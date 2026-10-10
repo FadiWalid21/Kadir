@@ -66,6 +66,7 @@ type PageState = 'loading' | 'ready' | 'error';
             >
               <kadr-tenant-logo
                 [logoUrl]="logoUrl()"
+                [logoVersion]="logoVersion()"
                 [fallbackName]="name()"
                 size="lg"
               />
@@ -145,6 +146,7 @@ export class CompanySettingsPage implements OnInit {
   protected readonly state = signal<PageState>('loading');
   protected readonly name = signal('');
   protected readonly logoUrl = signal<string | null>(null);
+  protected readonly logoVersion = signal(0);
   protected readonly nameError = signal<string | undefined>(undefined);
   protected readonly formError = signal<string | null>(null);
   protected readonly saveSuccess = signal(false);
@@ -176,7 +178,7 @@ export class CompanySettingsPage implements OnInit {
     try {
       const result = await this.tenantApi.updateSettings({ name: trimmed });
       this.name.set(result.name);
-      this.logoUrl.set(result.logoUrl);
+      this.setLogoUrl(result.logoUrl);
       await this.auth.refreshMe();
       this.saveSuccess.set(true);
     } catch (error) {
@@ -198,7 +200,7 @@ export class CompanySettingsPage implements OnInit {
     this.saveSuccess.set(false);
     try {
       const result = await this.tenantApi.uploadLogo(file);
-      this.logoUrl.set(result.logoUrl);
+      this.setLogoUrl(result.logoUrl);
       await this.auth.refreshMe();
     } catch (error) {
       this.formError.set(this.mapError(error, 'settings.company.logoFailed'));
@@ -215,7 +217,7 @@ export class CompanySettingsPage implements OnInit {
     this.formError.set(null);
     try {
       await this.tenantApi.deleteLogo();
-      this.logoUrl.set(null);
+      this.setLogoUrl(null);
       await this.auth.refreshMe();
     } catch (error) {
       this.formError.set(this.mapError(error, 'settings.company.logoFailed'));
@@ -230,11 +232,16 @@ export class CompanySettingsPage implements OnInit {
     try {
       const settings = await this.tenantApi.getSettings();
       this.name.set(settings.name);
-      this.logoUrl.set(settings.logoUrl);
+      this.setLogoUrl(settings.logoUrl);
       this.state.set('ready');
     } catch {
       this.state.set('error');
     }
+  }
+
+  private setLogoUrl(url: string | null): void {
+    this.logoUrl.set(url);
+    this.logoVersion.update((v) => v + 1);
   }
 
   private mapError(error: unknown, fallbackKey: string): string {

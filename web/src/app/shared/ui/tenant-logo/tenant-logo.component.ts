@@ -2,73 +2,89 @@ import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   inject,
   input,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AvatarComponent } from '../avatar/avatar.component';
 
-/** Loads a tenant logo URL with auth (Bearer) into a blob URL for img display. */
+type LogoView = 'loading' | 'image' | 'fallback';
+
+/** Loads a tenant logo via authenticated HttpClient (blob → object URL). */
 @Component({
   selector: 'kadr-tenant-logo',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AvatarComponent],
   template: `
-    @if (blobUrl()) {
-      <img
-        [src]="blobUrl()!"
-        alt=""
-        class="object-contain"
-        [class]="sizeClass()"
-      />
+    @if (view() === 'image' && blobUrl()) {
+      <img [src]="blobUrl()!" alt="" class="object-contain" [class]="sizeClass()" />
     } @else if (fallbackName()) {
       <kadr-avatar [name]="fallbackName()!" [size]="avatarSize()" [ariaLabel]="fallbackName()!" />
     } @else {
-      <img
-        src="/brand/logo-kadr.png"
-        alt=""
-        class="object-contain"
-        [class]="sizeClass()"
-      />
+      <img src="/brand/logo-kadr.png" alt="" class="object-contain" [class]="sizeClass()" />
     }
   `,
 })
 export class TenantLogoComponent {
   private readonly http = inject(HttpClient);
-  private readonly destroyRef = inject(DestroyRef);
+  /** Kept off the signal graph so revoke/clear does not re-trigger the load effect. */
+  private objectUrl: string | null = null;
 
+  /** Relative API path, e.g. /api/v1/files/{guid}. */
   readonly logoUrl = input<string | null | undefined>(undefined);
+  /** Bump after upload/replace/remove so the image reloads (number or file id string). */
+  readonly logoVersion = input<string | number>(0);
   readonly fallbackName = input<string | null | undefined>(undefined);
   readonly size = input<'sm' | 'md' | 'lg'>('md');
 
   protected readonly blobUrl = signal<string | null>(null);
+  protected readonly view = signal<LogoView>('fallback');
 
   constructor() {
     effect((onCleanup) => {
-      const url = this.logoUrl();
-      this.revoke();
-      this.blobUrl.set(null);
-      if (!url) {
+      const path = this.logoUrl();
+      const version = this.logoVersion();
+      this.revokeObjectUrl();
+
+      if (!path) {
+        this.blobUrl.set(null);
+        this.view.set('fallback');
         return;
       }
 
+      this.blobUrl.set(null);
+      this.view.set('loading');
+      const requestUrl = this.withCacheBust(path, version);
+
       const sub = this.http
-        .get(url, { responseType: 'blob', withCredentials: true })
-        .pipe(takeUntilDestroyed(this.destroyRef))
+        .get(requestUrl, { responseType: 'blob', observe: 'response', withCredentials: true })
         .subscribe({
-          next: (blob) => {
-            const objectUrl = URL.createObjectURL(blob);
-            this.blobUrl.set(objectUrl);
+          next: (res) => {
+            const blob = res.body;
+            if (!blob || blob.size === 0) {
+              this.view.set('fallback');
+              return;
+            }
+            const headerType = res.headers.get('Content-Type');
+            if (this.isRejectedContent(blob, headerType)) {
+              this.view.set('fallback');
+              return;
+            }
+            const created = URL.createObjectURL(blob);
+            this.objectUrl = created;
+            this.blobUrl.set(created);
+            this.view.set('image');
           },
-          error: () => this.blobUrl.set(null),
+          error: () => {
+            this.view.set('fallback');
+          },
         });
 
       onCleanup(() => {
         sub.unsubscribe();
-        this.revoke();
+        this.revokeObjectUrl();
+        this.blobUrl.set(null);
       });
     });
   }
@@ -88,10 +104,29 @@ export class TenantLogoComponent {
     return this.size();
   }
 
-  private revoke(): void {
-    const current = this.blobUrl();
-    if (current) {
-      URL.revokeObjectURL(current);
+  private withCacheBust(path: string, version: string | number): string {
+    const fileId = path.split('/').pop()?.split('?')[0] ?? '';
+    const sep = path.includes('?') ? '&' : '?';
+    const v = version === 0 || version === '0' || version === '' ? fileId : String(version);
+    return `${path}${sep}v=${encodeURIComponent(v || '1')}`;
+  }
+
+  /** Reject JSON/problem bodies that can arrive as blobs on error-ish content. */
+  private isRejectedContent(blob: Blob, headerType: string | null): boolean {
+    const type = (blob.type || headerType || '').toLowerCase();
+    if (!type) {
+      return false;
+    }
+    if (type.startsWith('image/')) {
+      return false;
+    }
+    return type.includes('json') || type.startsWith('text/');
+  }
+
+  private revokeObjectUrl(): void {
+    if (this.objectUrl) {
+      URL.revokeObjectURL(this.objectUrl);
+      this.objectUrl = null;
     }
   }
 }

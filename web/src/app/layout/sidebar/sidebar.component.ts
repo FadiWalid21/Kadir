@@ -29,6 +29,7 @@ export interface NavItem {
         <kadr-tenant-logo
           class="shrink-0"
           [logoUrl]="tenantLogoUrl()"
+          [logoVersion]="tenantLogoVersion()"
           [fallbackName]="tenantName()"
           size="sm"
         />
@@ -105,6 +106,9 @@ export class SidebarComponent {
   ];
 
   protected readonly tenantLogoUrl = computed(() => this.auth.me()?.tenant.logoUrl ?? null);
+
+  /** Forces reload when /me logoUrl changes (including replace with a new file id). */
+  protected readonly tenantLogoVersion = computed(() => this.tenantLogoUrl() ?? '');
 
   protected readonly visibleItems = computed(() =>
     this.items.filter((item) => {
