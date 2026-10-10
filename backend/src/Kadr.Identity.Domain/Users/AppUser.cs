@@ -1,5 +1,7 @@
+using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Ids;
+using Kadr.SharedKernel.Time;
 
 namespace Kadr.Identity.Domain.Users;
 
@@ -20,6 +22,8 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
     public bool EmailConfirmed { get; private set; }
     public DateTimeOffset? LastLoginAt { get; private set; }
     public Guid? EmployeeId { get; private set; }
+    public int AccessFailedCount { get; private set; }
+    public DateTimeOffset? LockoutEndUtc { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTimeOffset? UpdatedAt { get; private set; }
@@ -51,5 +55,41 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
             EmailConfirmed = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    public bool IsLockedOut(DateTimeOffset utcNow) =>
+        LockoutEndUtc is { } end && end > utcNow;
+
+    public bool RegisterFailedLogin(IClock clock)
+    {
+        AccessFailedCount++;
+        UpdatedAt = clock.UtcNow;
+
+        if (AccessFailedCount < AuthConstants.LockoutFailedAttemptThreshold)
+        {
+            return false;
+        }
+
+        LockoutEndUtc = clock.UtcNow.Add(AuthConstants.LockoutDuration);
+        return true;
+    }
+
+    public void ResetAccessFailedCount(IClock clock)
+    {
+        AccessFailedCount = 0;
+        LockoutEndUtc = null;
+        UpdatedAt = clock.UtcNow;
+    }
+
+    public void MarkEmailConfirmed(IClock clock)
+    {
+        EmailConfirmed = true;
+        UpdatedAt = clock.UtcNow;
+    }
+
+    public void RecordSuccessfulLogin(IClock clock)
+    {
+        ResetAccessFailedCount(clock);
+        LastLoginAt = clock.UtcNow;
     }
 }

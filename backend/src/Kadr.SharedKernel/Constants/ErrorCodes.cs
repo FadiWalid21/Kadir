@@ -6,6 +6,13 @@ public static class ErrorCodes
     public const string AuthPasswordTooShort = "auth.password_too_short";
     public const string AuthPasswordTooCommon = "auth.password_too_common";
     public const string AuthValidationFailed = "auth.validation_failed";
+    public const string AuthInvalidCredentials = "auth.invalid_credentials";
+    public const string AuthEmailNotVerified = "auth.email_not_verified";
+    public const string AuthAccountLocked = "auth.account_locked";
+    public const string AuthCsrfHeaderRequired = "auth.csrf_header_required";
+    public const string AuthRefreshInvalid = "auth.refresh_invalid";
+    public const string AuthRefreshReuse = "auth.refresh_reuse";
+    public const string AuthVerificationInvalid = "auth.verification_invalid";
     public const string IdempotencyKeyRequired = "idempotency.key_required";
     public const string IdempotencyKeyReuse = "idempotency.key_reuse";
     public const string TenantSlugUnavailable = "tenant.slug_unavailable";

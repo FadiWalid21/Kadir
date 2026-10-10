@@ -34,4 +34,9 @@ public sealed class EmailVerificationToken : Entity, ITenantOwned
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    public bool IsUsable(DateTimeOffset utcNow) =>
+        ConsumedAt is null && ExpiresAt > utcNow;
+
+    public void Consume(DateTimeOffset utcNow) => ConsumedAt = utcNow;
 }

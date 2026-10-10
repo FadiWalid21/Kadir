@@ -1,3 +1,5 @@
+using Kadr.Identity.Application.Auth;
+using Kadr.Infrastructure.Persistence.Auth;
 using Kadr.Infrastructure.Persistence.Commands;
 using Kadr.Infrastructure.Persistence.Dispatcher;
 using Kadr.Infrastructure.Persistence.DomainEvents;
@@ -27,7 +29,14 @@ public static class DependencyInjection
         services.AddScoped<PlanSeeder>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IEmailUniquenessChecker, EmailUniquenessChecker>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<PermissionService>();
+        services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());
+        services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<ICommandHandler<RegisterTenantCommand, RegisterTenantResult>, RegisterTenantCommandHandler>();
+        services.AddScoped<ICommandHandler<LoginCommand, LoginResult>, LoginCommandHandler>();
+        services.AddScoped<ICommandHandler<VerifyEmailCommand>, VerifyEmailCommandHandler>();
+        services.AddScoped<ICommandHandler<ResendVerificationCommand>, ResendVerificationCommandHandler>();
 
         services.AddDbContext<KadrDbContext>((sp, options) =>
         {
