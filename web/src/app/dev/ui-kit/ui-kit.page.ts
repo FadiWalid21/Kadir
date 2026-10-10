@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ThemeService } from '../../core/theme/theme.service';
@@ -7,6 +7,7 @@ import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { CardComponent } from '../../shared/ui/card/card.component';
+import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 import { DropdownMenuComponent } from '../../shared/ui/dropdown-menu/dropdown-menu.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
@@ -14,6 +15,8 @@ import { InputComponent } from '../../shared/ui/input/input.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { StepperComponent } from '../../shared/ui/stepper/stepper.component';
+import { TableComponent } from '../../shared/ui/table/table.component';
+import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
 import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
@@ -56,6 +59,9 @@ const SWATCHES = [
     ToastHostComponent,
     IconComponent,
     StepperComponent,
+    TabsComponent,
+    DrawerComponent,
+    TableComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
@@ -259,39 +265,43 @@ const SWATCHES = [
           </div>
         </kadr-card>
 
-        <kadr-card [title]="'uiKit.sampleTable' | transloco">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-line bg-subtle text-start text-fg-2">
-                  <th class="h-10 px-3 font-medium text-start">{{ 'glossary.employee' | transloco }}</th>
-                  <th class="h-10 px-3 font-medium text-start">{{ 'glossary.jobTitle' | transloco }}</th>
-                  <th class="h-10 px-3 font-medium text-start">{{ 'glossary.department' | transloco }}</th>
-                  <th class="h-10 px-3 font-medium text-start">{{ 'glossary.pending' | transloco }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="border-b border-line">
-                  <td class="h-row px-3">{{ 'uiKit.sampleName1' | transloco }}</td>
-                  <td class="px-3">{{ 'uiKit.sampleRole1' | transloco }}</td>
-                  <td class="px-3">{{ 'glossary.department' | transloco }}</td>
-                  <td class="px-3"><kadr-badge tone="success" [label]="'ui.statusActive' | transloco" /></td>
-                </tr>
-                <tr class="border-b border-line">
-                  <td class="h-row px-3">{{ 'uiKit.sampleName2' | transloco }}</td>
-                  <td class="px-3">{{ 'uiKit.sampleRole2' | transloco }}</td>
-                  <td class="px-3">{{ 'glossary.branch' | transloco }}</td>
-                  <td class="px-3"><kadr-badge tone="warning" [label]="'ui.statusLeave' | transloco" /></td>
-                </tr>
-                <tr class="border-b border-line">
-                  <td class="h-row px-3">{{ 'uiKit.sampleName3' | transloco }}</td>
-                  <td class="px-3">{{ 'uiKit.sampleRole3' | transloco }}</td>
-                  <td class="px-3">{{ 'glossary.attendance' | transloco }}</td>
-                  <td class="px-3"><kadr-badge tone="danger" [label]="'ui.statusAbsent' | transloco" /></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <kadr-card [title]="'uiKit.tabs' | transloco">
+          <kadr-tabs
+            [tabs]="demoTabs"
+            [ariaLabel]="'uiKit.tabs' | transloco"
+            [(activeId)]="demoTabId"
+          />
+          <p class="mt-3 text-sm text-fg-2">{{ demoTabId() }}</p>
+        </kadr-card>
+
+        <kadr-card [title]="'uiKit.drawer' | transloco">
+          <kadr-button variant="secondary" type="button" (click)="drawerOpen.set(true)">
+            {{ 'uiKit.openDrawer' | transloco }}
+          </kadr-button>
+          <kadr-drawer
+            [open]="drawerOpen()"
+            [title]="'uiKit.drawer' | transloco"
+            [closeLabel]="'ui.cancel' | transloco"
+            [hasFooter]="false"
+            (closed)="drawerOpen.set(false)"
+          >
+            <p class="text-sm text-fg-2">{{ 'uiKit.drawerBody' | transloco }}</p>
+          </kadr-drawer>
+        </kadr-card>
+
+        <kadr-card [title]="'uiKit.table' | transloco">
+          <kadr-table [columns]="demoColumns">
+            <tr class="border-b border-line">
+              <td class="h-row px-3">{{ 'uiKit.sampleName1' | transloco }}</td>
+              <td class="px-3">{{ 'uiKit.sampleRole1' | transloco }}</td>
+              <td class="px-3"><kadr-badge tone="success" [label]="'ui.statusActive' | transloco" /></td>
+            </tr>
+            <tr class="border-b border-line">
+              <td class="h-row px-3">{{ 'uiKit.sampleName2' | transloco }}</td>
+              <td class="px-3">{{ 'uiKit.sampleRole2' | transloco }}</td>
+              <td class="px-3"><kadr-badge tone="warning" [label]="'ui.statusLeave' | transloco" /></td>
+            </tr>
+          </kadr-table>
         </kadr-card>
 
         <kadr-card [title]="'uiKit.palette' | transloco">
@@ -320,6 +330,18 @@ export class UiKitPage {
     { id: 'a', label: '1' },
     { id: 'b', label: '2' },
     { id: 'c', label: '3' },
+  ];
+  protected readonly demoTabId = signal('one');
+  protected readonly drawerOpen = signal(false);
+  protected readonly demoTabs = [
+    { id: 'one', label: '1' },
+    { id: 'two', label: '2' },
+    { id: 'three', label: '3' },
+  ];
+  protected readonly demoColumns = [
+    { id: 'name', label: 'Name' },
+    { id: 'role', label: 'Role' },
+    { id: 'status', label: 'Status' },
   ];
 
   onLanguage(lang: AppLanguage): void {

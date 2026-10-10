@@ -209,6 +209,60 @@
         "tooLarge": "File exceeds 2 MB.",
         "invalidType": "Unsupported file type. Use PNG, JPG, or SVG."
       }
+    },
+    "navAria": "Settings sections",
+    "nav": {
+      "company": "Company",
+      "templates": "Templates"
+    },
+    "templates": {
+      "title": "Industry templates",
+      "subtitle": "Review and adjust the items copied from your industry template. The industry itself cannot be changed.",
+      "industryTitle": "Applied industry",
+      "industryPermanent": "Industry is permanent for this company. Platform admins can correct mistakes later.",
+      "versionLabel": "Applied version {{applied}} · Latest {{latest}}",
+      "updateTitle": "Template update available",
+      "updateBody": "New items can be added without changing your customized rows.",
+      "addMissing": "Add missing items",
+      "tabsAria": "Template sections",
+      "tabs": {
+        "shifts": "Shifts",
+        "leaveTypes": "Leave types",
+        "documentTypes": "Document types",
+        "jobTitles": "Job titles",
+        "departments": "Departments"
+      },
+      "search": "Search",
+      "colName": "Name",
+      "colStatus": "Status",
+      "colActive": "Active",
+      "colActions": "Actions",
+      "customized": "Customized",
+      "default": "Default",
+      "inactive": "Inactive",
+      "edit": "Edit",
+      "reset": "Reset",
+      "resetConfirm": "Reset this item to the template default?",
+      "editTitle": "Edit template item",
+      "nameAr": "Name (Arabic)",
+      "nameEn": "Name (English)",
+      "startTime": "Start time (HH:mm)",
+      "endTime": "End time (HH:mm)",
+      "graceMinutes": "Grace minutes",
+      "paid": "Paid",
+      "daysPerYear": "Days per year",
+      "hasExpiry": "Has expiry",
+      "verifyDisclaimer": "Day counts are placeholders — verify against current labour rules before relying on them.",
+      "emptyTitle": "No items in this section",
+      "emptyBody": "Nothing to show for the current filters.",
+      "loadErrorTitle": "Could not load templates",
+      "loadErrorBody": "Check your connection and try again.",
+      "listErrorTitle": "Could not load this section",
+      "listErrorBody": "Try again in a moment.",
+      "toastSaved": "Item saved.",
+      "toastReset": "Item reset to default.",
+      "toastAdded": "Added {{count}} missing item(s).",
+      "toastFail": "Could not complete the action."
     }
   },
   "home": {
@@ -275,6 +329,11 @@
     "pageHeader": "Page header",
     "dropdown": "Dropdown menu",
     "showToast": "Show toast",
-    "stepper": "Stepper"
+    "stepper": "Stepper",
+    "tabs": "Tabs",
+    "drawer": "Drawer",
+    "table": "Table",
+    "openDrawer": "Open drawer",
+    "drawerBody": "Side panel content for edit flows."
   }
 }

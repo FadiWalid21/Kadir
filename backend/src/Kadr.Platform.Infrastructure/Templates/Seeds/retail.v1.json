@@ -1,0 +1,177 @@
+{
+  "code": "retail",
+  "version": 1,
+  "nameAr": "التجزئة والمتاجر",
+  "nameEn": "Retail & Stores",
+  "descriptionAr": "قالب أولي — راجع القيم القانونية قبل الاعتماد",
+  "descriptionEn": "Starter template — verify statutory values before relying on them",
+  "items": {
+    "shifts": [
+      {
+        "key": "shift.morning",
+        "nameAr": "وردية صباحية",
+        "nameEn": "Morning",
+        "start": "09:00",
+        "end": "17:00",
+        "graceMinutes": 10
+      },
+      {
+        "key": "shift.evening",
+        "nameAr": "وردية مسائية",
+        "nameEn": "Evening",
+        "start": "14:00",
+        "end": "22:00",
+        "graceMinutes": 10
+      },
+      {
+        "key": "shift.weekend",
+        "nameAr": "وردية نهاية الأسبوع",
+        "nameEn": "Weekend",
+        "start": "10:00",
+        "end": "18:00",
+        "graceMinutes": 15
+      }
+    ],
+    "leaveTypes": [
+      {
+        "key": "leave.annual",
+        "nameAr": "إجازة سنوية",
+        "nameEn": "Annual leave",
+        "paid": true,
+        "daysPerYear": 21,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.sick",
+        "nameAr": "إجازة مرضية",
+        "nameEn": "Sick leave",
+        "paid": true,
+        "daysPerYear": 180,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      },
+      {
+        "key": "leave.unpaid",
+        "nameAr": "إجازة بدون راتب",
+        "nameEn": "Unpaid leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.emergency",
+        "nameAr": "إجازة طارئة",
+        "nameEn": "Emergency leave",
+        "paid": true,
+        "daysPerYear": 5,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.hajj",
+        "nameAr": "إجازة حج",
+        "nameEn": "Hajj leave",
+        "paid": true,
+        "daysPerYear": 30,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      }
+    ],
+    "documentTypes": [
+      {
+        "key": "doc.national_id",
+        "nameAr": "بطاقة شخصية",
+        "nameEn": "National ID",
+        "hasExpiry": true,
+        "alertDays": [
+          60,
+          30,
+          7
+        ]
+      },
+      {
+        "key": "doc.contract",
+        "nameAr": "عقد عمل",
+        "nameEn": "Employment contract",
+        "hasExpiry": false,
+        "alertDays": []
+      },
+      {
+        "key": "doc.health",
+        "nameAr": "شهادة صحية",
+        "nameEn": "Health certificate",
+        "hasExpiry": true,
+        "alertDays": [
+          30
+        ]
+      },
+      {
+        "key": "doc.cash",
+        "nameAr": "إقرار عهدة",
+        "nameEn": "Cash custody form",
+        "hasExpiry": false,
+        "alertDays": []
+      }
+    ],
+    "jobTitles": [
+      {
+        "key": "job.store_manager",
+        "nameAr": "مدير متجر",
+        "nameEn": "Store manager"
+      },
+      {
+        "key": "job.cashier",
+        "nameAr": "كاشير",
+        "nameEn": "Cashier"
+      },
+      {
+        "key": "job.sales",
+        "nameAr": "بائع",
+        "nameEn": "Sales associate"
+      },
+      {
+        "key": "job.supervisor",
+        "nameAr": "مشرف وردية",
+        "nameEn": "Shift supervisor"
+      },
+      {
+        "key": "job.stock",
+        "nameAr": "أمين مخزن",
+        "nameEn": "Stock keeper"
+      },
+      {
+        "key": "job.hr",
+        "nameAr": "أخصائي موارد بشرية",
+        "nameEn": "HR specialist"
+      }
+    ],
+    "departments": [
+      {
+        "key": "dept.store",
+        "nameAr": "المتجر",
+        "nameEn": "Store floor"
+      },
+      {
+        "key": "dept.warehouse",
+        "nameAr": "المخزن",
+        "nameEn": "Warehouse"
+      },
+      {
+        "key": "dept.hr",
+        "nameAr": "الموارد البشرية",
+        "nameEn": "Human Resources"
+      },
+      {
+        "key": "dept.finance",
+        "nameAr": "المالية",
+        "nameEn": "Finance"
+      }
+    ],
+    "workflows": []
+  }
+}
