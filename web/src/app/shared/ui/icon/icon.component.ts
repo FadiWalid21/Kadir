@@ -15,7 +15,12 @@ export type IconName =
   | 'moon'
   | 'chevrons'
   | 'user'
-  | 'check';
+  | 'check'
+  | 'shield'
+  | 'building'
+  | 'file'
+  | 'lock'
+  | 'fingerprint';
 
 /** Inline stroke icons (Lucide-like). Logical flip via rtl-flip class when needed. */
 @Component({
@@ -111,6 +116,35 @@ export type IconName =
         }
         @case ('check') {
           <path d="M20 6 9 17l-5-5" />
+        }
+        @case ('shield') {
+          <path d="M12 3 4 6v6c0 5 3.5 8.5 8 9.5 4.5-1 8-4.5 8-9.5V6l-8-3z" />
+        }
+        @case ('building') {
+          <path d="M4 21h16" />
+          <path d="M6 21V5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v16" />
+          <path d="M9 8h1" />
+          <path d="M14 8h1" />
+          <path d="M9 12h1" />
+          <path d="M14 12h1" />
+          <path d="M9 16h1" />
+          <path d="M14 16h1" />
+        }
+        @case ('file') {
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+          <path d="M14 3v5h5" />
+        }
+        @case ('lock') {
+          <rect x="4" y="10" width="16" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+        }
+        @case ('fingerprint') {
+          <path d="M12 11a3 3 0 0 0-3 3v5" />
+          <path d="M12 7a7 7 0 0 0-7 7v1" />
+          <path d="M19 14v1a7 7 0 0 1-2 4.9" />
+          <path d="M12 15v4" />
+          <path d="M9 18.5V20" />
+          <path d="M15 17v3" />
         }
       }
     </svg>

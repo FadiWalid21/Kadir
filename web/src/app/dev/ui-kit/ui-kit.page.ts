@@ -13,6 +13,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { StepperComponent } from '../../shared/ui/stepper/stepper.component';
 import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
@@ -54,6 +55,7 @@ const SWATCHES = [
     SkeletonComponent,
     ToastHostComponent,
     IconComponent,
+    StepperComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
@@ -202,6 +204,14 @@ const SWATCHES = [
               <kadr-icon name="bell" />
             </div>
             <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.stepper' | transloco }}</p>
+              <kadr-stepper
+                [steps]="stepperDemo"
+                [currentIndex]="1"
+                [ariaLabel]="'uiKit.stepper' | transloco"
+              />
+            </div>
+            <div>
               <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.avatar' | transloco }}</p>
               <div class="flex items-center gap-2">
                 <kadr-avatar name="أحمد محمد" size="sm" />
@@ -306,6 +316,11 @@ export class UiKitPage {
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
   protected readonly swatches = SWATCHES;
+  protected readonly stepperDemo = [
+    { id: 'a', label: '1' },
+    { id: 'b', label: '2' },
+    { id: 'c', label: '3' },
+  ];
 
   onLanguage(lang: AppLanguage): void {
     this.theme.setLanguage(lang);

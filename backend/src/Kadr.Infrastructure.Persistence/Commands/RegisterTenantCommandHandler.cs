@@ -7,6 +7,7 @@ using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Tenants;
+using Kadr.Platform.Domain.Org;
 using Kadr.Platform.Domain.Settings;
 using Kadr.Platform.Domain.Subscriptions;
 using Kadr.Platform.Domain.Tenants;
@@ -45,6 +46,11 @@ public sealed class RegisterTenantCommandHandler(
         if (passwordError is not null)
         {
             return Result.Failure<RegisterTenantResult>(passwordError, passwordError);
+        }
+
+        if (!IndustryCodes.IsAllowed(command.IndustryCode))
+        {
+            return Result.Failure<RegisterTenantResult>(ErrorCodes.IndustryInvalid, ErrorCodes.IndustryInvalid);
         }
 
         var email = EmailNormalizer.ForDisplay(command.Email);
@@ -139,7 +145,15 @@ public sealed class RegisterTenantCommandHandler(
             var ownerRole = roles.Single(r => r.Name == SystemRoleNames.Owner);
             db.UserRoles.Add(UserRole.Create(tenantId, owner.Id, ownerRole.Id));
 
-            SeedDefaultSettings(tenantId, country);
+            var legalEntity = LegalEntity.CreateDefault(tenantId, command.CompanyName, country);
+            db.LegalEntities.Add(legalEntity);
+
+            var branchName = string.IsNullOrWhiteSpace(command.FirstBranchName)
+                ? command.CompanyName
+                : command.FirstBranchName.Trim();
+            db.Branches.Add(Branch.CreateDefault(tenantId, legalEntity.Id, branchName));
+
+            SeedDefaultSettings(tenantId, country, command);
 
             db.EmailVerificationTokens.Add(
                 EmailVerificationToken.Create(tenantId, owner.Id, tokenHash, now.Add(VerificationLifetime)));
@@ -217,15 +231,31 @@ public sealed class RegisterTenantCommandHandler(
         Role.CreateSystem(tenantId, SystemRoleNames.Accountant, "محاسب", "Accountant"),
     ];
 
-    private void SeedDefaultSettings(Guid tenantId, string country)
+    private void SeedDefaultSettings(Guid tenantId, string country, RegisterTenantCommand command)
     {
+        var workDays = NormalizeDays(
+            command.WorkWeekDays,
+            ["sun", "mon", "tue", "wed", "thu"]);
+        var weekend = NormalizeDays(
+            command.WorkWeekWeekend,
+            ["fri", "sat"]);
+        var start = string.IsNullOrWhiteSpace(command.DefaultWorkStart) ? "09:00" : command.DefaultWorkStart.Trim();
+        var end = string.IsNullOrWhiteSpace(command.DefaultWorkEnd) ? "17:00" : command.DefaultWorkEnd.Trim();
+
         db.TenantSettings.AddRange(
             TenantSetting.Create(tenantId, SettingKeys.CompanyCountry, JsonSerializer.Serialize(country)),
-            TenantSetting.Create(tenantId, SettingKeys.WorkWeekDays, """["sun","mon","tue","wed","thu"]"""),
-            TenantSetting.Create(tenantId, SettingKeys.WorkWeekWeekend, """["fri","sat"]"""),
+            TenantSetting.Create(tenantId, SettingKeys.WorkWeekDays, JsonSerializer.Serialize(workDays)),
+            TenantSetting.Create(tenantId, SettingKeys.WorkWeekWeekend, JsonSerializer.Serialize(weekend)),
+            TenantSetting.Create(tenantId, SettingKeys.WorkDayStart, JsonSerializer.Serialize(start)),
+            TenantSetting.Create(tenantId, SettingKeys.WorkDayEnd, JsonSerializer.Serialize(end)),
             TenantSetting.Create(tenantId, SettingKeys.DateFormat, JsonSerializer.Serialize("yyyy-MM-dd")),
             TenantSetting.Create(tenantId, SettingKeys.CalendarHijriEnabled, "false"));
     }
+
+    private static string[] NormalizeDays(IReadOnlyList<string>? days, string[] fallback) =>
+        days is { Count: > 0 }
+            ? days.Select(d => d.Trim().ToLowerInvariant()).Distinct().ToArray()
+            : fallback;
 
     private static string HashToken(string rawToken)
     {

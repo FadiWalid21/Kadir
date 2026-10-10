@@ -7,6 +7,8 @@ import {
   AccessTokenResponse,
   LoginRequest,
   ProblemDetails,
+  RegisterTenantRequest,
+  RegisterTenantResponse,
   VerifyEmailRequest,
 } from './auth.models';
 
@@ -14,6 +16,14 @@ import {
 export class AuthApi {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/auth`;
+
+  register(body: RegisterTenantRequest, idempotencyKey: string): Promise<RegisterTenantResponse> {
+    return firstValueFrom(
+      this.http.post<RegisterTenantResponse>(`${this.base}/register`, body, {
+        headers: { 'Idempotency-Key': idempotencyKey },
+      }),
+    );
+  }
 
   login(body: LoginRequest): Promise<AccessTokenResponse> {
     return firstValueFrom(
