@@ -54,6 +54,8 @@ public sealed class TenantBrandingTests(RegisterApiFactory factory)
         var file = await client.GetAsync(logo.LogoUrl);
         Assert.Equal(HttpStatusCode.OK, file.StatusCode);
         Assert.Equal("image/png", file.Content.Headers.ContentType?.MediaType);
+        var fileBytes = await file.Content.ReadAsByteArrayAsync();
+        Assert.True(fileBytes.Length > 0, "Authenticated file GET must return a non-empty body.");
 
         var replace = await UploadLogoAsync(client, CreatePng(40, 40));
         Assert.Equal(HttpStatusCode.OK, replace.StatusCode);
@@ -131,6 +133,10 @@ public sealed class TenantBrandingTests(RegisterApiFactory factory)
         ownerB.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenB);
         var cross = await ownerB.GetAsync(logoA!.LogoUrl);
         Assert.Equal(HttpStatusCode.NotFound, cross.StatusCode);
+
+        var anon = factory.CreateCookieClient();
+        var unauthenticated = await anon.GetAsync(logoA.LogoUrl);
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthenticated.StatusCode);
     }
 
     private async Task<(string Slug, string Email, Guid TenantId)> RegisterVerifiedAsync(
