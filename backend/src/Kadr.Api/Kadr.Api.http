@@ -1,0 +1,6 @@
+@Kadr.Api_HostAddress = http://localhost:5248
+
+GET {{Kadr.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

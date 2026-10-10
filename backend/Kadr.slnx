@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kadr.Api/Kadr.Api.csproj" />
+    <Project Path="src/Kadr.Identity.Application/Kadr.Identity.Application.csproj" />
+    <Project Path="src/Kadr.Identity.Domain/Kadr.Identity.Domain.csproj" />
+    <Project Path="src/Kadr.Identity.Infrastructure/Kadr.Identity.Infrastructure.csproj" />
+    <Project Path="src/Kadr.Infrastructure.Persistence/Kadr.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Kadr.Platform.Application/Kadr.Platform.Application.csproj" />
+    <Project Path="src/Kadr.Platform.Domain/Kadr.Platform.Domain.csproj" />
+    <Project Path="src/Kadr.Platform.Infrastructure/Kadr.Platform.Infrastructure.csproj" />
+    <Project Path="src/Kadr.SharedKernel/Kadr.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kadr.Platform.Tests/Kadr.Platform.Tests.csproj" />
+    <Project Path="tests/Kadr.TenantIsolation.Tests/Kadr.TenantIsolation.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kadr.Platform.Application\Kadr.Platform.Application.csproj" />
+    <ProjectReference Include="..\Kadr.Platform.Infrastructure\Kadr.Platform.Infrastructure.csproj" />
+    <ProjectReference Include="..\Kadr.Identity.Application\Kadr.Identity.Application.csproj" />
+    <ProjectReference Include="..\Kadr.Identity.Infrastructure\Kadr.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Kadr.Infrastructure.Persistence\Kadr.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Kadr.SharedKernel\Kadr.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>
