@@ -1,0 +1,85 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: var(--leading-body);
+  font-weight: var(--fw-regular);
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html:lang(ar) {
+  letter-spacing: normal;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  font: inherit;
+  color: inherit;
+  background-color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+::selection {
+  background-color: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.h-control {
+  height: var(--control-height);
+}
+
+.h-row {
+  height: var(--row-height);
+}
+
+.rtl-flip {
+  transform: scaleX(1);
+}
+
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Soft scrollbars using tokens only */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
