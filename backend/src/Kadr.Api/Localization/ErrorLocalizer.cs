@@ -23,6 +23,11 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.PlanNotFound] = ("خطة التجربة غير متاحة.", "Trial plan is not available."),
         [ErrorCodes.RegistrationFailed] = ("فشل التسجيل.", "Registration failed."),
         [ErrorCodes.IndustryInvalid] = ("قطاع العمل غير مدعوم.", "Industry is not supported."),
+        [ErrorCodes.FileTooLarge] = ("حجم الملف أكبر من 2 ميغابايت.", "File exceeds 2 MB."),
+        [ErrorCodes.FileInvalidType] = ("نوع الملف غير مدعوم. استخدم PNG أو JPG أو SVG.", "Unsupported file type. Use PNG, JPG, or SVG."),
+        [ErrorCodes.TenantNotFound] = ("المنشأة غير موجودة.", "Tenant was not found."),
+        [ErrorCodes.FileNotFound] = ("الملف غير موجود.", "File was not found."),
+        [ErrorCodes.TenantSettingsValidationFailed] = ("بيانات إعدادات المنشأة غير صالحة.", "Tenant settings are invalid."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

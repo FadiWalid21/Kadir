@@ -14,7 +14,7 @@ const me = {
   language: 'ar',
   roles: ['Owner'],
   permissions: [] as string[],
-  tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test-co' },
+  tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test-co', logoUrl: null },
 };
 
 describe('HomePage', () => {
@@ -49,8 +49,10 @@ describe('HomePage', () => {
     expect(text).toContain('جاهزية مكان العمل');
     expect(text).toContain('إضافة شعار الشركة');
     expect(text).toContain('غير متاح بعد');
+    expect(text).toContain('ابدأ');
     expect(text).toContain('0 / 4');
     expect(text).toContain('الموافقات');
+    expect(fixture.nativeElement.querySelector('a[href="/settings/company"]')).toBeTruthy();
 
     page.setStateForTest('loading');
     fixture.detectChanges();

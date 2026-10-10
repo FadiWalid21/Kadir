@@ -8,12 +8,13 @@ import {
   signal,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../core/auth/auth.service';
 import { BadgeComponent } from '../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../shared/ui/empty-state/empty-state.component';
+import { IconComponent } from '../shared/ui/icon/icon.component';
 import { SkeletonComponent } from '../shared/ui/skeleton/skeleton.component';
 
 type HomeState = 'loading' | 'ready' | 'error';
@@ -23,10 +24,12 @@ type HomeState = 'loading' | 'ready' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TranslocoPipe,
+    RouterLink,
     ButtonComponent,
     BadgeComponent,
     EmptyStateComponent,
     SkeletonComponent,
+    IconComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -66,11 +69,29 @@ type HomeState = 'loading' | 'ready' | 'error';
             <p class="mt-1 text-sm text-fg-2">{{ 'home.checklistIntro' | transloco }}</p>
           </div>
           <p class="text-sm font-medium tabular-nums text-fg-muted">
-            {{ 'home.checklistProgress' | transloco: { done: 0, total: 4 } }}
+            {{ 'home.checklistProgress' | transloco: { done: checklistDone(), total: 4 } }}
           </p>
         </div>
         <ul class="flex flex-col gap-2">
-          @for (item of checklistKeys; track item) {
+          <li
+            class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+          >
+            <a
+              routerLink="/settings/company"
+              class="text-sm text-accent underline-offset-2 hover:underline"
+            >
+              {{ 'home.checklist.logo' | transloco }}
+            </a>
+            @if (hasLogo()) {
+              <span class="inline-flex items-center gap-1 text-sm text-success">
+                <kadr-icon name="check" size="sm" />
+                {{ 'home.checklistDone' | transloco }}
+              </span>
+            } @else {
+              <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
+            }
+          </li>
+          @for (item of pendingChecklistKeys; track item) {
             <li
               class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
             >
@@ -121,12 +142,15 @@ export class HomePage implements OnInit {
   protected readonly showUiKit = isDevMode();
   protected readonly state = signal<HomeState>('loading');
 
-  protected readonly checklistKeys = [
-    'home.checklist.logo',
+  protected readonly pendingChecklistKeys = [
     'home.checklist.invite',
     'home.checklist.template',
     'home.checklist.employee',
   ] as const;
+
+  protected readonly hasLogo = computed(() => !!this.auth.me()?.tenant.logoUrl);
+
+  protected readonly checklistDone = computed(() => (this.hasLogo() ? 1 : 0));
 
   protected readonly welcomeTitle = computed(() => {
     const name = this.auth.me()?.fullName ?? '';

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -13,6 +15,8 @@ describe('ShellLayout', () => {
       providers: [
         provideRouter([]),
         provideTestTransloco(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: AuthService,
           useValue: {
@@ -23,9 +27,10 @@ describe('ShellLayout', () => {
               language: 'ar',
               roles: ['Owner'],
               permissions: ['users.read', 'tenant.settings.read'],
-              tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test-co' },
+              tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test-co', logoUrl: null },
             }),
             status: signal('authenticated'),
+            accessToken: signal('test-token'),
             hasPermission: (code: string) =>
               ['users.read', 'tenant.settings.read'].includes(code),
             logout: vi.fn(),

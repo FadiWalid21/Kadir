@@ -25,11 +25,12 @@ public interface IFileStorage
         string contentType,
         CancellationToken cancellationToken = default);
 
-    Task<Uri> GetTemporaryReadUrlAsync(
-        Guid tenantId,
-        Guid fileId,
-        TimeSpan lifetime,
+    /// <summary>Opens a stored file by relative storage path for authenticated streaming.</summary>
+    Task<Stream> OpenReadAsync(
+        string storagePath,
         CancellationToken cancellationToken = default);
 
-    Task DeleteAsync(Guid tenantId, Guid fileId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(
+        string storagePath,
+        CancellationToken cancellationToken = default);
 }

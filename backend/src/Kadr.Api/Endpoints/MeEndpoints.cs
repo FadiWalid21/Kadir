@@ -42,12 +42,13 @@ public static class MeEndpoints
 
         var tenant = await db.Tenants.AsNoTracking()
             .Where(t => t.Id == tenantId)
-            .Select(t => new { t.Id, t.Name, t.Slug })
+            .Select(t => new { t.Id, t.Name, t.Slug, t.LogoFileId })
             .SingleAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var roles = await permissions.GetRoleNamesAsync(tenantId, userId, cancellationToken).ConfigureAwait(false);
         var perms = await permissions.GetPermissionsAsync(tenantId, userId, cancellationToken).ConfigureAwait(false);
+        var logoUrl = tenant.LogoFileId is null ? null : $"/api/v1/files/{tenant.LogoFileId:D}";
 
         return Results.Ok(new MeResponse(
             user.Id,
@@ -56,7 +57,7 @@ public static class MeEndpoints
             user.PreferredLanguage,
             roles,
             perms,
-            new MeTenant(tenant.Id, tenant.Name, tenant.Slug)));
+            new MeTenant(tenant.Id, tenant.Name, tenant.Slug, logoUrl)));
     }
 }
 
@@ -69,4 +70,4 @@ public sealed record MeResponse(
     IReadOnlyList<string> Permissions,
     MeTenant Tenant);
 
-public sealed record MeTenant(Guid Id, string Name, string Slug);
+public sealed record MeTenant(Guid Id, string Name, string Slug, string? LogoUrl);

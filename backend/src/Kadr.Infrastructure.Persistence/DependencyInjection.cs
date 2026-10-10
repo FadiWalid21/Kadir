@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<LoginCommand, LoginResult>, LoginCommandHandler>();
         services.AddScoped<ICommandHandler<VerifyEmailCommand>, VerifyEmailCommandHandler>();
         services.AddScoped<ICommandHandler<ResendVerificationCommand>, ResendVerificationCommandHandler>();
+        services.AddScoped<ICommandHandler<UpdateTenantSettingsCommand, TenantSettingsResult>, UpdateTenantSettingsCommandHandler>();
+        services.AddScoped<ICommandHandler<UploadTenantLogoCommand, TenantLogoResult>, UploadTenantLogoCommandHandler>();
+        services.AddScoped<ICommandHandler<DeleteTenantLogoCommand>, DeleteTenantLogoCommandHandler>();
 
         services.AddDbContext<KadrDbContext>((sp, options) =>
         {
