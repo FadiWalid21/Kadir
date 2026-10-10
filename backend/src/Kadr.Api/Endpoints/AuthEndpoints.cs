@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentValidation;
 using Kadr.Api.Http;
 using Kadr.Api.Localization;
+using Kadr.Identity.Application.Auth;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Application;
 using Kadr.SharedKernel.Constants;
@@ -17,6 +18,26 @@ public static class AuthEndpoints
         app.MapPost("/api/v1/auth/register", RegisterAsync)
             .RequireRateLimiting("auth-register")
             .WithName("RegisterTenant");
+
+        app.MapPost("/api/v1/auth/login", LoginAsync)
+            .RequireRateLimiting("auth-login")
+            .WithName("Login");
+
+        app.MapPost("/api/v1/auth/refresh", RefreshAsync)
+            .RequireRateLimiting("auth-refresh")
+            .WithName("Refresh");
+
+        app.MapPost("/api/v1/auth/logout", LogoutAsync)
+            .RequireRateLimiting("auth-refresh")
+            .WithName("Logout");
+
+        app.MapPost("/api/v1/auth/verify-email", VerifyEmailAsync)
+            .RequireRateLimiting("auth-verify")
+            .WithName("VerifyEmail");
+
+        app.MapPost("/api/v1/auth/resend-verification", ResendVerificationAsync)
+            .RequireRateLimiting("auth-resend")
+            .WithName("ResendVerification");
 
         return app;
     }
@@ -92,6 +113,148 @@ public static class AuthEndpoints
 
         return Results.Created($"/api/v1/tenants/{body.TenantId}", body);
     }
+
+    private static async Task<IResult> LoginAsync(
+        [FromBody] LoginRequest request,
+        HttpContext httpContext,
+        ICommandDispatcher dispatcher,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await dispatcher.SendAsync(
+                new LoginCommand(
+                    request.Email,
+                    request.Password,
+                    request.CompanySlug,
+                    httpContext.Connection.RemoteIpAddress?.ToString(),
+                    httpContext.Request.Headers.UserAgent.ToString()),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            var code = result.ErrorCode ?? ErrorCodes.AuthInvalidCredentials;
+            var status = code switch
+            {
+                ErrorCodes.AuthEmailNotVerified => StatusCodes.Status403Forbidden,
+                ErrorCodes.AuthAccountLocked => StatusCodes.Status403Forbidden,
+                _ => StatusCodes.Status401Unauthorized,
+            };
+            return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));
+        }
+
+        var secure = httpContext.Request.IsHttps;
+        RefreshCookie.Set(httpContext.Response, result.Value!.RefreshOpaqueToken, result.Value.RefreshExpiresAt, secure);
+        return Results.Ok(new AccessTokenResponse(
+            result.Value.AccessToken,
+            result.Value.ExpiresInSeconds,
+            "Bearer"));
+    }
+
+    private static async Task<IResult> RefreshAsync(
+        HttpContext httpContext,
+        IRefreshTokenService refreshTokenService,
+        IJwtTokenService jwtTokenService,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (!RefreshCookie.HasCsrfHeader(httpContext.Request))
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext, StatusCodes.Status400BadRequest, ErrorCodes.AuthCsrfHeaderRequired, localizer));
+        }
+
+        var opaque = RefreshCookie.Read(httpContext.Request);
+        if (string.IsNullOrWhiteSpace(opaque))
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext, StatusCodes.Status401Unauthorized, ErrorCodes.AuthRefreshInvalid, localizer));
+        }
+
+        var rotated = await refreshTokenService.RotateAsync(
+                opaque,
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                httpContext.Request.Headers.UserAgent.ToString(),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        var secure = httpContext.Request.IsHttps;
+        if (!rotated.IsSuccess)
+        {
+            RefreshCookie.Clear(httpContext.Response, secure);
+            var code = rotated.ErrorCode ?? ErrorCodes.AuthRefreshInvalid;
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext, StatusCodes.Status401Unauthorized, code, localizer));
+        }
+
+        var access = jwtTokenService.CreateAccessToken(
+            rotated.Value!.UserId,
+            rotated.Value.TenantId,
+            rotated.Value.Roles,
+            rotated.Value.Language);
+
+        RefreshCookie.Set(httpContext.Response, rotated.Value.OpaqueToken, rotated.Value.ExpiresAt, secure);
+        return Results.Ok(new AccessTokenResponse(access.AccessToken, access.ExpiresInSeconds, "Bearer"));
+    }
+
+    private static async Task<IResult> LogoutAsync(
+        HttpContext httpContext,
+        IRefreshTokenService refreshTokenService,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (!RefreshCookie.HasCsrfHeader(httpContext.Request))
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext, StatusCodes.Status400BadRequest, ErrorCodes.AuthCsrfHeaderRequired, localizer));
+        }
+
+        var opaque = RefreshCookie.Read(httpContext.Request);
+        if (!string.IsNullOrWhiteSpace(opaque))
+        {
+            await refreshTokenService.RevokeFamilyByOpaqueTokenAsync(opaque, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        RefreshCookie.Clear(httpContext.Response, httpContext.Request.IsHttps);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> VerifyEmailAsync(
+        [FromBody] VerifyEmailRequest request,
+        HttpContext httpContext,
+        ICommandDispatcher dispatcher,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await dispatcher.SendAsync(new VerifyEmailCommand(request.Token), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext,
+                StatusCodes.Status400BadRequest,
+                result.ErrorCode ?? ErrorCodes.AuthVerificationInvalid,
+                localizer));
+        }
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> ResendVerificationAsync(
+        [FromBody] ResendVerificationRequest request,
+        HttpContext httpContext,
+        ICommandDispatcher dispatcher,
+        CancellationToken cancellationToken)
+    {
+        await dispatcher.SendAsync(
+                new ResendVerificationCommand(request.Email, request.CompanySlug),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return Results.Accepted();
+    }
 }
 
 public sealed record RegisterTenantRequest(
@@ -105,3 +268,11 @@ public sealed record RegisterTenantRequest(
     string? CountryCode);
 
 public sealed record RegisterTenantResponse(Guid TenantId, string Slug, DateTimeOffset TrialEndsAt);
+
+public sealed record LoginRequest(string Email, string Password, string CompanySlug);
+
+public sealed record AccessTokenResponse(string AccessToken, int ExpiresIn, string TokenType);
+
+public sealed record VerifyEmailRequest(string Token);
+
+public sealed record ResendVerificationRequest(string Email, string CompanySlug);
