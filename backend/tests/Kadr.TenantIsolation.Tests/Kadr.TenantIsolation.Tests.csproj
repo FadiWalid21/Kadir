@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
@@ -29,6 +33,7 @@
     <ProjectReference Include="..\..\src\Kadr.SharedKernel\Kadr.SharedKernel.csproj" />
     <ProjectReference Include="..\..\src\Kadr.Platform.Domain\Kadr.Platform.Domain.csproj" />
     <ProjectReference Include="..\..\src\Kadr.Infrastructure.Persistence\Kadr.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Kadr.Testing.Support\Kadr.Testing.Support.csproj" />
   </ItemGroup>
 
 </Project>

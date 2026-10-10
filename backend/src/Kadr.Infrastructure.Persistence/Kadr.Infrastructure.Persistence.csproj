@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Kadr.Platform.Application\Kadr.Platform.Application.csproj" />
     <ProjectReference Include="..\Kadr.Platform.Domain\Kadr.Platform.Domain.csproj" />
+    <ProjectReference Include="..\Kadr.Identity.Application\Kadr.Identity.Application.csproj" />
     <ProjectReference Include="..\Kadr.Identity.Domain\Kadr.Identity.Domain.csproj" />
     <ProjectReference Include="..\Kadr.SharedKernel\Kadr.SharedKernel.csproj" />
   </ItemGroup>

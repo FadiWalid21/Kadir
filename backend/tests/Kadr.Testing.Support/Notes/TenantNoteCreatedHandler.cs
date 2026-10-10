@@ -1,8 +1,7 @@
-using Kadr.Platform.Domain.Notes;
 using Kadr.SharedKernel.Application;
 using Microsoft.Extensions.Logging;
 
-namespace Kadr.Platform.Application.Notes;
+namespace Kadr.Testing.Support.Notes;
 
 public sealed class TenantNoteCreatedHandler(ILogger<TenantNoteCreatedHandler> logger)
     : IDomainEventHandler<TenantNoteCreated>
