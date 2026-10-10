@@ -10,6 +10,12 @@ export const routes: Routes = [
       import('./features/auth/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
+  },
+  {
     path: 'verify-email',
     canActivate: [guestGuard],
     loadComponent: () =>

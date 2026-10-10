@@ -18,4 +18,5 @@ public static class ErrorCodes
     public const string TenantSlugUnavailable = "tenant.slug_unavailable";
     public const string PlanNotFound = "plan.not_found";
     public const string RegistrationFailed = "auth.registration_failed";
+    public const string IndustryInvalid = "industry.invalid";
 }

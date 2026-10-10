@@ -45,7 +45,7 @@
     "statusNew": "New"
   },
   "auth": {
-    "loginTitle": "Sign in",
+    "loginTitle": "Sign in to the platform",
     "loginSubtitle": "Enter your company code, email, and password to continue.",
     "companyCode": "Company code",
     "companyCodeRequired": "Enter the company code",
@@ -53,6 +53,13 @@
     "passwordRequired": "Enter your password",
     "signIn": "Sign in to the platform",
     "signOut": "Sign out",
+    "createCompany": "Create a company account",
+    "registerPrompt": "Is your organization not on Kadr yet?",
+    "registerCta": "Request a new account",
+    "orEmail": "Or use your work email",
+    "ssoNafath": "National unified access",
+    "ssoGoogle": "Google Workspace",
+    "ssoUnavailable": "Not available yet",
     "invalid_credentials": "Invalid sign-in details.",
     "email_not_verified": "Please verify your email first.",
     "account_locked": "Account temporarily locked. Try again later.",
@@ -69,7 +76,29 @@
     "backToLogin": "Back to sign in",
     "forbiddenTitle": "Not allowed",
     "forbiddenBody": "You do not have permission to view this page.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "shell": {
+      "brand": "Kadr",
+      "brandLine": "HR & Payroll",
+      "secureBadge": "Secure connection",
+      "badges": "Enterprise-ready security standards",
+      "footerNav": "Footer links",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service",
+      "copyright": "© Kadr HR and payroll platform. All rights reserved."
+    },
+    "panel": {
+      "aria": "Platform information",
+      "badge": "Built for regional markets",
+      "headline": "Payroll governance and human capital management",
+      "f1Title": "Legal entity and branches from day one",
+      "f1Body": "Clear org structure per company with strict tenant data isolation.",
+      "f2Title": "Ready templates for common industries",
+      "f2Body": "Faster setup for companies in Egypt and Saudi Arabia.",
+      "f3Title": "Permissions and multi-tenant security",
+      "f3Body": "Fine-grained access with company-scoped protected sessions.",
+      "footer": "Servers prepared for local markets — static copy, not live telemetry"
+    }
   },
   "shell": {
     "sidebar": "Sidebar",
@@ -91,6 +120,72 @@
       "reports": "Reports",
       "settings": "Settings",
       "profile": "Profile"
+    }
+  },
+  "onboarding": {
+    "title": "Create your company on Kadr",
+    "subtitle": "A short path to a usable trial account.",
+    "stepsAria": "Registration steps",
+    "continue": "Continue",
+    "back": "Back",
+    "finish": "Create account",
+    "haveAccount": "Already have an account? Sign in",
+    "doneTitle": "Company created",
+    "doneBody": "Your company code is {{slug}}. Use it with your email when signing in.",
+    "verifyReminder": "Verify your email before the first sign-in (activation link or verify page).",
+    "goToLogin": "Go to sign in",
+    "logoSkipHint": "Logo upload comes later in Settings. You can continue now.",
+    "industryIntro": "Pick the industry that fits your business. This choice is permanent.",
+    "industryConfirm": "I understand the industry cannot be changed after signup.",
+    "inviteSkipBody": "Team invites will be available after account activation. You can skip for now.",
+    "steps": {
+      "account": "Account",
+      "company": "Company",
+      "industry": "Industry",
+      "work": "Work week",
+      "branch": "Branch",
+      "invite": "Invite team"
+    },
+    "fields": {
+      "fullName": "Full name",
+      "passwordHint": "At least 10 characters",
+      "companyName": "Company name",
+      "country": "Country",
+      "timeZone": "Time zone",
+      "language": "Interface language",
+      "workDays": "Working days",
+      "weekend": "Weekend",
+      "workStart": "Work start",
+      "workEnd": "Work end",
+      "branchName": "First branch name"
+    },
+    "countries": {
+      "EG": "Egypt",
+      "SA": "Saudi Arabia"
+    },
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "errors": {
+      "fullName": "Enter your full name",
+      "email": "Enter a valid email",
+      "password": "Password is too short",
+      "companyName": "Enter the company name",
+      "industry": "Choose an industry",
+      "industryConfirm": "Confirm that the industry is permanent",
+      "workDays": "Select at least one working day",
+      "workHours": "Enter start and end as HH:mm",
+      "branchName": "Enter the branch name",
+      "industries": "Could not load industries",
+      "registerFailed": "Could not create the account",
+      "industryInvalid": "Industry is not supported",
+      "emailTaken": "Email is already used in this tenant"
     }
   },
   "home": {
@@ -154,6 +249,7 @@
     "toast": "Toasts",
     "pageHeader": "Page header",
     "dropdown": "Dropdown menu",
-    "showToast": "Show toast"
+    "showToast": "Show toast",
+    "stepper": "Stepper"
   }
 }

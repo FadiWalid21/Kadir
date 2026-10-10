@@ -22,6 +22,7 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.TenantSlugUnavailable] = ("تعذر إنشاء معرف فريد للشركة.", "Could not allocate a unique company slug."),
         [ErrorCodes.PlanNotFound] = ("خطة التجربة غير متاحة.", "Trial plan is not available."),
         [ErrorCodes.RegistrationFailed] = ("فشل التسجيل.", "Registration failed."),
+        [ErrorCodes.IndustryInvalid] = ("قطاع العمل غير مدعوم.", "Industry is not supported."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

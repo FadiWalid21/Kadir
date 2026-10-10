@@ -159,6 +159,7 @@ try
         .WithName("ApiHealth");
     app.MapAuthEndpoints();
     app.MapMeEndpoints();
+    app.MapTemplatesEndpoints();
 
     app.Run();
 }

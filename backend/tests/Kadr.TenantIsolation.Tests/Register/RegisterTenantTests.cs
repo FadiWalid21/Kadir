@@ -68,15 +68,91 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
 
         var settings = await db.TenantSettings.AsNoTracking()
             .Where(s => s.TenantId == body.TenantId)
-            .Select(s => s.Key)
             .ToListAsync();
-        Assert.Contains(SettingKeys.CompanyCountry, settings);
-        Assert.Contains(SettingKeys.WorkWeekDays, settings);
-        Assert.Contains(SettingKeys.WorkWeekWeekend, settings);
-        Assert.Contains(SettingKeys.DateFormat, settings);
-        Assert.Contains(SettingKeys.CalendarHijriEnabled, settings);
+        var keys = settings.Select(s => s.Key).ToList();
+        Assert.Contains(SettingKeys.CompanyCountry, keys);
+        Assert.Contains(SettingKeys.WorkWeekDays, keys);
+        Assert.Contains(SettingKeys.WorkWeekWeekend, keys);
+        Assert.Contains(SettingKeys.WorkDayStart, keys);
+        Assert.Contains(SettingKeys.WorkDayEnd, keys);
+        Assert.Contains(SettingKeys.DateFormat, keys);
+        Assert.Contains(SettingKeys.CalendarHijriEnabled, keys);
+
+        var legal = await db.LegalEntities.AsNoTracking().SingleAsync(e => e.TenantId == body.TenantId);
+        Assert.Equal("Acme Corp", legal.Name);
+        Assert.Equal("EG", legal.CountryCode);
+        Assert.True(legal.IsDefault);
+
+        var branch = await db.Branches.AsNoTracking().SingleAsync(b => b.TenantId == body.TenantId);
+        Assert.Equal("Acme HQ", branch.Name);
+        Assert.Equal(legal.Id, branch.LegalEntityId);
+        Assert.True(branch.IsDefault);
 
         Assert.True(await db.EmailVerificationTokens.AsNoTracking().AnyAsync(t => t.UserId == owner.Id));
+    }
+
+    [Fact]
+    public async Task Unknown_industry_is_rejected()
+    {
+        await factory.ResetDatabaseAsync();
+        var client = factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/register")
+        {
+            Content = JsonContent.Create(new RegisterTenantRequest(
+                "Owner",
+                "bad-industry@example.com",
+                "Str0ngPass!!",
+                "Bad Industry Co",
+                "spaceships",
+                "Africa/Cairo",
+                "ar",
+                "EG")),
+        };
+        request.Headers.TryAddWithoutValidation(HttpHeaderNames.IdempotencyKey, Guid.NewGuid().ToString("N"));
+        var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.Contains(ErrorCodes.IndustryInvalid, json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Industries_catalog_returns_five_codes()
+    {
+        var client = factory.CreateClient();
+        var response = await client.GetAsync("/api/v1/templates/industries");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var items = await response.Content.ReadFromJsonAsync<IndustryDto[]>(JsonOptions);
+        Assert.NotNull(items);
+        Assert.Equal(5, items.Length);
+        Assert.Equal(
+            IndustryCodes.Catalog.Select(i => i.Code).OrderBy(x => x),
+            items.Select(i => i.Code).OrderBy(x => x));
+    }
+
+    [Fact]
+    public async Task Branch_of_tenant_A_is_invisible_to_tenant_B()
+    {
+        await factory.ResetDatabaseAsync();
+        var client = factory.CreateClient();
+        var a = await RegisterAsync(client, "A", "a-iso@example.com", "Tenant A Iso", Guid.NewGuid().ToString("N"));
+        var b = await RegisterAsync(client, "B", "b-iso@example.com", "Tenant B Iso", Guid.NewGuid().ToString("N"));
+        var bodyA = await a.Content.ReadFromJsonAsync<RegisterTenantResponse>(JsonOptions);
+        var bodyB = await b.Content.ReadFromJsonAsync<RegisterTenantResponse>(JsonOptions);
+        Assert.NotNull(bodyA);
+        Assert.NotNull(bodyB);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+        ambient.Set(bodyA.TenantId);
+        Assert.Equal(1, await db.Branches.CountAsync());
+        Assert.Equal(1, await db.LegalEntities.CountAsync());
+
+        ambient.Set(bodyB.TenantId);
+        Assert.Equal(1, await db.Branches.CountAsync());
+        Assert.DoesNotContain(
+            await db.Branches.Select(x => x.TenantId).ToListAsync(),
+            id => id == bodyA.TenantId);
     }
 
     [Fact]
@@ -194,7 +270,12 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
                 "office",
                 "Africa/Cairo",
                 "ar",
-                "EG")),
+                "EG",
+                ["sun", "mon", "tue", "wed", "thu"],
+                ["fri", "sat"],
+                "09:00",
+                "17:00",
+                "Acme HQ")),
         };
         request.Headers.TryAddWithoutValidation(HttpHeaderNames.IdempotencyKey, idempotencyKey);
         return await client.SendAsync(request);

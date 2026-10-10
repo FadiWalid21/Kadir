@@ -25,7 +25,7 @@ describe('LoginPage', () => {
     }).compileComponents();
   });
 
-  it('renders login form in Arabic', async () => {
+  it('renders login form in auth shell', async () => {
     const fixture = TestBed.createComponent(LoginPage);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -37,6 +37,9 @@ describe('LoginPage', () => {
     expect(el.querySelector('form')).toBeTruthy();
     expect(el.querySelector('kadr-button')).toBeTruthy();
     expect(el.querySelector('img[src="/brand/logo-kadr.png"]')).toBeTruthy();
-    expect(el.querySelector('.rounded-lg.bg-surface')).toBeTruthy();
+    expect(el.querySelector('[data-testid="auth-shell-card"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="auth-brand-panel"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="auth-sso-row"]')).toBeTruthy();
+    expect(el.textContent).toContain('رمز الشركة');
   });
 });

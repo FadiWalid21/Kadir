@@ -14,6 +14,7 @@ describe('auth guards', () => {
       providers: [
         provideRouter([
           { path: 'login', children: [] },
+          { path: 'register', children: [] },
           { path: 'forbidden', children: [] },
           { path: '', children: [] },
         ]),
@@ -49,6 +50,12 @@ describe('auth guards', () => {
     const result = await TestBed.runInInjectionContext(() => guestGuard({} as never, {} as never));
     expect(result instanceof UrlTree).toBe(true);
     expect(router.serializeUrl(result as UrlTree)).toBe('/');
+  });
+
+  it('guestGuard allows anonymous users on register', async () => {
+    vi.mocked(auth.status).mockReturnValue('anonymous');
+    const result = await TestBed.runInInjectionContext(() => guestGuard({} as never, {} as never));
+    expect(result).toBe(true);
   });
 
   it('permissionGuard blocks missing permission', async () => {

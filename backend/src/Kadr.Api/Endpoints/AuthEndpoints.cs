@@ -80,13 +80,21 @@ public static class AuthEndpoints
             request.TimeZone,
             request.DefaultLanguage,
             request.CountryCode,
+            request.WorkWeekDays,
+            request.WorkWeekWeekend,
+            request.DefaultWorkStart,
+            request.DefaultWorkEnd,
+            request.FirstBranchName,
             idempotencyKey);
 
         var validation = await validator.ValidateAsync(command, cancellationToken).ConfigureAwait(false);
         if (!validation.IsValid)
         {
+            var code = validation.Errors.Any(e => e.ErrorCode == ErrorCodes.IndustryInvalid)
+                ? ErrorCodes.IndustryInvalid
+                : ErrorCodes.AuthValidationFailed;
             var problem = ApiProblemDetails.Create(
-                httpContext, StatusCodes.Status400BadRequest, ErrorCodes.AuthValidationFailed, localizer);
+                httpContext, StatusCodes.Status400BadRequest, code, localizer);
             problem.Extensions["errors"] = validation.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
@@ -265,7 +273,12 @@ public sealed record RegisterTenantRequest(
     string IndustryCode,
     string? TimeZone,
     string? DefaultLanguage,
-    string? CountryCode);
+    string? CountryCode,
+    IReadOnlyList<string>? WorkWeekDays = null,
+    IReadOnlyList<string>? WorkWeekWeekend = null,
+    string? DefaultWorkStart = null,
+    string? DefaultWorkEnd = null,
+    string? FirstBranchName = null);
 
 public sealed record RegisterTenantResponse(Guid TenantId, string Slug, DateTimeOffset TrialEndsAt);
 
