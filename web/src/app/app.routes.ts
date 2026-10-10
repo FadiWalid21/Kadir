@@ -44,6 +44,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/company-settings.page').then((m) => m.CompanySettingsPage),
       },
+      {
+        path: 'settings/templates',
+        canActivate: [permissionGuard(PermissionCodes.TenantTemplatesManage)],
+        loadComponent: () =>
+          import('./features/settings/templates-settings.page').then((m) => m.TemplatesSettingsPage),
+      },
     ],
   },
   ...devRoutes,

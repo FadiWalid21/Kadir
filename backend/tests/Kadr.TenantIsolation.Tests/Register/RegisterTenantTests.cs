@@ -89,6 +89,60 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
         Assert.True(branch.IsDefault);
 
         Assert.True(await db.EmailVerificationTokens.AsNoTracking().AnyAsync(t => t.UserId == owner.Id));
+
+        // office seed: 2 shifts, 4 leave, 3 docs, 5 jobs, 3 depts
+        Assert.Equal(2, await db.Shifts.CountAsync());
+        Assert.Equal(4, await db.LeaveTypes.CountAsync());
+        Assert.Equal(3, await db.DocumentTypes.CountAsync());
+        Assert.Equal(5, await db.JobTitles.CountAsync());
+        Assert.Equal(3, await db.Departments.CountAsync());
+        Assert.All(await db.Shifts.AsNoTracking().ToListAsync(), s =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(s.SourceKey));
+            Assert.Equal(1, s.SourceVersion);
+            Assert.NotNull(s.SourceTemplateId);
+            Assert.False(s.IsCustomized);
+            Assert.True(s.IsActive);
+        });
+    }
+
+    [Theory]
+    [InlineData("office", 2, 4, 3, 5, 3)]
+    [InlineData("retail", 3, 5, 4, 6, 4)]
+    public async Task Register_applies_industry_template_row_counts(
+        string industry,
+        int shifts,
+        int leaveTypes,
+        int documentTypes,
+        int jobTitles,
+        int departments)
+    {
+        await factory.ResetDatabaseAsync();
+        var client = factory.CreateClient();
+        var response = await RegisterAsync(
+            client,
+            "Owner",
+            $"{industry}-tpl@example.com",
+            $"{industry} Co",
+            Guid.NewGuid().ToString("N"),
+            industry);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<RegisterTenantResponse>(JsonOptions);
+        Assert.NotNull(body);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+        ambient.Set(body.TenantId);
+
+        var tenant = await db.Tenants.AsNoTracking().SingleAsync(t => t.Id == body.TenantId);
+        Assert.Equal(industry, tenant.IndustryCode);
+        Assert.Equal(shifts, await db.Shifts.CountAsync());
+        Assert.Equal(leaveTypes, await db.LeaveTypes.CountAsync());
+        Assert.Equal(documentTypes, await db.DocumentTypes.CountAsync());
+        Assert.Equal(jobTitles, await db.JobTitles.CountAsync());
+        Assert.Equal(departments, await db.Departments.CountAsync());
+        Assert.Contains(await db.LeaveTypes.AsNoTracking().Select(x => x.SourceKey).ToListAsync(), k => k == "leave.annual");
     }
 
     [Fact]
@@ -183,6 +237,11 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
         Assert.Equal(0, await db.Users.IgnoreQueryFilters().CountAsync());
         Assert.Equal(0, await db.Roles.IgnoreQueryFilters().CountAsync());
         Assert.Equal(0, await db.Subscriptions.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(0, await db.Shifts.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(0, await db.LeaveTypes.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(0, await db.DocumentTypes.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(0, await db.JobTitles.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(0, await db.Departments.IgnoreQueryFilters().CountAsync());
     }
 
     [Fact]
@@ -258,7 +317,8 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
         string fullName,
         string email,
         string companyName,
-        string idempotencyKey)
+        string idempotencyKey,
+        string industryCode = "office")
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/register")
         {
@@ -267,7 +327,7 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
                 email,
                 "Str0ngPass!!",
                 companyName,
-                "office",
+                industryCode,
                 "Africa/Cairo",
                 "ar",
                 "EG",

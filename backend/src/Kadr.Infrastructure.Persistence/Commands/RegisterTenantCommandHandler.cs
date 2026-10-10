@@ -31,6 +31,7 @@ public sealed class RegisterTenantCommandHandler(
     IEmailSender emailSender,
     IEmailUniquenessChecker emailUniqueness,
     IRegisterTenantFailureInjector failureInjector,
+    ITemplateApplyService templateApply,
     ILogger<RegisterTenantCommandHandler> logger)
     : ICommandHandler<RegisterTenantCommand, RegisterTenantResult>
 {
@@ -157,6 +158,9 @@ public sealed class RegisterTenantCommandHandler(
 
             db.EmailVerificationTokens.Add(
                 EmailVerificationToken.Create(tenantId, owner.Id, tokenHash, now.Add(VerificationLifetime)));
+
+            await templateApply.ApplyAsync(tenantId, command.IndustryCode, cancellationToken)
+                .ConfigureAwait(false);
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);

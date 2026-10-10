@@ -1,6 +1,8 @@
+using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Infrastructure.Email;
 using Kadr.Platform.Infrastructure.Imaging;
 using Kadr.Platform.Infrastructure.Storage;
+using Kadr.Platform.Infrastructure.Templates;
 using Kadr.SharedKernel.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +15,7 @@ public static class DependencyInjection
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IImageProcessor, LogoImageProcessor>();
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<IIndustryTemplateSeedSource, IndustryTemplateSeedSource>();
         return services;
     }
 }

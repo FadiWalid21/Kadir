@@ -16,6 +16,7 @@ import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.com
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.component';
+import { SettingsSubnavComponent } from './settings-subnav.component';
 
 type PageState = 'loading' | 'ready' | 'error';
 
@@ -29,6 +30,7 @@ type PageState = 'loading' | 'ready' | 'error';
     SkeletonComponent,
     EmptyStateComponent,
     TenantLogoComponent,
+    SettingsSubnavComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -47,6 +49,7 @@ type PageState = 'loading' | 'ready' | 'error';
       </kadr-empty-state>
     } @else {
       <div class="mx-auto flex w-full max-w-xl flex-col gap-6">
+        <kadr-settings-subnav active="company" [showTemplates]="showTemplates()" />
         <header class="flex flex-col gap-2 text-start">
           <h1 class="text-2xl font-bold leading-tight text-fg">
             {{ 'settings.company.title' | transloco }}
@@ -155,6 +158,10 @@ export class CompanySettingsPage implements OnInit {
 
   protected readonly canUpdate = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantSettingsUpdate),
+  );
+
+  protected readonly showTemplates = computed(() =>
+    this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
   );
 
   ngOnInit(): void {

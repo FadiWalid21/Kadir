@@ -152,6 +152,7 @@ try
         var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
         await db.Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
     }
 
     app.MapHealthChecks("/health");
@@ -161,6 +162,7 @@ try
     app.MapMeEndpoints();
     app.MapTenantEndpoints();
     app.MapTemplatesEndpoints();
+    app.MapTenantTemplatesEndpoints();
 
     app.Run();
 }

@@ -1,0 +1,178 @@
+{
+  "code": "construction",
+  "version": 1,
+  "nameAr": "المقاولات والتشييد",
+  "nameEn": "Construction",
+  "descriptionAr": "قالب أولي — راجع القيم القانونية قبل الاعتماد",
+  "descriptionEn": "Starter template — verify statutory values before relying on them",
+  "items": {
+    "shifts": [
+      {
+        "key": "shift.site",
+        "nameAr": "وردية موقع",
+        "nameEn": "Site day",
+        "start": "07:00",
+        "end": "15:00",
+        "graceMinutes": 10
+      },
+      {
+        "key": "shift.office",
+        "nameAr": "وردية مكتبية",
+        "nameEn": "Office",
+        "start": "09:00",
+        "end": "17:00",
+        "graceMinutes": 15
+      }
+    ],
+    "leaveTypes": [
+      {
+        "key": "leave.annual",
+        "nameAr": "إجازة سنوية",
+        "nameEn": "Annual leave",
+        "paid": true,
+        "daysPerYear": 21,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.sick",
+        "nameAr": "إجازة مرضية",
+        "nameEn": "Sick leave",
+        "paid": true,
+        "daysPerYear": 180,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      },
+      {
+        "key": "leave.unpaid",
+        "nameAr": "إجازة بدون راتب",
+        "nameEn": "Unpaid leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.site",
+        "nameAr": "إجازة موقع",
+        "nameEn": "Site leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.emergency",
+        "nameAr": "إجازة طارئة",
+        "nameEn": "Emergency leave",
+        "paid": true,
+        "daysPerYear": 5,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      }
+    ],
+    "documentTypes": [
+      {
+        "key": "doc.national_id",
+        "nameAr": "بطاقة شخصية",
+        "nameEn": "National ID",
+        "hasExpiry": true,
+        "alertDays": [
+          30,
+          7
+        ]
+      },
+      {
+        "key": "doc.safety",
+        "nameAr": "شهادة سلامة",
+        "nameEn": "Safety certificate",
+        "hasExpiry": true,
+        "alertDays": [
+          30
+        ]
+      },
+      {
+        "key": "doc.contract",
+        "nameAr": "عقد عمل",
+        "nameEn": "Employment contract",
+        "hasExpiry": false,
+        "alertDays": []
+      },
+      {
+        "key": "doc.insurance",
+        "nameAr": "تأمين",
+        "nameEn": "Insurance card",
+        "hasExpiry": true,
+        "alertDays": [
+          60
+        ]
+      }
+    ],
+    "jobTitles": [
+      {
+        "key": "job.site_eng",
+        "nameAr": "مهندس موقع",
+        "nameEn": "Site engineer"
+      },
+      {
+        "key": "job.foreman",
+        "nameAr": "ملاحظ",
+        "nameEn": "Foreman"
+      },
+      {
+        "key": "job.worker",
+        "nameAr": "عامل",
+        "nameEn": "Worker"
+      },
+      {
+        "key": "job.safety",
+        "nameAr": "مسؤول سلامة",
+        "nameEn": "Safety officer"
+      },
+      {
+        "key": "job.hr",
+        "nameAr": "أخصائي موارد بشرية",
+        "nameEn": "HR specialist"
+      },
+      {
+        "key": "job.qs",
+        "nameAr": "حصر كميات",
+        "nameEn": "Quantity surveyor"
+      },
+      {
+        "key": "job.admin",
+        "nameAr": "إداري",
+        "nameEn": "Administrator"
+      }
+    ],
+    "departments": [
+      {
+        "key": "dept.site",
+        "nameAr": "الموقع",
+        "nameEn": "Site"
+      },
+      {
+        "key": "dept.engineering",
+        "nameAr": "الهندسة",
+        "nameEn": "Engineering"
+      },
+      {
+        "key": "dept.safety",
+        "nameAr": "السلامة",
+        "nameEn": "Safety"
+      },
+      {
+        "key": "dept.hr",
+        "nameAr": "الموارد البشرية",
+        "nameEn": "Human Resources"
+      },
+      {
+        "key": "dept.admin",
+        "nameAr": "الإدارة",
+        "nameEn": "Administration"
+      }
+    ],
+    "workflows": []
+  }
+}

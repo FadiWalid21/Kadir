@@ -1,0 +1,148 @@
+{
+  "code": "clinic",
+  "version": 1,
+  "nameAr": "العيادات والرعاية الصحية",
+  "nameEn": "Clinics & Healthcare",
+  "descriptionAr": "قالب أولي — راجع القيم القانونية قبل الاعتماد",
+  "descriptionEn": "Starter template — verify statutory values before relying on them",
+  "items": {
+    "shifts": [
+      {
+        "key": "shift.day",
+        "nameAr": "وردية نهارية",
+        "nameEn": "Day",
+        "start": "08:00",
+        "end": "16:00",
+        "graceMinutes": 10
+      },
+      {
+        "key": "shift.night",
+        "nameAr": "وردية ليلية",
+        "nameEn": "Night",
+        "start": "16:00",
+        "end": "00:00",
+        "graceMinutes": 10
+      }
+    ],
+    "leaveTypes": [
+      {
+        "key": "leave.annual",
+        "nameAr": "إجازة سنوية",
+        "nameEn": "Annual leave",
+        "paid": true,
+        "daysPerYear": 21,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.sick",
+        "nameAr": "إجازة مرضية",
+        "nameEn": "Sick leave",
+        "paid": true,
+        "daysPerYear": 180,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      },
+      {
+        "key": "leave.unpaid",
+        "nameAr": "إجازة بدون راتب",
+        "nameEn": "Unpaid leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.training",
+        "nameAr": "إجازة تدريب",
+        "nameEn": "Training leave",
+        "paid": true,
+        "daysPerYear": 10,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      }
+    ],
+    "documentTypes": [
+      {
+        "key": "doc.national_id",
+        "nameAr": "بطاقة شخصية",
+        "nameEn": "National ID",
+        "hasExpiry": true,
+        "alertDays": [
+          30,
+          7
+        ]
+      },
+      {
+        "key": "doc.license",
+        "nameAr": "ترخيص مزاولة",
+        "nameEn": "Practice license",
+        "hasExpiry": true,
+        "alertDays": [
+          90,
+          30
+        ]
+      },
+      {
+        "key": "doc.contract",
+        "nameAr": "عقد عمل",
+        "nameEn": "Employment contract",
+        "hasExpiry": false,
+        "alertDays": []
+      },
+      {
+        "key": "doc.vaccine",
+        "nameAr": "شهادة تطعيم",
+        "nameEn": "Vaccination record",
+        "hasExpiry": false,
+        "alertDays": []
+      }
+    ],
+    "jobTitles": [
+      {
+        "key": "job.doctor",
+        "nameAr": "طبيب",
+        "nameEn": "Doctor"
+      },
+      {
+        "key": "job.nurse",
+        "nameAr": "ممرض",
+        "nameEn": "Nurse"
+      },
+      {
+        "key": "job.receptionist",
+        "nameAr": "استقبال",
+        "nameEn": "Receptionist"
+      },
+      {
+        "key": "job.lab",
+        "nameAr": "فني مختبر",
+        "nameEn": "Lab technician"
+      },
+      {
+        "key": "job.admin",
+        "nameAr": "إداري",
+        "nameEn": "Administrator"
+      }
+    ],
+    "departments": [
+      {
+        "key": "dept.clinical",
+        "nameAr": "العيادة",
+        "nameEn": "Clinical"
+      },
+      {
+        "key": "dept.nursing",
+        "nameAr": "التمريض",
+        "nameEn": "Nursing"
+      },
+      {
+        "key": "dept.admin",
+        "nameAr": "الإدارة",
+        "nameEn": "Administration"
+      }
+    ],
+    "workflows": []
+  }
+}

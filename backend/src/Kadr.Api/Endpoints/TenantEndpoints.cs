@@ -78,6 +78,15 @@ public static class TenantEndpoints
         IErrorLocalizer localizer,
         CancellationToken cancellationToken)
     {
+        if (request.IndustryCode is not null)
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext,
+                StatusCodes.Status400BadRequest,
+                ErrorCodes.TemplateChangeNotAllowed,
+                localizer));
+        }
+
         var command = new UpdateTenantSettingsCommand(request.Name, request.DefaultLanguage, request.TimeZone);
         var validation = await validator.ValidateAsync(command, cancellationToken).ConfigureAwait(false);
         if (!validation.IsValid)
@@ -211,7 +220,11 @@ public static class TenantEndpoints
     }
 }
 
-public sealed record UpdateTenantSettingsRequest(string Name, string? DefaultLanguage, string? TimeZone);
+public sealed record UpdateTenantSettingsRequest(
+    string Name,
+    string? DefaultLanguage,
+    string? TimeZone,
+    string? IndustryCode = null);
 
 public sealed record TenantSettingsResponse(
     string Name,

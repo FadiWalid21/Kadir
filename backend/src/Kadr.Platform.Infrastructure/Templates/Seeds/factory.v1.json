@@ -1,0 +1,158 @@
+{
+  "code": "factory",
+  "version": 1,
+  "nameAr": "المصانع والإنتاج",
+  "nameEn": "Factories & Production",
+  "descriptionAr": "قالب أولي — راجع القيم القانونية قبل الاعتماد",
+  "descriptionEn": "Starter template — verify statutory values before relying on them",
+  "items": {
+    "shifts": [
+      {
+        "key": "shift.a",
+        "nameAr": "وردية أ",
+        "nameEn": "Shift A",
+        "start": "06:00",
+        "end": "14:00",
+        "graceMinutes": 5
+      },
+      {
+        "key": "shift.b",
+        "nameAr": "وردية ب",
+        "nameEn": "Shift B",
+        "start": "14:00",
+        "end": "22:00",
+        "graceMinutes": 5
+      },
+      {
+        "key": "shift.c",
+        "nameAr": "وردية ج",
+        "nameEn": "Shift C",
+        "start": "22:00",
+        "end": "06:00",
+        "graceMinutes": 5
+      }
+    ],
+    "leaveTypes": [
+      {
+        "key": "leave.annual",
+        "nameAr": "إجازة سنوية",
+        "nameEn": "Annual leave",
+        "paid": true,
+        "daysPerYear": 21,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.sick",
+        "nameAr": "إجازة مرضية",
+        "nameEn": "Sick leave",
+        "paid": true,
+        "daysPerYear": 180,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      },
+      {
+        "key": "leave.unpaid",
+        "nameAr": "إجازة بدون راتب",
+        "nameEn": "Unpaid leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.injury",
+        "nameAr": "إجازة إصابة عمل",
+        "nameEn": "Work injury leave",
+        "paid": true,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      }
+    ],
+    "documentTypes": [
+      {
+        "key": "doc.national_id",
+        "nameAr": "بطاقة شخصية",
+        "nameEn": "National ID",
+        "hasExpiry": true,
+        "alertDays": [
+          30
+        ]
+      },
+      {
+        "key": "doc.safety",
+        "nameAr": "شهادة سلامة",
+        "nameEn": "Safety certificate",
+        "hasExpiry": true,
+        "alertDays": [
+          60,
+          14
+        ]
+      },
+      {
+        "key": "doc.contract",
+        "nameAr": "عقد عمل",
+        "nameEn": "Employment contract",
+        "hasExpiry": false,
+        "alertDays": []
+      }
+    ],
+    "jobTitles": [
+      {
+        "key": "job.operator",
+        "nameAr": "مشغل آلات",
+        "nameEn": "Machine operator"
+      },
+      {
+        "key": "job.supervisor",
+        "nameAr": "مشرف إنتاج",
+        "nameEn": "Production supervisor"
+      },
+      {
+        "key": "job.qc",
+        "nameAr": "مراقب جودة",
+        "nameEn": "Quality controller"
+      },
+      {
+        "key": "job.maintenance",
+        "nameAr": "فني صيانة",
+        "nameEn": "Maintenance tech"
+      },
+      {
+        "key": "job.hr",
+        "nameAr": "أخصائي موارد بشرية",
+        "nameEn": "HR specialist"
+      },
+      {
+        "key": "job.store",
+        "nameAr": "أمين مخزن",
+        "nameEn": "Storekeeper"
+      }
+    ],
+    "departments": [
+      {
+        "key": "dept.production",
+        "nameAr": "الإنتاج",
+        "nameEn": "Production"
+      },
+      {
+        "key": "dept.quality",
+        "nameAr": "الجودة",
+        "nameEn": "Quality"
+      },
+      {
+        "key": "dept.maintenance",
+        "nameAr": "الصيانة",
+        "nameEn": "Maintenance"
+      },
+      {
+        "key": "dept.hr",
+        "nameAr": "الموارد البشرية",
+        "nameEn": "Human Resources"
+      }
+    ],
+    "workflows": []
+  }
+}

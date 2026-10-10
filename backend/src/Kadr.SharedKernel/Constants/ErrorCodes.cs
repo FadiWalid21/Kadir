@@ -24,4 +24,9 @@ public static class ErrorCodes
     public const string TenantNotFound = "tenant.not_found";
     public const string FileNotFound = "file.not_found";
     public const string TenantSettingsValidationFailed = "tenant.settings.validation_failed";
+    public const string TemplateSourceMissing = "template.source_missing";
+    public const string TemplateChangeNotAllowed = "template.change_not_allowed";
+    public const string TemplateValidationFailed = "template.validation_failed";
+    public const string TemplateSectionInvalid = "template.section_invalid";
+    public const string TemplateItemNotFound = "template.item_not_found";
 }

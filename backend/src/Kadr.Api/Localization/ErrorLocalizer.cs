@@ -28,6 +28,11 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.TenantNotFound] = ("المنشأة غير موجودة.", "Tenant was not found."),
         [ErrorCodes.FileNotFound] = ("الملف غير موجود.", "File was not found."),
         [ErrorCodes.TenantSettingsValidationFailed] = ("بيانات إعدادات المنشأة غير صالحة.", "Tenant settings are invalid."),
+        [ErrorCodes.TemplateSourceMissing] = ("تعذر العثور على مصدر القالب لإعادة التعيين.", "Template source item was not found for reset."),
+        [ErrorCodes.TemplateChangeNotAllowed] = ("لا يمكن تغيير قطاع العمل بعد التسجيل.", "Industry cannot be changed after registration."),
+        [ErrorCodes.TemplateValidationFailed] = ("بيانات عنصر القالب غير صالحة.", "Template item data is invalid."),
+        [ErrorCodes.TemplateSectionInvalid] = ("قسم القالب غير معروف.", "Template section is invalid."),
+        [ErrorCodes.TemplateItemNotFound] = ("عنصر القالب غير موجود.", "Template item was not found."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

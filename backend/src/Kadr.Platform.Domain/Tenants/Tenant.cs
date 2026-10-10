@@ -78,4 +78,12 @@ public sealed class Tenant : AggregateRoot, IPlatformEntity, IAuditable
     {
         LogoFileId = null;
     }
+
+    /// <summary>Platform-admin exception path (Feature 14). Not exposed on tenant APIs.</summary>
+    public void ChangeIndustry(string industryCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(industryCode);
+        IndustryCode = industryCode.Trim().ToLowerInvariant();
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

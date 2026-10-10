@@ -1,0 +1,139 @@
+{
+  "code": "office",
+  "version": 1,
+  "nameAr": "المكاتب والخدمات",
+  "nameEn": "Office & Services",
+  "descriptionAr": "قالب أولي — راجع القيم القانونية قبل الاعتماد",
+  "descriptionEn": "Starter template — verify statutory values before relying on them",
+  "items": {
+    "shifts": [
+      {
+        "key": "shift.morning",
+        "nameAr": "وردية صباحية",
+        "nameEn": "Morning",
+        "start": "09:00",
+        "end": "17:00",
+        "graceMinutes": 15
+      },
+      {
+        "key": "shift.evening",
+        "nameAr": "وردية مسائية",
+        "nameEn": "Evening",
+        "start": "13:00",
+        "end": "21:00",
+        "graceMinutes": 10
+      }
+    ],
+    "leaveTypes": [
+      {
+        "key": "leave.annual",
+        "nameAr": "إجازة سنوية",
+        "nameEn": "Annual leave",
+        "paid": true,
+        "daysPerYear": 21,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      },
+      {
+        "key": "leave.sick",
+        "nameAr": "إجازة مرضية",
+        "nameEn": "Sick leave",
+        "paid": true,
+        "daysPerYear": 180,
+        "requiresApproval": true,
+        "requiresAttachment": true,
+        "verify": true
+      },
+      {
+        "key": "leave.unpaid",
+        "nameAr": "إجازة بدون راتب",
+        "nameEn": "Unpaid leave",
+        "paid": false,
+        "requiresApproval": true,
+        "requiresAttachment": false
+      },
+      {
+        "key": "leave.emergency",
+        "nameAr": "إجازة طارئة",
+        "nameEn": "Emergency leave",
+        "paid": true,
+        "daysPerYear": 7,
+        "requiresApproval": true,
+        "requiresAttachment": false,
+        "verify": true
+      }
+    ],
+    "documentTypes": [
+      {
+        "key": "doc.national_id",
+        "nameAr": "بطاقة شخصية",
+        "nameEn": "National ID",
+        "hasExpiry": true,
+        "alertDays": [
+          30,
+          7
+        ]
+      },
+      {
+        "key": "doc.contract",
+        "nameAr": "عقد عمل",
+        "nameEn": "Employment contract",
+        "hasExpiry": false,
+        "alertDays": []
+      },
+      {
+        "key": "doc.certificate",
+        "nameAr": "شهادة",
+        "nameEn": "Certificate",
+        "hasExpiry": false,
+        "alertDays": []
+      }
+    ],
+    "jobTitles": [
+      {
+        "key": "job.manager",
+        "nameAr": "مدير",
+        "nameEn": "Manager"
+      },
+      {
+        "key": "job.hr",
+        "nameAr": "أخصائي موارد بشرية",
+        "nameEn": "HR specialist"
+      },
+      {
+        "key": "job.accountant",
+        "nameAr": "محاسب",
+        "nameEn": "Accountant"
+      },
+      {
+        "key": "job.admin",
+        "nameAr": "إداري",
+        "nameEn": "Administrator"
+      },
+      {
+        "key": "job.assistant",
+        "nameAr": "مساعد",
+        "nameEn": "Assistant"
+      }
+    ],
+    "departments": [
+      {
+        "key": "dept.hr",
+        "nameAr": "الموارد البشرية",
+        "nameEn": "Human Resources"
+      },
+      {
+        "key": "dept.finance",
+        "nameAr": "المالية",
+        "nameEn": "Finance"
+      },
+      {
+        "key": "dept.ops",
+        "nameAr": "العمليات",
+        "nameEn": "Operations"
+      }
+    ],
+    "workflows": []
+  }
+}

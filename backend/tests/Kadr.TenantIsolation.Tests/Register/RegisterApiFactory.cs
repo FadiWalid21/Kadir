@@ -65,6 +65,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         await db.Database.EnsureDeletedAsync();
         await db.Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
     }
 
     public HttpClient CreateCookieClient() =>
