@@ -7,6 +7,7 @@
   --color-app: var(--bg-app);
   --color-surface: var(--bg-surface);
   --color-subtle: var(--bg-subtle);
+  --color-hover: var(--bg-hover);
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-fg: var(--text-primary);

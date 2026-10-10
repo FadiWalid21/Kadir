@@ -3,10 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { ThemeService } from '../../core/theme/theme.service';
 import type { AppLanguage, DensityMode, ThemeMode } from '../../core/theme/theme.types';
+import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { CardComponent } from '../../shared/ui/card/card.component';
+import { DropdownMenuComponent } from '../../shared/ui/dropdown-menu/dropdown-menu.component';
+import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 const SWATCHES = [
   '--brand-50',
@@ -39,9 +47,17 @@ const SWATCHES = [
     InputComponent,
     BadgeComponent,
     CardComponent,
+    AvatarComponent,
+    DropdownMenuComponent,
+    EmptyStateComponent,
+    PageHeaderComponent,
+    SkeletonComponent,
+    ToastHostComponent,
+    IconComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
+      <kadr-toast-host />
       <div
         class="sticky top-0 z-10 flex flex-wrap items-end gap-3 border-b border-line bg-surface px-4 py-3"
       >
@@ -172,6 +188,67 @@ const SWATCHES = [
           </div>
         </kadr-card>
 
+        <kadr-card [title]="'uiKit.shell' | transloco">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap gap-3 text-fg">
+              <kadr-icon name="home" />
+              <kadr-icon name="users" />
+              <kadr-icon name="clock" />
+              <kadr-icon name="calendar" />
+              <kadr-icon name="inbox" />
+              <kadr-icon name="chart" />
+              <kadr-icon name="settings" />
+              <kadr-icon name="search" />
+              <kadr-icon name="bell" />
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.avatar' | transloco }}</p>
+              <div class="flex items-center gap-2">
+                <kadr-avatar name="أحمد محمد" size="sm" />
+                <kadr-avatar name="شركة النور" size="md" />
+                <kadr-avatar name="Sara" size="lg" />
+              </div>
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.pageHeader' | transloco }}</p>
+              <kadr-page-header
+                [title]="'uiKit.sampleCompany' | transloco"
+                [subtitle]="'uiKit.subtitle' | transloco"
+              />
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.dropdown' | transloco }}</p>
+              <kadr-dropdown-menu [ariaLabel]="'uiKit.dropdown' | transloco">
+                <span dropdownTrigger class="rounded-md border border-line px-3 py-2 text-sm">
+                  {{ 'shell.userMenu' | transloco }}
+                </span>
+                <div dropdownContent>
+                  <button type="button" class="block w-full rounded-sm px-3 py-2 text-start text-sm hover:bg-hover" role="menuitem">
+                    {{ 'auth.signOut' | transloco }}
+                  </button>
+                </div>
+              </kadr-dropdown-menu>
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.skeleton' | transloco }}</p>
+              <kadr-skeleton height="2rem" width="50%" />
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.emptyState' | transloco }}</p>
+              <kadr-empty-state
+                [title]="'home.widgetApprovalsTitle' | transloco"
+                [description]="'home.widgetEmptyBody' | transloco"
+              />
+            </div>
+            <div>
+              <p class="mb-2 text-xs text-fg-2">{{ 'uiKit.toast' | transloco }}</p>
+              <kadr-button variant="secondary" type="button" (click)="showToast()">
+                {{ 'uiKit.showToast' | transloco }}
+              </kadr-button>
+            </div>
+          </div>
+        </kadr-card>
+
         <kadr-card [title]="'uiKit.sampleTable' | transloco">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -227,6 +304,7 @@ const SWATCHES = [
 export class UiKitPage {
   protected readonly theme = inject(ThemeService);
   private readonly transloco = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
   protected readonly swatches = SWATCHES;
 
   onLanguage(lang: AppLanguage): void {
@@ -245,5 +323,9 @@ export class UiKitPage {
   onBrand(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.theme.setBrand(value);
+  }
+
+  showToast(): void {
+    this.toast.show(this.transloco.translate('shell.notAvailableYet'), 'info');
   }
 }

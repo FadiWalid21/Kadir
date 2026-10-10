@@ -44,6 +44,76 @@
     "statusRejected": "Rejected",
     "statusNew": "New"
   },
+  "auth": {
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Enter your company code, email, and password to continue.",
+    "companyCode": "Company code",
+    "companyCodeRequired": "Enter the company code",
+    "password": "Password",
+    "passwordRequired": "Enter your password",
+    "signIn": "Sign in to the platform",
+    "signOut": "Sign out",
+    "invalid_credentials": "Invalid sign-in details.",
+    "email_not_verified": "Please verify your email first.",
+    "account_locked": "Account temporarily locked. Try again later.",
+    "login_failed": "Could not sign in. Try again.",
+    "verifyEmailLink": "Verify email",
+    "verifyTitle": "Verify email",
+    "verifySubtitle": "Paste the verification token from your email or activation link.",
+    "verifyToken": "Verification token",
+    "verifyTokenRequired": "Enter the verification token",
+    "verifySubmit": "Verify email",
+    "verifySuccess": "Your email is verified. You can sign in now.",
+    "verifyInvalid": "The verification token is invalid or expired.",
+    "verifyFailed": "Could not verify email. Try again.",
+    "backToLogin": "Back to sign in",
+    "forbiddenTitle": "Not allowed",
+    "forbiddenBody": "You do not have permission to view this page.",
+    "backHome": "Back to home"
+  },
+  "shell": {
+    "sidebar": "Sidebar",
+    "topBar": "Top bar",
+    "bottomNav": "Bottom navigation",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "userMenu": "User menu",
+    "searchDisabled": "Search not available yet",
+    "searchPlaceholder": "Search for an employee or report…",
+    "notificationsDisabled": "Notifications not available yet",
+    "notAvailableYet": "Not available yet",
+    "nav": {
+      "home": "Home",
+      "employees": "Employees",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "requests": "Requests",
+      "reports": "Reports",
+      "settings": "Settings",
+      "profile": "Profile"
+    }
+  },
+  "home": {
+    "welcome": "Welcome, {{name}}",
+    "welcomeCompany": "{{company}} — get your company ready to start.",
+    "checklistTitle": "Workplace readiness",
+    "checklistIntro": "Complete these steps to set up your company. Some unlock in later features.",
+    "checklistProgress": "{{done}} / {{total}}",
+    "checklist": {
+      "logo": "Add company logo",
+      "invite": "Invite your team",
+      "template": "Review company template",
+      "employee": "Add first employee"
+    },
+    "notAvailable": "Not available yet",
+    "widgetApprovalsTitle": "Approvals",
+    "widgetAttendanceTitle": "Attendance today",
+    "widgetEmptyTitle": "No data yet",
+    "widgetEmptyBody": "Data will appear here when the module is enabled.",
+    "loadErrorTitle": "Could not load this page",
+    "loadErrorBody": "Check your connection and try again.",
+    "retry": "Retry"
+  },
   "uiKit": {
     "title": "UI kit",
     "subtitle": "Kadr components and tokens — development only",
@@ -76,6 +146,14 @@
     "statEmployees": "Total employees",
     "statPresent": "Present today",
     "statLate": "Late",
-    "statPending": "Pending requests"
+    "statPending": "Pending requests",
+    "shell": "App shell",
+    "avatar": "Avatar",
+    "emptyState": "Empty state",
+    "skeleton": "Skeleton",
+    "toast": "Toasts",
+    "pageHeader": "Page header",
+    "dropdown": "Dropdown menu",
+    "showToast": "Show toast"
   }
 }

@@ -1,36 +1,172 @@
-import { isDevMode } from '@angular/core';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  isDevMode,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { AuthService } from '../core/auth/auth.service';
+import { BadgeComponent } from '../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../shared/ui/button/button.component';
-import { CardComponent } from '../shared/ui/card/card.component';
+import { EmptyStateComponent } from '../shared/ui/empty-state/empty-state.component';
+import { SkeletonComponent } from '../shared/ui/skeleton/skeleton.component';
+
+type HomeState = 'loading' | 'ready' | 'error';
 
 @Component({
   selector: 'kadr-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, ButtonComponent, CardComponent],
+  imports: [
+    TranslocoPipe,
+    ButtonComponent,
+    BadgeComponent,
+    EmptyStateComponent,
+    SkeletonComponent,
+  ],
   template: `
-    <main class="mx-auto flex min-h-dvh max-w-3xl flex-col gap-6 p-6">
-      <header>
-        <p class="text-sm text-fg-2">{{ 'app.name' | transloco }}</p>
-        <h1 class="text-2xl font-bold leading-tight text-fg">{{ 'app.homeTitle' | transloco }}</h1>
-        <p class="mt-2 text-fg-2">{{ 'app.homeBody' | transloco }}</p>
+    @if (state() === 'loading') {
+      <div class="flex flex-col gap-6" role="status" [attr.aria-label]="'ui.loading' | transloco">
+        <kadr-skeleton height="2.25rem" width="55%" />
+        <kadr-skeleton height="1.25rem" width="40%" />
+        <kadr-skeleton height="12rem" />
+        <div class="grid gap-4 md:grid-cols-2">
+          <kadr-skeleton height="8rem" />
+          <kadr-skeleton height="8rem" />
+        </div>
+      </div>
+    } @else if (state() === 'error') {
+      <kadr-empty-state
+        [title]="'home.loadErrorTitle' | transloco"
+        [description]="'home.loadErrorBody' | transloco"
+      >
+        <kadr-button variant="secondary" type="button" (click)="reload()">
+          {{ 'home.retry' | transloco }}
+        </kadr-button>
+      </kadr-empty-state>
+    } @else {
+      <header class="mb-8 flex flex-col gap-2 text-start">
+        <h1 class="text-2xl font-bold leading-tight text-fg md:text-3xl">
+          {{ welcomeTitle() }}
+        </h1>
+        <p class="max-w-2xl text-sm text-fg-2">{{ welcomeSubtitle() }}</p>
       </header>
+
+      <section
+        class="mb-6 rounded-lg border border-line bg-surface p-5 shadow-sm"
+        [attr.aria-label]="'home.checklistTitle' | transloco"
+      >
+        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <div class="text-start">
+            <h2 class="text-lg font-bold text-fg">{{ 'home.checklistTitle' | transloco }}</h2>
+            <p class="mt-1 text-sm text-fg-2">{{ 'home.checklistIntro' | transloco }}</p>
+          </div>
+          <p class="text-sm font-medium tabular-nums text-fg-muted">
+            {{ 'home.checklistProgress' | transloco: { done: 0, total: 4 } }}
+          </p>
+        </div>
+        <ul class="flex flex-col gap-2">
+          @for (item of checklistKeys; track item) {
+            <li
+              class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+            >
+              <span class="text-sm text-fg">{{ item | transloco }}</span>
+              <kadr-badge tone="neutral" [label]="'home.notAvailable' | transloco" />
+            </li>
+          }
+        </ul>
+      </section>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <section class="rounded-lg border border-line bg-surface p-5 shadow-sm">
+          <h2 class="mb-3 text-base font-bold text-fg">
+            {{ 'home.widgetApprovalsTitle' | transloco }}
+          </h2>
+          <kadr-empty-state
+            [title]="'home.widgetEmptyTitle' | transloco"
+            [description]="'home.widgetEmptyBody' | transloco"
+          />
+        </section>
+        <section class="rounded-lg border border-line bg-surface p-5 shadow-sm">
+          <h2 class="mb-3 text-base font-bold text-fg">
+            {{ 'home.widgetAttendanceTitle' | transloco }}
+          </h2>
+          <kadr-empty-state
+            [title]="'home.widgetEmptyTitle' | transloco"
+            [description]="'home.widgetEmptyBody' | transloco"
+          />
+        </section>
+      </div>
+
       @if (showUiKit) {
-        <kadr-card>
-          <kadr-button variant="primary" type="button" (click)="openUiKit()">
+        <div class="mt-8">
+          <kadr-button variant="ghost" type="button" (click)="openUiKit()">
             {{ 'app.openUiKit' | transloco }}
           </kadr-button>
-        </kadr-card>
+        </div>
       }
-    </main>
+    }
   `,
 })
-export class HomePage {
+export class HomePage implements OnInit {
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly title = inject(Title);
+  private readonly transloco = inject(TranslocoService);
+
   protected readonly showUiKit = isDevMode();
+  protected readonly state = signal<HomeState>('loading');
+
+  protected readonly checklistKeys = [
+    'home.checklist.logo',
+    'home.checklist.invite',
+    'home.checklist.template',
+    'home.checklist.employee',
+  ] as const;
+
+  protected readonly welcomeTitle = computed(() => {
+    const name = this.auth.me()?.fullName ?? '';
+    return this.transloco.translate('home.welcome', { name });
+  });
+
+  protected readonly welcomeSubtitle = computed(() => {
+    const company = this.auth.me()?.tenant.name ?? '';
+    return this.transloco.translate('home.welcomeCompany', { company });
+  });
+
+  ngOnInit(): void {
+    void this.load();
+  }
+
+  reload(): void {
+    void this.load();
+  }
 
   openUiKit(): void {
     void this.router.navigateByUrl('/dev/ui-kit');
+  }
+
+  /** Test helper: force a specific view state. */
+  setStateForTest(state: HomeState): void {
+    this.state.set(state);
+  }
+
+  private async load(): Promise<void> {
+    this.state.set('loading');
+    try {
+      await this.auth.restoreSession();
+      const me = this.auth.me();
+      if (!me) {
+        throw new Error('no session');
+      }
+      this.title.setTitle(`${me.tenant.name} · Kadr`);
+      this.state.set('ready');
+    } catch {
+      this.state.set('error');
+    }
   }
 }

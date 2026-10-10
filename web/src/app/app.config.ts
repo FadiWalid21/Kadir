@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   APP_INITIALIZER,
@@ -8,12 +8,15 @@ import {
 import { provideRouter } from '@angular/router';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { routes } from './app.routes';
+import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
 import { ThemeService } from './core/theme/theme.service';
 
-function initThemeAndI18n(theme: ThemeService, transloco: TranslocoService) {
+function initApp(theme: ThemeService, transloco: TranslocoService, auth: AuthService) {
   return () => {
     transloco.setActiveLang(theme.language());
+    return auth.restoreSession();
   };
 }
 
@@ -21,7 +24,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideTransloco({
       config: {
         availableLangs: ['ar', 'en'],
@@ -33,8 +36,8 @@ export const appConfig: ApplicationConfig = {
     }),
     {
       provide: APP_INITIALIZER,
-      useFactory: initThemeAndI18n,
-      deps: [ThemeService, TranslocoService],
+      useFactory: initApp,
+      deps: [ThemeService, TranslocoService, AuthService],
       multi: true,
     },
   ],

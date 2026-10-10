@@ -44,6 +44,76 @@
     "statusRejected": "مرفوض",
     "statusNew": "جديد"
   },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "loginSubtitle": "أدخل رمز الشركة وبريدك وكلمة المرور للمتابعة.",
+    "companyCode": "رمز الشركة",
+    "companyCodeRequired": "أدخل رمز الشركة",
+    "password": "كلمة المرور",
+    "passwordRequired": "أدخل كلمة المرور",
+    "signIn": "دخول إلى المنصة",
+    "signOut": "تسجيل الخروج",
+    "invalid_credentials": "بيانات الدخول غير صحيحة.",
+    "email_not_verified": "يرجى تأكيد البريد الإلكتروني أولاً.",
+    "account_locked": "الحساب مقفل مؤقتاً. حاول لاحقاً.",
+    "login_failed": "تعذر تسجيل الدخول. حاول مرة أخرى.",
+    "verifyEmailLink": "تأكيد البريد الإلكتروني",
+    "verifyTitle": "تأكيد البريد",
+    "verifySubtitle": "الصق رمز التأكيد من رسالة البريد أو من رابط التفعيل.",
+    "verifyToken": "رمز التأكيد",
+    "verifyTokenRequired": "أدخل رمز التأكيد",
+    "verifySubmit": "تأكيد البريد",
+    "verifySuccess": "تم تأكيد بريدك. يمكنك تسجيل الدخول الآن.",
+    "verifyInvalid": "رمز التأكيد غير صالح أو منتهٍ.",
+    "verifyFailed": "تعذر تأكيد البريد. حاول مرة أخرى.",
+    "backToLogin": "العودة لتسجيل الدخول",
+    "forbiddenTitle": "غير مصرح",
+    "forbiddenBody": "ليس لديك صلاحية لعرض هذه الصفحة.",
+    "backHome": "العودة للرئيسية"
+  },
+  "shell": {
+    "sidebar": "القائمة الجانبية",
+    "topBar": "شريط علوي",
+    "bottomNav": "التنقل السفلي",
+    "collapseSidebar": "طي القائمة",
+    "expandSidebar": "توسيع القائمة",
+    "userMenu": "قائمة المستخدم",
+    "searchDisabled": "البحث غير متاح بعد",
+    "searchPlaceholder": "ابحث عن موظف أو تقرير…",
+    "notificationsDisabled": "الإشعارات غير متاحة بعد",
+    "notAvailableYet": "غير متاح بعد",
+    "nav": {
+      "home": "الرئيسية",
+      "employees": "الموظفون",
+      "attendance": "الحضور والانصراف",
+      "leave": "الإجازات",
+      "requests": "الطلبات",
+      "reports": "التقارير",
+      "settings": "الإعدادات",
+      "profile": "الملف"
+    }
+  },
+  "home": {
+    "welcome": "مرحباً، {{name}}",
+    "welcomeCompany": "{{company}} — جهّز شركتك للبدء.",
+    "checklistTitle": "جاهزية مكان العمل",
+    "checklistIntro": "أكمل هذه الخطوات لتجهيز شركتك. بعضها سيُفعّل في الميزات القادمة.",
+    "checklistProgress": "{{done}} / {{total}}",
+    "checklist": {
+      "logo": "إضافة شعار الشركة",
+      "invite": "دعوة فريق العمل",
+      "template": "مراجعة قالب الشركة",
+      "employee": "إضافة أول موظف"
+    },
+    "notAvailable": "غير متاح بعد",
+    "widgetApprovalsTitle": "الموافقات",
+    "widgetAttendanceTitle": "الحضور اليوم",
+    "widgetEmptyTitle": "لا توجد بيانات بعد",
+    "widgetEmptyBody": "ستظهر هنا البيانات عند تفعيل الوحدة.",
+    "loadErrorTitle": "تعذر تحميل الصفحة",
+    "loadErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+    "retry": "إعادة المحاولة"
+  },
   "uiKit": {
     "title": "مجموعة الواجهة",
     "subtitle": "مكونات وألوان كادر — للتطوير فقط",
@@ -76,6 +146,14 @@
     "statEmployees": "إجمالي الموظفين",
     "statPresent": "حاضرون اليوم",
     "statLate": "متأخرون",
-    "statPending": "طلبات قيد المراجعة"
+    "statPending": "طلبات قيد المراجعة",
+    "shell": "هيكل التطبيق",
+    "avatar": "الصورة الرمزية",
+    "emptyState": "الحالة الفارغة",
+    "skeleton": "هيكل التحميل",
+    "toast": "التنبيهات",
+    "pageHeader": "عنوان الصفحة",
+    "dropdown": "القائمة المنسدلة",
+    "showToast": "إظهار تنبيه"
   }
 }
