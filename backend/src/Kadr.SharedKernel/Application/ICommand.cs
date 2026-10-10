@@ -3,6 +3,7 @@ using Kadr.SharedKernel.Results;
 namespace Kadr.SharedKernel.Application;
 
 public interface ICommand;
+
 public interface ICommand<TResponse>;
 
 public interface ICommandHandler<in TCommand>

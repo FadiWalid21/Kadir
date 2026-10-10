@@ -1,6 +1,6 @@
-using Kadr.Platform.Application.Notes;
-using Kadr.Platform.Domain.Notes;
-using Kadr.SharedKernel.Application;
+using FluentValidation;
+using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kadr.Platform.Application;
@@ -9,7 +9,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddPlatformApplication(this IServiceCollection services)
     {
-        services.AddScoped<IDomainEventHandler<TenantNoteCreated>, TenantNoteCreatedHandler>();
+        services.AddValidatorsFromAssemblyContaining<RegisterTenantCommandValidator>();
+        services.AddSingleton<IRegisterTenantFailureInjector, NoOpRegisterTenantFailureInjector>();
         return services;
     }
 }

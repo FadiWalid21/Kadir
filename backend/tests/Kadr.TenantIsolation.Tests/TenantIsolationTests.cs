@@ -1,12 +1,11 @@
-using Kadr.Infrastructure.Persistence;
 using Kadr.Infrastructure.Persistence.DomainEvents;
 using Kadr.Infrastructure.Persistence.Interceptors;
 using Kadr.Infrastructure.Persistence.Tenancy;
-using Kadr.Platform.Application;
-using Kadr.Platform.Domain.Notes;
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Ids;
 using Kadr.SharedKernel.Tenancy;
+using Kadr.Testing.Support.Notes;
+using Kadr.Testing.Support.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -20,26 +19,36 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddPlatformApplication();
         services.AddScoped<AmbientTenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<AmbientTenantContext>());
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<TenantSaveChangesInterceptor>();
-        services.AddDbContext<KadrDbContext>((sp, options) =>
+        services.AddScoped(sp =>
         {
-            options
+            var interceptor = sp.GetRequiredService<TenantSaveChangesInterceptor>();
+            var builder = new DbContextOptionsBuilder<Kadr.Infrastructure.Persistence.KadrDbContext>();
+            builder
                 .UseNpgsql(connectionString)
                 .UseSnakeCaseNamingConvention()
-                .AddInterceptors(sp.GetRequiredService<TenantSaveChangesInterceptor>());
+                .AddInterceptors(interceptor);
+            return builder.Options;
         });
         return services.BuildServiceProvider();
+    }
+
+    private static TestKadrDbContext CreateDb(IServiceScope scope)
+    {
+        var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<Kadr.Infrastructure.Persistence.KadrDbContext>>();
+        var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
+        return new TestKadrDbContext(options, ambient, dispatcher);
     }
 
     private async Task EnsureSchemaAsync()
     {
         await using var provider = BuildProvider(fixture.ConnectionString);
         using var scope = provider.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var db = CreateDb(scope);
         await db.Database.EnsureCreatedAsync();
     }
 
@@ -54,7 +63,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         using (var scope = provider.CreateScope())
         {
             var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var db = CreateDb(scope);
             ambient.Set(tenantA);
             db.TenantNotes.Add(TenantNote.Create(tenantA, "A note"));
             await db.SaveChangesAsync();
@@ -67,7 +76,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         using (var scope = provider.CreateScope())
         {
             var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var db = CreateDb(scope);
             ambient.Set(tenantA);
             var titles = await db.TenantNotes.AsNoTracking().Select(n => n.Title).ToListAsync();
             Assert.Equal(["A note"], titles);
@@ -86,7 +95,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         using (var scope = provider.CreateScope())
         {
             var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var db = CreateDb(scope);
             ambient.Set(tenantB);
             var noteB = TenantNote.Create(tenantB, "secret");
             db.TenantNotes.Add(noteB);
@@ -97,7 +106,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         using (var scope = provider.CreateScope())
         {
             var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var db = CreateDb(scope);
             ambient.Set(tenantA);
             var found = await db.TenantNotes.AsNoTracking().SingleOrDefaultAsync(n => n.Id == noteBId);
             Assert.Null(found);
@@ -113,7 +122,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         await using var provider = BuildProvider(fixture.ConnectionString);
         using var scope = provider.CreateScope();
         var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var db = CreateDb(scope);
         ambient.Set(tenantA);
 
         var note = TenantNote.Create(tenantA, "stamped");
@@ -135,7 +144,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         await using var provider = BuildProvider(fixture.ConnectionString);
         using var scope = provider.CreateScope();
         var ambient = scope.ServiceProvider.GetRequiredService<AmbientTenantContext>();
-        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var db = CreateDb(scope);
         ambient.Set(tenantA);
 
         db.TenantNotes.Add(TenantNote.Create(tenantB, "mismatch"));
@@ -148,20 +157,17 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         await EnsureSchemaAsync();
         await using var provider = BuildProvider(fixture.ConnectionString);
         using var scope = provider.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var db = CreateDb(scope);
 
-        var tenantOwned = typeof(TenantNote).Assembly
-            .GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(ITenantOwned).IsAssignableFrom(t))
+        var tenantOwned = db.Model.GetEntityTypes()
+            .Where(t => typeof(ITenantOwned).IsAssignableFrom(t.ClrType))
             .ToList();
 
         Assert.NotEmpty(tenantOwned);
 
-        foreach (var type in tenantOwned)
+        foreach (var entityType in tenantOwned)
         {
-            var entityType = db.Model.FindEntityType(type);
-            Assert.NotNull(entityType);
-            Assert.NotNull(entityType.GetQueryFilter());
+            Assert.NotEmpty(entityType.GetDeclaredQueryFilters());
         }
     }
 }

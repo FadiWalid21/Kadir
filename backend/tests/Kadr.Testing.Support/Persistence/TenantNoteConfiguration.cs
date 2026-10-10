@@ -1,8 +1,8 @@
-using Kadr.Platform.Domain.Notes;
+using Kadr.Testing.Support.Notes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Kadr.Infrastructure.Persistence.Configurations;
+namespace Kadr.Testing.Support.Persistence;
 
 public sealed class TenantNoteConfiguration : IEntityTypeConfiguration<TenantNote>
 {

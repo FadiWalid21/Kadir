@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\src\Kadr.Platform.Domain\Kadr.Platform.Domain.csproj" />
     <ProjectReference Include="..\..\src\Kadr.Platform.Application\Kadr.Platform.Application.csproj" />
     <ProjectReference Include="..\..\src\Kadr.Infrastructure.Persistence\Kadr.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Kadr.Testing.Support\Kadr.Testing.Support.csproj" />
   </ItemGroup>
 
 </Project>

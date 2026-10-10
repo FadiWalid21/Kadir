@@ -1,10 +1,10 @@
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Ids;
 
-namespace Kadr.Platform.Domain.Notes;
+namespace Kadr.Testing.Support.Notes;
 
 /// <summary>
-/// Minimal tenant-owned aggregate used by the isolation harness until Core HR entities exist.
+/// Isolation-harness aggregate. Registered only on <see cref="Persistence.TestKadrDbContext"/>.
 /// </summary>
 public sealed class TenantNote : AggregateRoot, ITenantOwned, IAuditable
 {

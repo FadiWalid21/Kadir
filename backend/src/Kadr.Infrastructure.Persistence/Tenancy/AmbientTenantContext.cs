@@ -5,7 +5,7 @@ namespace Kadr.Infrastructure.Persistence.Tenancy;
 /// <summary>
 /// Mutable tenant context for the request (or tests). JWT wiring arrives in Feature 4.
 /// </summary>
-public sealed class AmbientTenantContext : ITenantContext
+public sealed class AmbientTenantContext : ITenantContextAccessor
 {
     public Guid? TenantId { get; private set; }
     public Guid? UserId { get; private set; }

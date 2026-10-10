@@ -1,6 +1,6 @@
 using System.Reflection;
 using Kadr.Platform.Application;
-using Kadr.Platform.Domain.Notes;
+using Kadr.Platform.Domain.Tenants;
 using Kadr.SharedKernel.Domain;
 using NetArchTest.Rules;
 using Xunit;
@@ -9,7 +9,7 @@ namespace Kadr.Platform.Tests.Architecture;
 
 public sealed class ArchitectureTests
 {
-    private static readonly Assembly DomainAssembly = typeof(TenantNote).Assembly;
+    private static readonly Assembly DomainAssembly = typeof(Tenant).Assembly;
     private static readonly Assembly ApplicationAssembly = typeof(DependencyInjection).Assembly;
     private static readonly Assembly SharedKernelAssembly = typeof(AggregateRoot).Assembly;
 

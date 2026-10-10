@@ -1,12 +1,19 @@
+using Kadr.Identity.Domain.Roles;
+using Kadr.Identity.Domain.Tokens;
+using Kadr.Identity.Domain.Users;
 using Kadr.Infrastructure.Persistence.DomainEvents;
-using Kadr.Platform.Domain.Notes;
+using Kadr.Platform.Domain.Idempotency;
+using Kadr.Platform.Domain.Plans;
+using Kadr.Platform.Domain.Settings;
+using Kadr.Platform.Domain.Subscriptions;
+using Kadr.Platform.Domain.Tenants;
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kadr.Infrastructure.Persistence;
 
-public sealed class KadrDbContext : DbContext
+public class KadrDbContext : DbContext
 {
     private readonly ITenantContext _tenantContext;
     private readonly IDomainEventDispatcher _domainEventDispatcher;
@@ -24,12 +31,31 @@ public sealed class KadrDbContext : DbContext
     /// <summary>Exposed for EF global query filters (evaluated per query).</summary>
     public Guid? CurrentTenantId => _tenantContext.TenantId;
 
-    public DbSet<TenantNote> TenantNotes => Set<TenantNote>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+    public DbSet<TenantSetting> TenantSettings => Set<TenantSetting>();
+    public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KadrDbContext).Assembly);
+        OnModelCreatingPartial(modelBuilder);
+        ApplyTenantFilters(modelBuilder);
+    }
 
+    /// <summary>Hook for test DbContexts to register harness-only entities.</summary>
+    protected virtual void OnModelCreatingPartial(ModelBuilder modelBuilder)
+    {
+    }
+
+    protected void ApplyTenantFilters(ModelBuilder modelBuilder)
+    {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (!typeof(ITenantOwned).IsAssignableFrom(entityType.ClrType))

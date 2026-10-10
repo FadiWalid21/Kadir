@@ -1,5 +1,5 @@
-using Kadr.Platform.Domain.Notes;
 using Kadr.SharedKernel.Ids;
+using Kadr.Testing.Support.Notes;
 using Xunit;
 
 namespace Kadr.Platform.Tests.Domain;

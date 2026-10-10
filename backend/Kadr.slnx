@@ -11,6 +11,7 @@
     <Project Path="src/Kadr.SharedKernel/Kadr.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Kadr.Testing.Support/Kadr.Testing.Support.csproj" />
     <Project Path="tests/Kadr.Platform.Tests/Kadr.Platform.Tests.csproj" />
     <Project Path="tests/Kadr.TenantIsolation.Tests/Kadr.TenantIsolation.Tests.csproj" />
   </Folder>
