@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guard';
+import { PermissionCodes } from './core/auth/permission-codes';
 import { devRoutes } from './dev/dev.routes';
 
 export const routes: Routes = [
@@ -36,6 +37,12 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
         pathMatch: 'full',
+      },
+      {
+        path: 'settings/company',
+        canActivate: [permissionGuard(PermissionCodes.TenantSettingsRead)],
+        loadComponent: () =>
+          import('./features/settings/company-settings.page').then((m) => m.CompanySettingsPage),
       },
     ],
   },

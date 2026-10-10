@@ -2,6 +2,7 @@ export interface MeTenantDto {
   id: string;
   name: string;
   slug: string;
+  logoUrl?: string | null;
 }
 
 export interface MeResponse {

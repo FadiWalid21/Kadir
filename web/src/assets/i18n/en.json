@@ -188,6 +188,29 @@
       "emailTaken": "Email is already used in this tenant"
     }
   },
+  "settings": {
+    "company": {
+      "title": "Company settings",
+      "subtitle": "Update the company name and logo shown in the app.",
+      "identityAria": "Visual identity",
+      "identityTitle": "Company visual identity",
+      "name": "Company name",
+      "nameRequired": "Enter the company name",
+      "logoHint": "PNG, JPG, or SVG, up to 2 MB.",
+      "changeLogo": "Change logo",
+      "removeLogo": "Remove logo",
+      "save": "Save changes",
+      "saved": "Settings saved.",
+      "saveFailed": "Could not save settings.",
+      "logoFailed": "Could not update the logo.",
+      "loadErrorTitle": "Could not load settings",
+      "loadErrorBody": "Check your connection and try again.",
+      "errors": {
+        "tooLarge": "File exceeds 2 MB.",
+        "invalidType": "Unsupported file type. Use PNG, JPG, or SVG."
+      }
+    }
+  },
   "home": {
     "welcome": "Welcome, {{name}}",
     "welcomeCompany": "{{company}} — get your company ready to start.",
@@ -200,6 +223,8 @@
       "template": "Review company template",
       "employee": "Add first employee"
     },
+    "checklistDone": "Done",
+    "checklistAction": "Start",
     "notAvailable": "Not available yet",
     "widgetApprovalsTitle": "Approvals",
     "widgetAttendanceTitle": "Attendance today",

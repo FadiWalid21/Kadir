@@ -4,6 +4,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
+import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.component';
 
 export interface NavItem {
   labelKey: string;
@@ -16,7 +17,7 @@ export interface NavItem {
 @Component({
   selector: 'kadr-sidebar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoPipe, RouterLink, RouterLinkActive, IconComponent],
+  imports: [TranslocoPipe, RouterLink, RouterLinkActive, IconComponent, TenantLogoComponent],
   template: `
     <aside
       class="flex h-dvh flex-col border-e border-line bg-surface transition-[width] duration-200"
@@ -25,19 +26,16 @@ export interface NavItem {
       [attr.aria-label]="'shell.sidebar' | transloco"
     >
       <div class="flex items-center gap-3 border-b border-line px-3 py-4">
-        <img
-          src="/brand/logo-kadr.png"
-          alt=""
-          width="36"
-          height="36"
-          class="size-9 shrink-0 object-contain"
+        <kadr-tenant-logo
+          class="shrink-0"
+          [logoUrl]="tenantLogoUrl()"
+          [fallbackName]="tenantName()"
+          size="sm"
         />
         @if (!collapsed()) {
           <div class="min-w-0 flex-1 text-start">
-            <p class="truncate text-sm font-bold text-fg">{{ 'app.name' | transloco }}</p>
-            <p class="truncate text-xs text-fg-muted" [attr.title]="tenantName()">
-              {{ tenantName() }}
-            </p>
+            <p class="truncate text-sm font-bold text-fg">{{ tenantName() || ('app.name' | transloco) }}</p>
+            <p class="truncate text-xs text-fg-muted">{{ 'app.name' | transloco }}</p>
           </div>
         }
         <button
@@ -101,10 +99,12 @@ export class SidebarComponent {
     {
       labelKey: 'shell.nav.settings',
       icon: 'settings',
-      disabled: true,
+      route: '/settings/company',
       permission: PermissionCodes.TenantSettingsRead,
     },
   ];
+
+  protected readonly tenantLogoUrl = computed(() => this.auth.me()?.tenant.logoUrl ?? null);
 
   protected readonly visibleItems = computed(() =>
     this.items.filter((item) => {

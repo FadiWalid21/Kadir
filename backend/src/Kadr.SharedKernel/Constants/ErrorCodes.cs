@@ -19,4 +19,9 @@ public static class ErrorCodes
     public const string PlanNotFound = "plan.not_found";
     public const string RegistrationFailed = "auth.registration_failed";
     public const string IndustryInvalid = "industry.invalid";
+    public const string FileTooLarge = "file.too_large";
+    public const string FileInvalidType = "file.invalid_type";
+    public const string TenantNotFound = "tenant.not_found";
+    public const string FileNotFound = "file.not_found";
+    public const string TenantSettingsValidationFailed = "tenant.settings.validation_failed";
 }

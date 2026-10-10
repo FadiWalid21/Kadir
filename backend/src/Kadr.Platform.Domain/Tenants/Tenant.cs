@@ -50,4 +50,32 @@ public sealed class Tenant : AggregateRoot, IPlatformEntity, IAuditable
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    public void Rename(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name.Trim();
+    }
+
+    public void UpdateDefaults(TenantLanguage defaultLanguage, string timeZone)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(timeZone);
+        DefaultLanguage = defaultLanguage;
+        TimeZone = timeZone.Trim();
+    }
+
+    public void SetLogo(Guid fileId)
+    {
+        if (fileId == Guid.Empty)
+        {
+            throw new ArgumentException("Logo file id is required.", nameof(fileId));
+        }
+
+        LogoFileId = fileId;
+    }
+
+    public void ClearLogo()
+    {
+        LogoFileId = null;
+    }
 }

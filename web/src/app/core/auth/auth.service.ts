@@ -66,6 +66,13 @@ export class AuthService {
     this.statusSignal.set('anonymous');
   }
 
+  /** Reload `/me` after tenant branding changes. */
+  async refreshMe(): Promise<void> {
+    const me = await this.meApi.getMe();
+    this.meSignal.set(me);
+    this.statusSignal.set('authenticated');
+  }
+
   /**
    * Single-flight refresh shared by the interceptor and parallel 401s.
    * Returns true when a new access token was stored.

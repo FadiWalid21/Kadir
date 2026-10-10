@@ -188,6 +188,29 @@
       "emailTaken": "البريد مستخدم في هذه المنشأة"
     }
   },
+  "settings": {
+    "company": {
+      "title": "إعدادات الشركة",
+      "subtitle": "حدّث اسم المنشأة وشعارها الظاهر في الواجهة.",
+      "identityAria": "الهوية البصرية",
+      "identityTitle": "الهوية البصرية للمنشأة",
+      "name": "اسم الشركة",
+      "nameRequired": "أدخل اسم الشركة",
+      "logoHint": "PNG أو JPG أو SVG، بحد أقصى 2 ميغابايت.",
+      "changeLogo": "تغيير الشعار",
+      "removeLogo": "إزالة الشعار",
+      "save": "حفظ التغييرات",
+      "saved": "تم حفظ الإعدادات.",
+      "saveFailed": "تعذر حفظ الإعدادات.",
+      "logoFailed": "تعذر تحديث الشعار.",
+      "loadErrorTitle": "تعذر تحميل الإعدادات",
+      "loadErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "errors": {
+        "tooLarge": "حجم الملف أكبر من 2 ميغابايت.",
+        "invalidType": "نوع الملف غير مدعوم. استخدم PNG أو JPG أو SVG."
+      }
+    }
+  },
   "home": {
     "welcome": "مرحباً، {{name}}",
     "welcomeCompany": "{{company}} — جهّز شركتك للبدء.",
@@ -200,6 +223,8 @@
       "template": "مراجعة قالب الشركة",
       "employee": "إضافة أول موظف"
     },
+    "checklistDone": "تم",
+    "checklistAction": "ابدأ",
     "notAvailable": "غير متاح بعد",
     "widgetApprovalsTitle": "الموافقات",
     "widgetAttendanceTitle": "الحضور اليوم",

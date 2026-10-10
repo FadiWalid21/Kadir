@@ -2,6 +2,7 @@ using Kadr.Identity.Domain.Roles;
 using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Infrastructure.Persistence.DomainEvents;
+using Kadr.Platform.Domain.Files;
 using Kadr.Platform.Domain.Idempotency;
 using Kadr.Platform.Domain.Org;
 using Kadr.Platform.Domain.Plans;
@@ -39,6 +40,7 @@ public class KadrDbContext : DbContext
     public DbSet<TenantSetting> TenantSettings => Set<TenantSetting>();
     public DbSet<LegalEntity> LegalEntities => Set<LegalEntity>();
     public DbSet<Branch> Branches => Set<Branch>();
+    public DbSet<FileObject> FileObjects => Set<FileObject>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
