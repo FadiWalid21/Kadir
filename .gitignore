@@ -1,0 +1,45 @@
+# ---- .NET ----
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+*.log
+*.binlog
+
+# ---- Node / Angular ----
+node_modules/
+dist/
+.angular/
+.vercel/
+coverage/
+npm-debug.log*
+
+# ---- Secrets & local config (never commit) ----
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Local.json
+appsettings.*.local.json
+appsettings.Production.json
+*.pfx
+*.pem
+*.key
+*.p12
+*.snk
+
+# ---- Local data ----
+uploads/
+storage/
+.data/
+pgdata/
+logs/
+
+# ---- OS / IDE ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
