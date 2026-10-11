@@ -22,6 +22,14 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
         <kadr-icon name="home" size="sm" />
         {{ 'shell.nav.home' | transloco }}
       </a>
+      <a
+        routerLink="/attendance/me"
+        routerLinkActive="text-accent"
+        class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-fg-2 focus-visible:outline-none"
+      >
+        <kadr-icon name="clock" size="sm" />
+        {{ 'shell.nav.attendance' | transloco }}
+      </a>
       @for (item of disabledItems; track item.key) {
         <button
           type="button"
@@ -41,7 +49,6 @@ export class BottomNavComponent {
 
   protected readonly disabledItems: { key: string; icon: IconName }[] = [
     { key: 'shell.nav.requests', icon: 'inbox' },
-    { key: 'shell.nav.attendance', icon: 'clock' },
     { key: 'shell.nav.profile', icon: 'user' },
   ];
 

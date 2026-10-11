@@ -1,11 +1,15 @@
 using Kadr.Identity.Domain.Roles;
 using Kadr.SharedKernel.Constants;
+using Kadr.SharedKernel.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kadr.Infrastructure.Persistence.Seeding;
 
-public sealed class SystemRolePermissionSeeder(KadrDbContext db, ILogger<SystemRolePermissionSeeder> logger)
+public sealed class SystemRolePermissionSeeder(
+    KadrDbContext db,
+    ITenantContextAccessor tenantContext,
+    ILogger<SystemRolePermissionSeeder> logger)
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -27,33 +31,51 @@ public sealed class SystemRolePermissionSeeder(KadrDbContext db, ILogger<SystemR
         var existingSet = existing.Select(x => (x.RoleId, x.PermissionCode)).ToHashSet();
 
         var added = 0;
-        foreach (var role in systemRoles)
+        foreach (var group in systemRoles.GroupBy(r => r.TenantId))
         {
-            IReadOnlyList<string> desired;
+            tenantContext.Set(group.Key);
             try
             {
-                desired = SystemRolePermissions.ForRole(role.Name);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                continue;
-            }
-
-            foreach (var code in desired)
-            {
-                if (existingSet.Contains((role.Id, code)))
+                var batch = 0;
+                foreach (var role in group)
                 {
-                    continue;
+                    IReadOnlyList<string> desired;
+                    try
+                    {
+                        desired = SystemRolePermissions.ForRole(role.Name);
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        continue;
+                    }
+
+                    foreach (var code in desired)
+                    {
+                        if (existingSet.Contains((role.Id, code)))
+                        {
+                            continue;
+                        }
+
+                        db.RolePermissions.Add(RolePermission.Create(role.TenantId, role.Id, code));
+                        existingSet.Add((role.Id, code));
+                        batch++;
+                    }
                 }
 
-                db.RolePermissions.Add(RolePermission.Create(role.TenantId, role.Id, code));
-                added++;
+                if (batch > 0)
+                {
+                    await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    added += batch;
+                }
+            }
+            finally
+            {
+                tenantContext.Clear();
             }
         }
 
         if (added > 0)
         {
-            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Synced {Count} missing system role permissions", added);
         }
     }

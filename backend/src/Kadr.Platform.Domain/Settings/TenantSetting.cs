@@ -30,4 +30,10 @@ public sealed class TenantSetting : AggregateRoot, ITenantOwned, IAuditable
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    public void SetValue(string valueJson)
+    {
+        ValueJson = valueJson ?? string.Empty;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

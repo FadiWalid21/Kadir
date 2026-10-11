@@ -99,7 +99,12 @@ export class SidebarComponent {
       permission: PermissionCodes.EmployeesRead,
     },
     { labelKey: 'shell.nav.org', icon: 'building', route: '/org', permission: PermissionCodes.OrgRead },
-    { labelKey: 'shell.nav.attendance', icon: 'clock', disabled: true },
+    {
+      labelKey: 'shell.nav.attendance',
+      icon: 'clock',
+      route: '/attendance/me',
+      permission: PermissionCodes.AttendanceReadOwn,
+    },
     { labelKey: 'shell.nav.leave', icon: 'calendar', disabled: true },
     { labelKey: 'shell.nav.requests', icon: 'inbox', disabled: true },
     { labelKey: 'shell.nav.reports', icon: 'chart', disabled: true },

@@ -76,4 +76,15 @@ public static class ErrorCodes
     public const string EmployeesForbidden = "employees.forbidden";
     public const string OrgDepartmentCycle = "org.department_cycle";
     public const string OrgNotFound = "org.not_found";
+    public const string AttendanceNoEmployee = "attendance.no_employee";
+    public const string AttendanceEmployeeInactive = "attendance.employee_inactive";
+    public const string AttendanceLocationStale = "attendance.location_stale";
+    public const string AttendanceLocationInaccurate = "attendance.location_inaccurate";
+    public const string AttendanceBranchNotConfigured = "attendance.branch_not_configured";
+    public const string AttendanceOutsideRange = "attendance.outside_range";
+    public const string AttendanceReasonRequired = "attendance.reason_required";
+    public const string AttendanceDuplicatePunch = "attendance.duplicate_punch";
+    public const string AttendanceValidationFailed = "attendance.validation_failed";
+    public const string AttendanceNotFound = "attendance.not_found";
+    public const string AttendanceForbidden = "attendance.forbidden";
 }

@@ -16,6 +16,9 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
     public TimeOnly StartTime { get; private set; }
     public TimeOnly EndTime { get; private set; }
     public int GraceMinutes { get; private set; }
+    public int BreakMinutes { get; private set; }
+    public bool CrossesMidnight { get; private set; }
+    public bool IsFlexible { get; private set; }
     public string? SourceKey { get; private set; }
     public Guid? SourceTemplateId { get; private set; }
     public int SourceVersion { get; private set; }
@@ -52,6 +55,9 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
             StartTime = startTime,
             EndTime = endTime,
             GraceMinutes = graceMinutes,
+            BreakMinutes = 0,
+            CrossesMidnight = endTime <= startTime,
+            IsFlexible = false,
             SourceKey = sourceKey.Trim(),
             SourceTemplateId = sourceTemplateId,
             SourceVersion = sourceVersion,
@@ -61,17 +67,29 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
         };
     }
 
-    public void Update(string nameAr, string nameEn, TimeOnly startTime, TimeOnly endTime, int graceMinutes)
+    public void Update(
+        string nameAr,
+        string nameEn,
+        TimeOnly startTime,
+        TimeOnly endTime,
+        int graceMinutes,
+        int breakMinutes = 0,
+        bool? crossesMidnight = null,
+        bool isFlexible = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
         ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
         ArgumentOutOfRangeException.ThrowIfNegative(graceMinutes);
+        ArgumentOutOfRangeException.ThrowIfNegative(breakMinutes);
         NameAr = nameAr.Trim();
         NameEn = nameEn.Trim();
         SearchName = BuildSearchName(nameAr, nameEn);
         StartTime = startTime;
         EndTime = endTime;
         GraceMinutes = graceMinutes;
+        BreakMinutes = breakMinutes;
+        CrossesMidnight = crossesMidnight ?? endTime <= startTime;
+        IsFlexible = isFlexible;
         IsCustomized = true;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -90,8 +108,20 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
         StartTime = startTime;
         EndTime = endTime;
         GraceMinutes = graceMinutes;
+        BreakMinutes = 0;
+        CrossesMidnight = endTime <= startTime;
+        IsFlexible = false;
         SourceVersion = sourceVersion;
         IsCustomized = false;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetEngineFields(int breakMinutes, bool crossesMidnight, bool isFlexible)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(breakMinutes);
+        BreakMinutes = breakMinutes;
+        CrossesMidnight = crossesMidnight;
+        IsFlexible = isFlexible;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

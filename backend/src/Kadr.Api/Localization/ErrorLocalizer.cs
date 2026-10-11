@@ -82,6 +82,17 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.EmployeesForbidden] = ("ليست لديك صلاحية لهذا الإجراء على الموظفين.", "You are not allowed to perform this employee action."),
         [ErrorCodes.OrgDepartmentCycle] = ("لا يمكن إنشاء حلقة في هيكل الإدارات.", "Cannot create a department hierarchy cycle."),
         [ErrorCodes.OrgNotFound] = ("عنصر الهيكل غير موجود.", "Org item was not found."),
+        [ErrorCodes.AttendanceNoEmployee] = ("حسابك غير مرتبط بملف موظف.", "Your account is not linked to an employee profile."),
+        [ErrorCodes.AttendanceEmployeeInactive] = ("الموظف غير نشط ولا يمكن تسجيل الحضور.", "The employee is inactive and cannot punch."),
+        [ErrorCodes.AttendanceLocationStale] = ("موقع الجهاز قديم. حدّث الموقع وحاول مرة أخرى.", "Device location is stale. Refresh location and try again."),
+        [ErrorCodes.AttendanceLocationInaccurate] = ("دقة الموقع غير كافية للتسجيل.", "Location accuracy is not sufficient to punch."),
+        [ErrorCodes.AttendanceBranchNotConfigured] = ("موقع الفرع غير مضبوط بعد.", "Branch location is not configured yet."),
+        [ErrorCodes.AttendanceOutsideRange] = ("أنت خارج نطاق الفرع.", "You are outside the branch geofence."),
+        [ErrorCodes.AttendanceReasonRequired] = ("مطلوب سبب عند التسجيل من خارج النطاق.", "A reason is required when punching outside the geofence."),
+        [ErrorCodes.AttendanceDuplicatePunch] = ("طلب التسجيل مكرر.", "Duplicate punch request."),
+        [ErrorCodes.AttendanceValidationFailed] = ("بيانات الحضور غير صالحة.", "Attendance data is invalid."),
+        [ErrorCodes.AttendanceNotFound] = ("عنصر الحضور غير موجود.", "Attendance item was not found."),
+        [ErrorCodes.AttendanceForbidden] = ("ليست لديك صلاحية لهذا الإجراء على الحضور.", "You are not allowed to perform this attendance action."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

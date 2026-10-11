@@ -22,6 +22,13 @@ public static class PermissionCodes
     public const string EmployeesImport = "employees.import";
     public const string OrgRead = "org.read";
     public const string OrgManage = "org.manage";
+    public const string AttendancePunch = "attendance.punch";
+    public const string AttendanceReadOwn = "attendance.read.own";
+    public const string AttendanceReadTeam = "attendance.read.team";
+    public const string AttendanceReadAll = "attendance.read.all";
+    public const string AttendanceManage = "attendance.manage";
+    public const string AttendanceEdit = "attendance.edit";
+    public const string AttendanceReports = "attendance.reports";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -45,5 +52,12 @@ public static class PermissionCodes
         EmployeesImport,
         OrgRead,
         OrgManage,
+        AttendancePunch,
+        AttendanceReadOwn,
+        AttendanceReadTeam,
+        AttendanceReadAll,
+        AttendanceManage,
+        AttendanceEdit,
+        AttendanceReports,
     ];
 }

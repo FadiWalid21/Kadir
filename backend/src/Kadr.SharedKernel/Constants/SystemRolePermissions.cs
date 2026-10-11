@@ -17,10 +17,15 @@ public static class SystemRolePermissions
             PermissionCodes.SubscriptionRead,
             PermissionCodes.EmployeesRead,
             PermissionCodes.OrgRead,
+            PermissionCodes.AttendancePunch,
+            PermissionCodes.AttendanceReadOwn,
+            PermissionCodes.AttendanceReadTeam,
         ],
         SystemRoleNames.Employee =>
         [
             PermissionCodes.EmployeesRead,
+            PermissionCodes.AttendancePunch,
+            PermissionCodes.AttendanceReadOwn,
         ],
         SystemRoleNames.Accountant =>
         [

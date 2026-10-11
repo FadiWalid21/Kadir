@@ -178,6 +178,48 @@ export const routes: Routes = [
           import('./features/employees/org-tree.page').then((m) => m.OrgTreePage),
       },
       {
+        path: 'attendance/me',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceReadOwn),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/my-month.page').then((m) => m.MyMonthPage),
+      },
+      {
+        path: 'attendance/settings/rules',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/settings/attendance-rules.page').then(
+            (m) => m.AttendanceRulesPage,
+          ),
+      },
+      {
+        path: 'attendance/settings/branches',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/settings/attendance-branches.page').then(
+            (m) => m.AttendanceBranchesPage,
+          ),
+      },
+      {
+        path: 'attendance/settings/holidays',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/settings/attendance-holidays.page').then(
+            (m) => m.AttendanceHolidaysPage,
+          ),
+      },
+      {
         path: 'settings/company',
         canActivate: [permissionGuard(PermissionCodes.TenantSettingsRead)],
         loadComponent: () =>

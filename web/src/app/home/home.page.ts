@@ -18,6 +18,7 @@ import { IconComponent } from '../shared/ui/icon/icon.component';
 import { InstallCardComponent } from '../shared/ui/pwa/install-card.component';
 import { NetworkErrorComponent } from '../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../shared/ui/skeleton/skeleton.component';
+import { HomeAttendanceCardComponent } from '../features/attendance/home-attendance-card.component';
 
 type HomeState = 'loading' | 'ready' | 'error';
 
@@ -34,6 +35,7 @@ type HomeState = 'loading' | 'ready' | 'error';
     IconComponent,
     InstallCardComponent,
     NetworkErrorComponent,
+    HomeAttendanceCardComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -147,14 +149,14 @@ type HomeState = 'loading' | 'ready' | 'error';
             [description]="'home.widgetEmptyBody' | transloco"
           />
         </section>
-        <section class="rounded-lg border border-line bg-surface p-5 shadow-sm">
+        <section
+          class="rounded-lg border border-line bg-surface p-5 shadow-sm"
+          [attr.aria-label]="'home.widgetAttendanceTitle' | transloco"
+        >
           <h2 class="mb-3 text-base font-bold text-fg">
             {{ 'home.widgetAttendanceTitle' | transloco }}
           </h2>
-          <kadr-empty-state
-            [title]="'home.widgetEmptyTitle' | transloco"
-            [description]="'home.widgetEmptyBody' | transloco"
-          />
+          <kadr-home-attendance-card />
         </section>
       </div>
 
