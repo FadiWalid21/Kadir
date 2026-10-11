@@ -475,7 +475,7 @@ export class OnboardingPage implements OnInit {
   protected readonly stepperSteps = computed<StepperStep[]>(() =>
     ONBOARDING_STEP_IDS.map((id) => ({
       id,
-      label: this.transloco.translate(`onboarding.steps.${id}`),
+      label: `onboarding.steps.${id}`,
     })),
   );
 
