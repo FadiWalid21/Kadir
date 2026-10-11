@@ -1,4 +1,4 @@
-namespace Kadr.Identity.Domain.Roles;
+namespace Kadr.SharedKernel.Tenancy;
 
 public enum DataScope
 {

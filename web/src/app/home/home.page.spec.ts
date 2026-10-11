@@ -15,6 +15,7 @@ const me = {
   roles: ['Owner'],
   permissions: [] as string[],
   tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test-co', logoUrl: null },
+  checklist: { inviteTeamDone: false },
 };
 
 describe('HomePage', () => {

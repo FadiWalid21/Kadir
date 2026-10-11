@@ -30,4 +30,17 @@ public sealed class CapturingEmailSender : IEmailSender
         var index = body.LastIndexOf(marker, StringComparison.Ordinal);
         return index < 0 ? null : body[(index + marker.Length)..].Trim();
     }
+
+    public string? ExtractLastInvitationToken()
+    {
+        var body = Last?.HtmlBody;
+        if (body is null)
+        {
+            return null;
+        }
+
+        const string marker = "Invitation token: ";
+        var index = body.LastIndexOf(marker, StringComparison.Ordinal);
+        return index < 0 ? null : body[(index + marker.Length)..].Trim();
+    }
 }

@@ -3,6 +3,8 @@ using FluentValidation;
 using Kadr.Api.Http;
 using Kadr.Api.Localization;
 using Kadr.Identity.Application.Auth;
+using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Invitations;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Application;
 using Kadr.SharedKernel.Constants;
@@ -38,6 +40,14 @@ public static class AuthEndpoints
         app.MapPost("/api/v1/auth/resend-verification", ResendVerificationAsync)
             .RequireRateLimiting("auth-resend")
             .WithName("ResendVerification");
+
+        app.MapPost("/api/v1/auth/invitations/validate", ValidateInvitationAsync)
+            .RequireRateLimiting("auth-invite-validate")
+            .WithName("ValidateInvitation");
+
+        app.MapPost("/api/v1/auth/accept-invitation", AcceptInvitationAsync)
+            .RequireRateLimiting("auth-invite-validate")
+            .WithName("AcceptInvitation");
 
         return app;
     }
@@ -262,6 +272,38 @@ public static class AuthEndpoints
             .ConfigureAwait(false);
 
         return Results.Accepted();
+    }
+
+    private static async Task<IResult> ValidateInvitationAsync(
+        [FromBody] ValidateInvitationRequest request,
+        IInvitationService invitations,
+        CancellationToken cancellationToken)
+    {
+        var result = await invitations.ValidateAsync(request.Token, cancellationToken).ConfigureAwait(false);
+        return Results.Ok(result.Value);
+    }
+
+    private static async Task<IResult> AcceptInvitationAsync(
+        [FromBody] AcceptInvitationRequest request,
+        HttpContext httpContext,
+        IInvitationService invitations,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await invitations.AcceptAsync(request, cancellationToken).ConfigureAwait(false);
+        if (result.IsSuccess)
+        {
+            return Results.NoContent();
+        }
+
+        var code = result.ErrorCode ?? ErrorCodes.InvitationInvalid;
+        var status = code switch
+        {
+            ErrorCodes.AuthEmailTaken => StatusCodes.Status409Conflict,
+            ErrorCodes.AuthPasswordTooShort or ErrorCodes.AuthPasswordTooCommon => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status400BadRequest,
+        };
+        return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));
     }
 }
 

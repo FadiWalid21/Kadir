@@ -5,6 +5,10 @@ export interface MeTenantDto {
   logoUrl?: string | null;
 }
 
+export interface MeChecklistDto {
+  inviteTeamDone: boolean;
+}
+
 export interface MeResponse {
   id: string;
   fullName: string;
@@ -13,4 +17,5 @@ export interface MeResponse {
   roles: string[];
   permissions: string[];
   tenant: MeTenantDto;
+  checklist: MeChecklistDto;
 }

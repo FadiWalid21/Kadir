@@ -11,8 +11,12 @@ import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 import { DropdownMenuComponent } from '../../shared/ui/dropdown-menu/dropdown-menu.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { CheckboxComponent } from '../../shared/ui/checkbox/checkbox.component';
+import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
+import { RadioCardComponent } from '../../shared/ui/radio-card/radio-card.component';
+import { SelectComponent } from '../../shared/ui/select/select.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { StepperComponent } from '../../shared/ui/stepper/stepper.component';
 import { TableComponent } from '../../shared/ui/table/table.component';
@@ -62,6 +66,10 @@ const SWATCHES = [
     TabsComponent,
     DrawerComponent,
     TableComponent,
+    SelectComponent,
+    CheckboxComponent,
+    RadioCardComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
@@ -304,6 +312,43 @@ const SWATCHES = [
           </kadr-table>
         </kadr-card>
 
+        <kadr-card [title]="'uiKit.select' | transloco">
+          <div class="grid gap-4 md:grid-cols-2">
+            <kadr-select
+              [label]="'uiKit.select' | transloco"
+              [options]="demoSelectOptions"
+              [value]="demoSelect()"
+              (valueChange)="demoSelect.set($event)"
+            />
+            <kadr-checkbox
+              [label]="'uiKit.checkbox' | transloco"
+              [checked]="demoChecked()"
+              (checkedChange)="demoChecked.set($event)"
+            />
+            <kadr-radio-card
+              [title]="'uiKit.radioCard' | transloco"
+              [description]="'uiKit.subtitle' | transloco"
+              [selected]="demoRadio()"
+              (selectedChange)="demoRadio.set(true)"
+            />
+            <div>
+              <kadr-button variant="secondary" type="button" (click)="confirmOpen.set(true)">
+                {{ 'uiKit.confirmDialog' | transloco }}
+              </kadr-button>
+              <kadr-confirm-dialog
+                [open]="confirmOpen()"
+                [title]="'uiKit.confirmDialog' | transloco"
+                [message]="'uiKit.drawerBody' | transloco"
+                [confirmLabel]="'ui.delete' | transloco"
+                [cancelLabel]="'ui.cancel' | transloco"
+                [danger]="true"
+                (confirmed)="confirmOpen.set(false)"
+                (cancelled)="confirmOpen.set(false)"
+              />
+            </div>
+          </div>
+        </kadr-card>
+
         <kadr-card [title]="'uiKit.palette' | transloco">
           <div class="flex flex-wrap gap-2">
             @for (token of swatches; track token) {
@@ -333,6 +378,14 @@ export class UiKitPage {
   ];
   protected readonly demoTabId = signal('one');
   protected readonly drawerOpen = signal(false);
+  protected readonly demoSelect = signal('a');
+  protected readonly demoChecked = signal(true);
+  protected readonly demoRadio = signal(true);
+  protected readonly confirmOpen = signal(false);
+  protected readonly demoSelectOptions = [
+    { value: 'a', label: 'A' },
+    { value: 'b', label: 'B' },
+  ];
   protected readonly demoTabs = [
     { id: 'one', label: '1' },
     { id: 'two', label: '2' },

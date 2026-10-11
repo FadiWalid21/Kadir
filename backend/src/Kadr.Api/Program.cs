@@ -82,6 +82,7 @@ try
     var refreshLimit = builder.Configuration.GetValue("RateLimiting:RefreshPermitLimit", 30);
     var verifyLimit = builder.Configuration.GetValue("RateLimiting:VerifyPermitLimit", 10);
     var resendLimit = builder.Configuration.GetValue("RateLimiting:ResendPermitLimit", 5);
+    var inviteValidateLimit = builder.Configuration.GetValue("RateLimiting:InviteValidatePermitLimit", 20);
 
     builder.Services.AddRateLimiter(options =>
     {
@@ -131,6 +132,15 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+        options.AddPolicy("auth-invite-validate", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = inviteValidateLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
     });
 
     var app = builder.Build();
@@ -163,6 +173,9 @@ try
     app.MapTenantEndpoints();
     app.MapTemplatesEndpoints();
     app.MapTenantTemplatesEndpoints();
+    app.MapRolesEndpoints();
+    app.MapUsersEndpoints();
+    app.MapInvitationsEndpoints();
 
     app.Run();
 }

@@ -14,16 +14,24 @@ import { ChangeDetectionStrategy, Component, effect, input, output } from '@angu
           (click)="requestClose()"
         ></button>
         <aside
-          class="relative z-10 flex h-full w-full max-w-md flex-col border-s border-line bg-surface shadow-lg"
+          class="relative z-10 flex h-full w-full flex-col border-s border-line bg-surface shadow-lg"
+          [class.max-w-md]="size() === 'md'"
+          [class.max-w-lg]="size() === 'lg'"
           role="dialog"
           aria-modal="true"
           [attr.aria-labelledby]="titleId"
+          [attr.aria-describedby]="subtitle() ? subtitleId : null"
         >
           <header class="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
-            <h2 [id]="titleId" class="text-start text-lg font-bold text-fg">{{ title() }}</h2>
+            <div class="min-w-0 flex-1 text-start">
+              <h2 [id]="titleId" class="text-lg font-bold text-fg">{{ title() }}</h2>
+              @if (subtitle()) {
+                <p [id]="subtitleId" class="mt-1 text-sm text-fg-2">{{ subtitle() }}</p>
+              }
+            </div>
             <button
               type="button"
-              class="inline-flex size-9 items-center justify-center rounded-md text-fg-2 hover:bg-subtle focus-visible:outline-none"
+              class="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-fg-2 hover:bg-subtle focus-visible:outline-none"
               [attr.aria-label]="closeLabel()"
               (click)="requestClose()"
             >
@@ -37,7 +45,7 @@ import { ChangeDetectionStrategy, Component, effect, input, output } from '@angu
             <ng-content />
           </div>
           @if (hasFooter()) {
-            <footer class="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-3">
+            <footer class="flex flex-wrap gap-2 border-t border-line px-4 py-3">
               <ng-content select="[drawerFooter]" />
             </footer>
           }
@@ -49,11 +57,15 @@ import { ChangeDetectionStrategy, Component, effect, input, output } from '@angu
 export class DrawerComponent {
   readonly open = input(false);
   readonly title = input.required<string>();
+  readonly subtitle = input<string | undefined>(undefined);
   readonly closeLabel = input.required<string>();
   readonly hasFooter = input(true);
+  /** md ≈ 28rem, lg ≈ 32rem (invite drawer). */
+  readonly size = input<'md' | 'lg'>('md');
   readonly closed = output<void>();
 
   protected readonly titleId = `drawer-title-${Math.random().toString(36).slice(2, 9)}`;
+  protected readonly subtitleId = `drawer-sub-${Math.random().toString(36).slice(2, 9)}`;
 
   constructor() {
     effect(() => {

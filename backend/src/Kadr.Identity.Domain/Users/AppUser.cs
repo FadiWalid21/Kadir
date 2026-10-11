@@ -92,4 +92,45 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
         ResetAccessFailedCount(clock);
         LastLoginAt = clock.UtcNow;
     }
+
+    public static AppUser CreateInvited(
+        Guid tenantId,
+        string email,
+        string normalizedEmail,
+        string passwordHash,
+        string fullName,
+        string preferredLanguage)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(normalizedEmail);
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
+
+        return new AppUser
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            Email = email,
+            NormalizedEmail = normalizedEmail,
+            PasswordHash = passwordHash,
+            FullName = fullName.Trim(),
+            PreferredLanguage = preferredLanguage,
+            IsActive = true,
+            EmailConfirmed = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    public void Rename(string fullName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
+        FullName = fullName.Trim();
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

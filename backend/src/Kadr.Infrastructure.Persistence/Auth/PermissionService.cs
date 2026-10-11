@@ -19,6 +19,19 @@ public sealed class PermissionService(KadrDbContext db, IMemoryCache cache) : IP
             return cached;
         }
 
+        var active = await db.Users.AsNoTracking()
+            .Where(u => u.Id == userId && u.TenantId == tenantId)
+            .Select(u => u.IsActive)
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!active)
+        {
+            IReadOnlyList<string> empty = [];
+            cache.Set(key, empty, CacheDuration);
+            return empty;
+        }
+
         var permissions = await (
                 from ur in db.UserRoles.AsNoTracking()
                 join rp in db.RolePermissions.AsNoTracking() on ur.RoleId equals rp.RoleId
