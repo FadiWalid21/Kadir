@@ -48,4 +48,6 @@ public static class ErrorCodes
     public const string InvitationUsed = "invitation.used";
     public const string InvitationRevoked = "invitation.revoked";
     public const string InvitationNotFound = "invitation.not_found";
+    public const string AuditExportTooLarge = "audit.export_too_large";
+    public const string AuditCursorInvalid = "audit.cursor_invalid";
 }

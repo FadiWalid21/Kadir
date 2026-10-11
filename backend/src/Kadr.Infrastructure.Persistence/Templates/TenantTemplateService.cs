@@ -161,9 +161,8 @@ public sealed class TenantTemplateService(
 
         var oldJson = JsonSerializer.Serialize(MapShift(entity));
         entity.Update(request.NameAr, request.NameEn, start, end, request.GraceMinutes);
+        StageAudit("template.update", SectionShifts, entity.Id, oldJson, JsonSerializer.Serialize(MapShift(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.update", SectionShifts, entity.Id, oldJson, JsonSerializer.Serialize(MapShift(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapShift(entity));
     }
 
@@ -196,9 +195,8 @@ public sealed class TenantTemplateService(
             request.RequiresApproval,
             request.RequiresAttachment,
             entity.ExtrasJson);
+        StageAudit("template.update", SectionLeaveTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapLeave(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.update", SectionLeaveTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapLeave(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapLeave(entity));
     }
 
@@ -227,9 +225,8 @@ public sealed class TenantTemplateService(
             request.NameEn,
             request.HasExpiry,
             JsonSerializer.Serialize(request.AlertDays ?? []));
+        StageAudit("template.update", SectionDocumentTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapDoc(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.update", SectionDocumentTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapDoc(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapDoc(entity));
     }
 
@@ -254,9 +251,8 @@ public sealed class TenantTemplateService(
 
         var oldJson = JsonSerializer.Serialize(MapJob(entity));
         entity.Update(request.NameAr, request.NameEn);
+        StageAudit("template.update", SectionJobTitles, entity.Id, oldJson, JsonSerializer.Serialize(MapJob(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.update", SectionJobTitles, entity.Id, oldJson, JsonSerializer.Serialize(MapJob(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapJob(entity));
     }
 
@@ -281,9 +277,8 @@ public sealed class TenantTemplateService(
 
         var oldJson = JsonSerializer.Serialize(MapDept(entity));
         entity.Update(request.NameAr, request.NameEn);
+        StageAudit("template.update", SectionDepartments, entity.Id, oldJson, JsonSerializer.Serialize(MapDept(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.update", SectionDepartments, entity.Id, oldJson, JsonSerializer.Serialize(MapDept(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapDept(entity));
     }
 
@@ -405,15 +400,13 @@ public sealed class TenantTemplateService(
             }
         }
 
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync(
+        StageAudit(
                 "template.set_active",
                 section,
                 entityId,
                 oldJson,
-                JsonSerializer.Serialize(dto),
-                cancellationToken)
-            .ConfigureAwait(false);
+                JsonSerializer.Serialize(dto));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success(dto!);
     }
 
@@ -430,14 +423,20 @@ public sealed class TenantTemplateService(
             .ConfigureAwait(false);
         var afterKeys = await CollectKeysAsync(tenant.Id, cancellationToken).ConfigureAwait(false);
         var newKeys = afterKeys.Where(k => !beforeKeys.Contains(k)).OrderBy(k => k).ToList();
-        await WriteAuditAsync(
-                "template.add_missing",
-                "templates",
-                null,
-                null,
-                JsonSerializer.Serialize(new { added, keys = newKeys }),
-                cancellationToken)
-            .ConfigureAwait(false);
+        if (tenantContext.TenantId is not null)
+        {
+            await audit.WriteAsync(
+                    tenantContext.TenantId.Value,
+                    tenantContext.UserId,
+                    "template.add_missing",
+                    "templates",
+                    null,
+                    null,
+                    JsonSerializer.Serialize(new { added, keys = newKeys }),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         return Result.Success(new AddMissingResultDto(added, newKeys));
     }
 
@@ -469,9 +468,8 @@ public sealed class TenantTemplateService(
             ParseTime(seedItem.End),
             seedItem.GraceMinutes,
             entity.SourceVersion);
+        StageAudit("template.reset", SectionShifts, entity.Id, oldJson, JsonSerializer.Serialize(MapShift(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.reset", SectionShifts, entity.Id, oldJson, JsonSerializer.Serialize(MapShift(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapShift(entity));
     }
 
@@ -506,9 +504,8 @@ public sealed class TenantTemplateService(
             seedItem.RequiresAttachment,
             extras,
             entity.SourceVersion);
+        StageAudit("template.reset", SectionLeaveTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapLeave(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.reset", SectionLeaveTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapLeave(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapLeave(entity));
     }
 
@@ -539,9 +536,8 @@ public sealed class TenantTemplateService(
             seedItem.HasExpiry,
             JsonSerializer.Serialize(seedItem.AlertDays),
             entity.SourceVersion);
+        StageAudit("template.reset", SectionDocumentTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapDoc(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.reset", SectionDocumentTypes, entity.Id, oldJson, JsonSerializer.Serialize(MapDoc(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapDoc(entity));
     }
 
@@ -567,9 +563,8 @@ public sealed class TenantTemplateService(
 
         var oldJson = JsonSerializer.Serialize(MapJob(entity));
         entity.ResetFromTemplate(seedItem.NameAr, seedItem.NameEn, entity.SourceVersion);
+        StageAudit("template.reset", SectionJobTitles, entity.Id, oldJson, JsonSerializer.Serialize(MapJob(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.reset", SectionJobTitles, entity.Id, oldJson, JsonSerializer.Serialize(MapJob(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapJob(entity));
     }
 
@@ -595,35 +590,31 @@ public sealed class TenantTemplateService(
 
         var oldJson = JsonSerializer.Serialize(MapDept(entity));
         entity.ResetFromTemplate(seedItem.NameAr, seedItem.NameEn, entity.SourceVersion);
+        StageAudit("template.reset", SectionDepartments, entity.Id, oldJson, JsonSerializer.Serialize(MapDept(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await WriteAuditAsync("template.reset", SectionDepartments, entity.Id, oldJson, JsonSerializer.Serialize(MapDept(entity)), cancellationToken)
-            .ConfigureAwait(false);
         return Result.Success(MapDept(entity));
     }
 
-    private async Task WriteAuditAsync(
+    private void StageAudit(
         string action,
         string entityType,
         Guid? entityId,
         string? oldJson,
-        string? newJson,
-        CancellationToken cancellationToken)
+        string? newJson)
     {
         if (tenantContext.TenantId is null)
         {
             return;
         }
 
-        await audit.WriteAsync(
-                tenantContext.TenantId.Value,
-                tenantContext.UserId,
-                action,
-                entityType,
-                entityId,
-                oldJson,
-                newJson,
-                cancellationToken)
-            .ConfigureAwait(false);
+        audit.Stage(
+            tenantContext.TenantId.Value,
+            tenantContext.UserId,
+            action,
+            entityType,
+            entityId,
+            oldJson,
+            newJson);
     }
 
     private async Task<Platform.Domain.Tenants.Tenant?> GetTenantAsync(CancellationToken cancellationToken)

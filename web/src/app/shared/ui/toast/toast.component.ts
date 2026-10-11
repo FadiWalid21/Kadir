@@ -21,13 +21,25 @@ import { ToastService } from './toast.service';
         >
           <span>{{ msg.text }}</span>
           @if (msg.link) {
-            <a
-              [routerLink]="msg.link.url"
-              class="font-medium text-accent underline underline-offset-2"
-              (click)="toast.dismiss(msg.id)"
-            >
-              {{ msg.link.label }}
-            </a>
+            @if (msg.link.url.startsWith('/') && !msg.link.url.startsWith('//')) {
+              <a
+                [routerLink]="msg.link.url"
+                class="font-medium text-accent underline underline-offset-2"
+                (click)="toast.dismiss(msg.id)"
+              >
+                {{ msg.link.label }}
+              </a>
+            } @else {
+              <a
+                [href]="msg.link.url"
+                target="_blank"
+                rel="noopener"
+                class="font-medium text-accent underline underline-offset-2"
+                (click)="toast.dismiss(msg.id)"
+              >
+                {{ msg.link.label }}
+              </a>
+            }
           }
         </div>
       }

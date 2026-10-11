@@ -91,22 +91,20 @@ public sealed class DevSubscriptionService(
             tenant.ResumeTrial();
         }
 
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        cache.Invalidate(tenantId);
-
         if (planChanged)
         {
-            await audit.WriteAsync(
-                    tenantId,
-                    tenantContext.UserId,
-                    "subscription.plan_changed",
-                    "Subscription",
-                    subscription.Id,
-                    JsonSerializer.Serialize(new { planCode = oldPlanCode }),
-                    JsonSerializer.Serialize(new { planCode = request.PlanCode }),
-                    cancellationToken)
-                .ConfigureAwait(false);
+            audit.Stage(
+                tenantId,
+                tenantContext.UserId,
+                "subscription.plan_changed",
+                "Subscription",
+                subscription.Id,
+                JsonSerializer.Serialize(new { planCode = oldPlanCode }),
+                JsonSerializer.Serialize(new { planCode = request.PlanCode }));
         }
+
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        cache.Invalidate(tenantId);
 
         return Result.Success();
     }

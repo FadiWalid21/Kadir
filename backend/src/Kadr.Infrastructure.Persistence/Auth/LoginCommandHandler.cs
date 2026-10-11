@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Kadr.Identity.Application.Auth;
 using Kadr.Identity.Application.Security;
+using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Application;
 using Kadr.SharedKernel.Constants;
@@ -19,6 +21,7 @@ public sealed class LoginCommandHandler(
     IJwtTokenService jwtTokenService,
     IRefreshTokenService refreshTokenService,
     IPermissionService permissionService,
+    IAuditLogWriter audit,
     IClock clock,
     ILogger<LoginCommandHandler> logger) : ICommandHandler<LoginCommand, LoginResult>
 {
@@ -47,6 +50,13 @@ public sealed class LoginCommandHandler(
         if (user is not null && user.IsLockedOut(clock.UtcNow))
         {
             _ = passwordHasher.VerifyPassword(dummyPasswordHash.Value, command.Password);
+            await WriteAuthAuditAsync(
+                    tenant.Id,
+                    user.Id,
+                    AuditActions.AuthAccountLocked,
+                    command,
+                    cancellationToken)
+                .ConfigureAwait(false);
             return Result.Failure<LoginResult>(ErrorCodes.AuthAccountLocked, ErrorCodes.AuthAccountLocked);
         }
 
@@ -58,6 +68,30 @@ public sealed class LoginCommandHandler(
             if (user is not null && user.IsActive)
             {
                 var locked = user.RegisterFailedLogin(clock);
+                audit.Stage(
+                    tenant.Id,
+                    user.Id,
+                    AuditActions.AuthLoginFailed,
+                    "Auth",
+                    user.Id,
+                    null,
+                    EmailJson(command.Email),
+                    command.ClientIp,
+                    command.DeviceInfo);
+                if (locked)
+                {
+                    audit.Stage(
+                        tenant.Id,
+                        user.Id,
+                        AuditActions.AuthAccountLocked,
+                        "Auth",
+                        user.Id,
+                        null,
+                        EmailJson(command.Email),
+                        command.ClientIp,
+                        command.DeviceInfo);
+                }
+
                 await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 if (locked)
                 {
@@ -67,6 +101,16 @@ public sealed class LoginCommandHandler(
                         user.TenantId);
                     return Result.Failure<LoginResult>(ErrorCodes.AuthAccountLocked, ErrorCodes.AuthAccountLocked);
                 }
+            }
+            else
+            {
+                await WriteAuthAuditAsync(
+                        tenant.Id,
+                        null,
+                        AuditActions.AuthLoginFailed,
+                        command,
+                        cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             return Result.Failure<LoginResult>(ErrorCodes.AuthInvalidCredentials, ErrorCodes.AuthInvalidCredentials);
@@ -78,6 +122,16 @@ public sealed class LoginCommandHandler(
         }
 
         user.RecordSuccessfulLogin(clock);
+        audit.Stage(
+            tenant.Id,
+            user.Id,
+            AuditActions.AuthLoginSucceeded,
+            "Auth",
+            user.Id,
+            null,
+            EmailJson(command.Email),
+            command.ClientIp,
+            command.DeviceInfo);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         tenantContext.Set(tenant.Id, user.Id);
@@ -100,4 +154,28 @@ public sealed class LoginCommandHandler(
             refresh.OpaqueToken,
             refresh.ExpiresAt));
     }
+
+    private async Task WriteAuthAuditAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        LoginCommand command,
+        CancellationToken cancellationToken)
+    {
+        await audit.WriteAsync(
+                tenantId,
+                userId,
+                action,
+                "Auth",
+                userId,
+                null,
+                EmailJson(command.Email),
+                cancellationToken,
+                command.ClientIp,
+                command.DeviceInfo)
+            .ConfigureAwait(false);
+    }
+
+    private static string EmailJson(string email) =>
+        JsonSerializer.Serialize(new { email = EmailNormalizer.Normalize(email) });
 }

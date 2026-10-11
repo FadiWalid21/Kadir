@@ -3,9 +3,9 @@ using Kadr.Platform.Domain.Audit;
 
 namespace Kadr.Infrastructure.Persistence.Audit;
 
-public sealed class AuditLogWriter(KadrDbContext db) : IAuditLogWriter
+public sealed class AuditLogWriter(KadrDbContext db, IClientRequestInfo clientInfo) : IAuditLogWriter
 {
-    public async Task WriteAsync(
+    public void Stage(
         Guid tenantId,
         Guid? userId,
         string action,
@@ -13,7 +13,8 @@ public sealed class AuditLogWriter(KadrDbContext db) : IAuditLogWriter
         Guid? entityId,
         string? oldValuesJson,
         string? newValuesJson,
-        CancellationToken cancellationToken = default)
+        string? ipAddress = null,
+        string? userAgent = null)
     {
         db.AuditLogs.Add(AuditLog.Create(
             tenantId,
@@ -22,7 +23,24 @@ public sealed class AuditLogWriter(KadrDbContext db) : IAuditLogWriter
             entityType,
             entityId,
             oldValuesJson,
-            newValuesJson));
+            newValuesJson,
+            ipAddress ?? clientInfo.IpAddress,
+            userAgent ?? clientInfo.UserAgent));
+    }
+
+    public async Task WriteAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        string entityType,
+        Guid? entityId,
+        string? oldValuesJson,
+        string? newValuesJson,
+        CancellationToken cancellationToken = default,
+        string? ipAddress = null,
+        string? userAgent = null)
+    {
+        Stage(tenantId, userId, action, entityType, entityId, oldValuesJson, newValuesJson, ipAddress, userAgent);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

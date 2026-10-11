@@ -31,11 +31,14 @@ public static class DependencyInjection
         services.AddScoped<ITenantContextAccessor>(sp => sp.GetRequiredService<AmbientTenantContext>());
         services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
         services.AddScoped<TenantSaveChangesInterceptor>();
+        services.AddScoped<AuditSaveChangesInterceptor>();
+        services.AddScoped<IClientRequestInfo, NullClientRequestInfo>();
         services.AddScoped<PlanSeeder>();
         services.AddScoped<IndustryTemplateSeeder>();
         services.AddScoped<ITemplateApplyService, TemplateApplyService>();
         services.AddScoped<ITenantTemplateService, TenantTemplateService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<PrivilegeGuard>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IUserService, Users.UserService>();
@@ -66,7 +69,9 @@ public static class DependencyInjection
             options
                 .UseNpgsql(connectionString)
                 .UseSnakeCaseNamingConvention()
-                .AddInterceptors(sp.GetRequiredService<TenantSaveChangesInterceptor>());
+                .AddInterceptors(
+                    sp.GetRequiredService<TenantSaveChangesInterceptor>(),
+                    sp.GetRequiredService<AuditSaveChangesInterceptor>());
         });
 
         return services;

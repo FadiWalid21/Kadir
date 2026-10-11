@@ -14,7 +14,11 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(x => x.EntityType).HasMaxLength(100).IsRequired();
         builder.Property(x => x.OldValuesJson).HasColumnType("jsonb");
         builder.Property(x => x.NewValuesJson).HasColumnType("jsonb");
+        builder.Property(x => x.IpAddress).HasMaxLength(64);
+        builder.Property(x => x.UserAgent).HasMaxLength(512);
         builder.HasIndex(x => new { x.TenantId, x.At });
         builder.HasIndex(x => new { x.TenantId, x.EntityType, x.EntityId });
+        builder.HasIndex(x => new { x.TenantId, x.UserId, x.At });
+        builder.HasIndex(x => new { x.TenantId, x.Action, x.At });
     }
 }

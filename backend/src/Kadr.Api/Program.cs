@@ -12,6 +12,7 @@ using Kadr.Identity.Infrastructure;
 using Kadr.Infrastructure.Persistence;
 using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.Platform.Application;
+using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Infrastructure;
 using Kadr.SharedKernel.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,6 +47,8 @@ try
     builder.Services.AddIdentityApplication();
     builder.Services.AddIdentityInfrastructure();
     builder.Services.AddPersistence(connectionString);
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IClientRequestInfo, HttpClientRequestInfo>();
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<IErrorLocalizer, ErrorLocalizer>();
     builder.Services.AddScoped<IdempotencyService>();
@@ -178,6 +181,7 @@ try
     app.MapUsersEndpoints();
     app.MapInvitationsEndpoints();
     app.MapSubscriptionEndpoints();
+    app.MapAuditLogEndpoints();
 
     app.Run();
 }
