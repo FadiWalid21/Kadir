@@ -37,13 +37,13 @@ public sealed class PlanSeeder(KadrDbContext db, ILogger<PlanSeeder> logger)
         decimal monthlyPrice,
         IReadOnlyList<string> enabledFeatures)
     {
-        var json = ToFeaturesJson(enabledFeatures);
-        if (byCode.TryGetValue(code, out var plan))
+        // Insert-only: platform admins may edit catalog fields; do not overwrite on every boot.
+        if (byCode.ContainsKey(code))
         {
-            plan.ApplySeed(nameAr, nameEn, PricingModel.FlatTier, cap, monthlyPrice, null, json);
             return;
         }
 
+        var json = ToFeaturesJson(enabledFeatures);
         var created = Plan.CreateFlat(code, nameAr, nameEn, cap, monthlyPrice, json);
         db.Plans.Add(created);
         byCode[code] = created;
@@ -58,13 +58,12 @@ public sealed class PlanSeeder(KadrDbContext db, ILogger<PlanSeeder> logger)
         int minBilled,
         IReadOnlyList<string> enabledFeatures)
     {
-        var json = ToFeaturesJson(enabledFeatures);
-        if (byCode.TryGetValue(code, out var plan))
+        if (byCode.ContainsKey(code))
         {
-            plan.ApplySeed(nameAr, nameEn, PricingModel.PerEmployee, null, unitPrice, minBilled, json);
             return;
         }
 
+        var json = ToFeaturesJson(enabledFeatures);
         var created = Plan.CreatePerEmployee(code, nameAr, nameEn, unitPrice, minBilled, json);
         db.Plans.Add(created);
         byCode[code] = created;

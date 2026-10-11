@@ -48,6 +48,9 @@ try
     builder.Services.AddOptions<PasswordResetOptions>()
         .Bind(builder.Configuration.GetSection(PasswordResetOptions.SectionName));
 
+    builder.Services.AddOptions<PlatformAdminOptions>()
+        .Bind(builder.Configuration.GetSection(PlatformAdminOptions.SectionName));
+
     builder.Services.AddPlatformApplication();
     builder.Services.AddPlatformInfrastructure();
     builder.Services.AddIdentityApplication();
@@ -245,12 +248,18 @@ try
         await db.Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
     }
 
     app.MapHealthChecks("/health");
     app.MapGet("/api/v1/health", () => Results.Ok(new { status = "ok" }))
         .WithName("ApiHealth");
     app.MapAuthEndpoints();
+    app.MapPlatformAuthEndpoints();
+    app.MapPlatformTenantsEndpoints();
+    app.MapPlatformPlansEndpoints();
+    app.MapPlatformAuditLogsEndpoints();
+    app.MapPlatformHealthEndpoints();
     app.MapGoogleAuthEndpoints();
     app.MapMeEndpoints();
     app.MapTenantEndpoints();

@@ -14,14 +14,26 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var tenantClaim = context.User.FindFirstValue(ClaimNames.TenantId);
             var subject = context.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
                 ?? context.User.FindFirstValue(ClaimNames.Subject)
                 ?? context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (Guid.TryParse(tenantClaim, out var tenantId) && Guid.TryParse(subject, out var userId))
+            var isPlatformAdmin = string.Equals(
+                context.User.FindFirstValue(ClaimNames.PlatformAdmin),
+                "true",
+                StringComparison.Ordinal);
+
+            if (isPlatformAdmin && Guid.TryParse(subject, out var platformAdminId))
             {
-                tenantContext.Set(tenantId, userId);
+                tenantContext.SetPlatformAdmin(platformAdminId);
+            }
+            else
+            {
+                var tenantClaim = context.User.FindFirstValue(ClaimNames.TenantId);
+                if (Guid.TryParse(tenantClaim, out var tenantId) && Guid.TryParse(subject, out var userId))
+                {
+                    tenantContext.Set(tenantId, userId);
+                }
             }
         }
 

@@ -93,4 +93,29 @@ public sealed class Plan : AggregateRoot, IPlatformEntity, IAuditable
         Currency = "EGP";
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    /// <summary>
+    /// Catalog edit by a platform admin. Code, pricing model and currency are fixed; the caller validates
+    /// the values against the pricing model before calling.
+    /// </summary>
+    public void UpdateCatalog(
+        string nameAr,
+        string nameEn,
+        int? employeeCap,
+        decimal? unitPrice,
+        int? minBilledEmployees,
+        string featuresJson,
+        bool isActive,
+        Guid? updatedBy)
+    {
+        NameAr = nameAr;
+        NameEn = nameEn;
+        EmployeeCap = employeeCap;
+        UnitPrice = unitPrice;
+        MinBilledEmployees = minBilledEmployees;
+        FeaturesJson = featuresJson;
+        IsActive = isActive;
+        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedBy = updatedBy;
+    }
 }

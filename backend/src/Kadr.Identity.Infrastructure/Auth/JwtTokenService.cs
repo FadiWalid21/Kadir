@@ -47,6 +47,31 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options) : IJwtTokenSer
         return new AccessTokenResult(encoded, _options.AccessTokenMinutes * 60);
     }
 
+    public AccessTokenResult CreatePlatformAccessToken(Guid platformAdminId, string language)
+    {
+        var expires = DateTime.UtcNow.AddMinutes(_options.AccessTokenMinutes);
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, platformAdminId.ToString()),
+            new(ClaimNames.PlatformAdmin, "true"),
+            new(ClaimNames.Language, language),
+            new(ClaimTypes.Role, "PlatformAdmin"),
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            claims: claims,
+            notBefore: DateTime.UtcNow,
+            expires: expires,
+            signingCredentials: credentials);
+
+        var encoded = new JwtSecurityTokenHandler().WriteToken(token);
+        return new AccessTokenResult(encoded, _options.AccessTokenMinutes * 60);
+    }
+
     public ClaimsPrincipal? ValidateAccessToken(string token)
     {
         var handler = new JwtSecurityTokenHandler();

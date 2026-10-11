@@ -8,6 +8,7 @@
   --color-surface: var(--bg-surface);
   --color-subtle: var(--bg-subtle);
   --color-hover: var(--bg-hover);
+  --color-ink: var(--bg-ink);
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-fg: var(--text-primary);
@@ -18,6 +19,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-soft-fg: var(--accent-soft-text);
   --color-on-accent: var(--text-on-accent);
+  --color-on-ink: var(--text-on-ink);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);

@@ -1,9 +1,52 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guard';
 import { PermissionCodes } from './core/auth/permission-codes';
+import { platformAuthGuard, platformGuestGuard } from './core/platform/platform-auth.guard';
 import { devRoutes } from './dev/dev.routes';
 
 export const routes: Routes = [
+  {
+    path: 'platform/login',
+    canActivate: [platformGuestGuard],
+    loadComponent: () =>
+      import('./features/platform/platform-login.page').then((m) => m.PlatformLoginPage),
+  },
+  {
+    path: 'platform',
+    canActivate: [platformAuthGuard],
+    loadComponent: () =>
+      import('./features/platform/platform-shell.layout').then((m) => m.PlatformShellLayout),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'companies' },
+      {
+        path: 'companies',
+        loadComponent: () =>
+          import('./features/platform/platform-companies.page').then((m) => m.PlatformCompaniesPage),
+      },
+      {
+        path: 'companies/:id',
+        loadComponent: () =>
+          import('./features/platform/platform-company-detail.page').then(
+            (m) => m.PlatformCompanyDetailPage,
+          ),
+      },
+      {
+        path: 'plans',
+        loadComponent: () =>
+          import('./features/platform/platform-plans.page').then((m) => m.PlatformPlansPage),
+      },
+      {
+        path: 'audit',
+        loadComponent: () =>
+          import('./features/platform/platform-audit.page').then((m) => m.PlatformAuditPage),
+      },
+      {
+        path: 'health',
+        loadComponent: () =>
+          import('./features/platform/platform-health.page').then((m) => m.PlatformHealthPage),
+      },
+    ],
+  },
   {
     path: 'login',
     canActivate: [guestGuard],

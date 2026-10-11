@@ -309,37 +309,10 @@ public sealed class AuditLogService(KadrDbContext db, ITenantContext tenantConte
         string.Equals(entityType, "user", StringComparison.OrdinalIgnoreCase)
         || string.Equals(entityType, nameof(AppUser), StringComparison.OrdinalIgnoreCase);
 
-    private static string EncodeCursor(DateTimeOffset at, Guid id)
-    {
-        var raw = $"{at.UtcDateTime:O}|{id:N}";
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
-    }
+    private static string EncodeCursor(DateTimeOffset at, Guid id) => AuditCursor.Encode(at, id);
 
-    private static bool TryDecodeCursor(string cursor, out DateTimeOffset at, out Guid id)
-    {
-        at = default;
-        id = default;
-        try
-        {
-            var raw = Encoding.UTF8.GetString(Convert.FromBase64String(cursor));
-            var parts = raw.Split('|', 2);
-            if (parts.Length != 2)
-            {
-                return false;
-            }
-
-            if (!DateTimeOffset.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at))
-            {
-                return false;
-            }
-
-            return Guid.TryParseExact(parts[1], "N", out id);
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
-    }
+    private static bool TryDecodeCursor(string cursor, out DateTimeOffset at, out Guid id) =>
+        AuditCursor.TryDecode(cursor, out at, out id);
 
     private static string Csv(string? value)
     {

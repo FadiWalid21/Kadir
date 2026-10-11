@@ -57,6 +57,9 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
         builder.UseSetting("Jwt:Issuer", "kadr-test");
         builder.UseSetting("Jwt:Audience", "kadr-test-api");
+        builder.UseSetting("PlatformAdmin:Email", "operator@kadr.test");
+        builder.UseSetting("PlatformAdmin:Password", "PlatformOwner!!99");
+        builder.UseSetting("PlatformAdmin:FullName", "Test Operator");
         builder.UseEnvironment("Testing");
         builder.ConfigureServices(services =>
         {
@@ -81,7 +84,11 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         await db.Database.MigrateAsync();
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
     }
+
+    public const string PlatformAdminEmail = "operator@kadr.test";
+    public const string PlatformAdminPassword = "PlatformOwner!!99";
 
     public HttpClient CreateCookieClient() =>
         CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });

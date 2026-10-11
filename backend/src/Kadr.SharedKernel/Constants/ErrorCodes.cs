@@ -61,4 +61,10 @@ public static class ErrorCodes
     public const string AuthGoogleAlreadyLinked = "auth.google_already_linked";
     public const string AuthPasswordResetInvalid = "auth.password_reset_invalid";
     public const string AuthGoogleDisabled = "auth.google_disabled";
+    public const string PlatformReasonRequired = "platform.reason_required";
+    public const string PlatformValidationFailed = "platform.validation_failed";
+    public const string PlatformTenantStateInvalid = "platform.tenant_state_invalid";
+    public const string PlatformNoChange = "platform.no_change";
+    public const string PlatformPlanNotFound = "platform.plan_not_found";
+    public const string PlatformPlanProtected = "platform.plan_protected";
 }

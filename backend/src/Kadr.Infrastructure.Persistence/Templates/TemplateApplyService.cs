@@ -3,6 +3,7 @@ using System.Text.Json;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Templates;
 using Kadr.Platform.Domain.Templates;
+using Kadr.SharedKernel.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kadr.Infrastructure.Persistence.Templates;
@@ -39,6 +40,80 @@ public sealed class TemplateApplyService(KadrDbContext db) : ITemplateApplyServi
         }
 
         return added;
+    }
+
+    public async Task<TemplateReplaceResult> ReplaceUntouchedAsync(
+        Guid tenantId,
+        string industryCode,
+        CancellationToken cancellationToken = default)
+    {
+        var template = await GetLatestTemplateAsync(industryCode, cancellationToken).ConfigureAwait(false);
+        var seed = Deserialize(template);
+        var existing = await CollectExistingKeysAsync(tenantId, cancellationToken).ConfigureAwait(false);
+
+        // Untouched = copied from a template and never customized. Items that are also part of the new
+        // template are kept as-is; everything else is deactivated, never deleted (other data may reference it).
+        var deactivated = 0;
+        deactivated += await DeactivateUntouchedAsync(
+            db.Shifts.Where(x => x.TenantId == tenantId && x.SourceKey != null && !x.IsCustomized && x.IsActive),
+            seed.Items.Shifts.Select(x => x.Key),
+            x => x.SetActive(false),
+            cancellationToken).ConfigureAwait(false);
+        deactivated += await DeactivateUntouchedAsync(
+            db.LeaveTypes.Where(x => x.TenantId == tenantId && x.SourceKey != null && !x.IsCustomized && x.IsActive),
+            seed.Items.LeaveTypes.Select(x => x.Key),
+            x => x.SetActive(false),
+            cancellationToken).ConfigureAwait(false);
+        deactivated += await DeactivateUntouchedAsync(
+            db.DocumentTypes.Where(x => x.TenantId == tenantId && x.SourceKey != null && !x.IsCustomized && x.IsActive),
+            seed.Items.DocumentTypes.Select(x => x.Key),
+            x => x.SetActive(false),
+            cancellationToken).ConfigureAwait(false);
+        deactivated += await DeactivateUntouchedAsync(
+            db.JobTitles.Where(x => x.TenantId == tenantId && x.SourceKey != null && !x.IsCustomized && x.IsActive),
+            seed.Items.JobTitles.Select(x => x.Key),
+            x => x.SetActive(false),
+            cancellationToken).ConfigureAwait(false);
+        deactivated += await DeactivateUntouchedAsync(
+            db.Departments.Where(x => x.TenantId == tenantId && x.SourceKey != null && !x.IsCustomized && x.IsActive),
+            seed.Items.Departments.Select(x => x.Key),
+            x => x.SetActive(false),
+            cancellationToken).ConfigureAwait(false);
+
+        var before = CountTrackedAdds();
+        AddAllMissing(tenantId, template, seed, existing);
+        var added = CountTrackedAdds() - before;
+
+        if (added > 0 || deactivated > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return new TemplateReplaceResult(added, deactivated);
+    }
+
+    private static async Task<int> DeactivateUntouchedAsync<T>(
+        IQueryable<T> candidates,
+        IEnumerable<string> newTemplateKeys,
+        Action<T> deactivate,
+        CancellationToken cancellationToken)
+        where T : class, ITemplateSourced
+    {
+        var keep = newTemplateKeys.ToHashSet(StringComparer.Ordinal);
+        var items = await candidates.ToListAsync(cancellationToken).ConfigureAwait(false);
+        var count = 0;
+        foreach (var item in items)
+        {
+            if (item.SourceKey is { } key && keep.Contains(key))
+            {
+                continue;
+            }
+
+            deactivate(item);
+            count++;
+        }
+
+        return count;
     }
 
     private int CountTrackedAdds() =>

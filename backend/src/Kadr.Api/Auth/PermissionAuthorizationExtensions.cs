@@ -10,6 +10,7 @@ public static class PermissionAuthorizationExtensions
     public static IServiceCollection AddPermissionAuthorization(this IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationHandler, PlatformAdminAuthorizationHandler>();
         services.AddAuthorization(options =>
         {
             foreach (var code in PermissionCodes.All)
@@ -17,6 +18,10 @@ public static class PermissionAuthorizationExtensions
                 options.AddPolicy(code, policy =>
                     policy.Requirements.Add(new PermissionRequirement(code)));
             }
+
+            options.AddPolicy(
+                AuthorizationPolicies.PlatformAdmin,
+                policy => policy.Requirements.Add(new PlatformAdminRequirement()));
         });
 
         return services;
