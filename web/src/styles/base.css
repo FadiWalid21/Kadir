@@ -13,6 +13,15 @@ html {
   background-color: var(--bg-app);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* stylelint-disable-next-line property-no-vendor-prefix -- Safari iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+a,
+button,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
 }
 
 html:lang(ar) {
@@ -58,6 +67,40 @@ body {
 
 .rtl-flip {
   transform: scaleX(1);
+}
+
+/* PWA / standalone safe areas (UX-08) */
+.kadr-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.kadr-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.kadr-drawer-sheet {
+  max-height: 90dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.kadr-update-notice {
+  bottom: calc(3.5rem + env(safe-area-inset-bottom));
+}
+
+.kadr-toast-stack {
+  bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+@media (width >= 768px) {
+  .kadr-update-notice {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    inset-inline: 1.5rem auto;
+    max-width: 24rem;
+  }
+
+  .kadr-toast-stack {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 [dir='rtl'] .rtl-flip {

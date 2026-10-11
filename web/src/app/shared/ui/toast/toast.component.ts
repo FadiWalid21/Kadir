@@ -8,7 +8,7 @@ import { ToastService } from './toast.service';
   imports: [RouterLink],
   template: `
     <div
-      class="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 md:bottom-6"
+      class="kadr-toast-stack pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-4"
       aria-live="polite"
     >
       @for (msg of toast.messages(); track msg.id) {

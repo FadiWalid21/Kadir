@@ -65,5 +65,6 @@ describe('HomePage', () => {
     fixture.detectChanges();
     text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('تعذر تحميل الصفحة');
+    expect(fixture.nativeElement.querySelector('[data-testid="network-error"]')).toBeTruthy();
   });
 });

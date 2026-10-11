@@ -86,6 +86,21 @@ export class ThemeService {
     root.dataset['density'] = this.density();
     root.lang = this.language();
     root.dir = this.direction();
+    this.syncThemeColorMeta();
+  }
+
+  /** Keep the browser chrome in sync with the surface token (never hard-coded hex in components). */
+  private syncThemeColorMeta(): void {
+    const meta = this.document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      return;
+    }
+    const surface = getComputedStyle(this.document.documentElement)
+      .getPropertyValue('--bg-surface')
+      .trim();
+    if (surface) {
+      meta.setAttribute('content', surface);
+    }
   }
 
   private bindSystemThemeListener(): void {

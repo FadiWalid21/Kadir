@@ -22,7 +22,10 @@ type LogoView = 'loading' | 'image' | 'fallback';
     } @else if (fallbackName()) {
       <kadr-avatar [name]="fallbackName()!" [size]="avatarSize()" [ariaLabel]="fallbackName()!" />
     } @else {
-      <img src="/brand/logo-kadr.png" alt="" class="object-contain" [class]="sizeClass()" />
+      <picture>
+        <source type="image/webp" srcset="/brand/logo-kadr-128.webp" />
+        <img src="/brand/logo-kadr-128.png" alt="" class="object-contain" [class]="sizeClass()" />
+      </picture>
     }
   `,
 })

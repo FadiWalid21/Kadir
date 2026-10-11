@@ -12,11 +12,14 @@ import {
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { problemDetailsFromError } from '../../core/api/auth.api';
 import { MeApi } from '../../core/api/me.api';
+import { DirtyFormRegistry } from '../../core/forms/dirty-form.registry';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { MIN_PASSWORD_LENGTH } from '../onboarding/onboarding.store';
+
+const DIRTY_ID = 'account-password-drawer';
 
 export type PasswordDrawerMode = 'change' | 'add';
 type RuleStatus = 'met' | 'unmet' | 'failed';
@@ -113,6 +116,7 @@ const PASSWORD_TOO_COMMON = 'auth.password_too_common';
 export class PasswordDrawerComponent {
   private readonly me = inject(MeApi);
   private readonly transloco = inject(TranslocoService);
+  private readonly dirtyForms = inject(DirtyFormRegistry);
 
   readonly open = input(false);
   readonly mode = input<PasswordDrawerMode>('change');
@@ -154,12 +158,26 @@ export class PasswordDrawerComponent {
     effect(() => {
       if (this.open()) {
         untracked(() => this.reset());
+      } else {
+        untracked(() => this.dirtyForms.clear(DIRTY_ID));
+      }
+    });
+
+    effect(() => {
+      const dirty =
+        this.open() &&
+        (!!this.current() || !!this.next() || !!this.confirm());
+      if (dirty) {
+        this.dirtyForms.register(DIRTY_ID);
+      } else {
+        this.dirtyForms.clear(DIRTY_ID);
       }
     });
   }
 
   close(): void {
     if (!this.saving()) {
+      this.dirtyForms.clear(DIRTY_ID);
       this.closed.emit();
     }
   }
@@ -200,6 +218,7 @@ export class PasswordDrawerComponent {
       });
       this.saved.emit(this.mode());
       this.reset();
+      this.dirtyForms.clear(DIRTY_ID);
     } catch (error) {
       const code = problemDetailsFromError(error)?.code;
       if (code === INVALID_CREDENTIALS) {

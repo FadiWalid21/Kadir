@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnInit,
   signal,
@@ -12,6 +13,7 @@ import { problemDetailsFromError } from '../../core/api/auth.api';
 import { InvitationListItem, UserListItem } from '../../core/api/users.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
+import { DirtyFormRegistry } from '../../core/forms/dirty-form.registry';
 import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
@@ -389,6 +391,7 @@ export class UsersSettingsPage implements OnInit {
   private readonly subscription = inject(SubscriptionStore);
   private readonly toast = inject(ToastService);
   private readonly i18n = inject(TranslocoService);
+  private readonly dirtyForms = inject(DirtyFormRegistry);
 
   protected readonly activeTab = signal('users');
   protected readonly inviteOpen = signal(false);
@@ -467,6 +470,29 @@ export class UsersSettingsPage implements OnInit {
     { value: 'true', label: this.i18n.translate('settings.users.active') },
     { value: 'false', label: this.i18n.translate('settings.users.inactive') },
   ]);
+
+  constructor() {
+    effect(() => {
+      const dirty = this.inviteOpen() && !!this.inviteEmail().trim();
+      if (dirty) {
+        this.dirtyForms.register('users-invite-drawer');
+      } else {
+        this.dirtyForms.clear('users-invite-drawer');
+      }
+    });
+
+    effect(() => {
+      const user = this.editUser();
+      const dirty =
+        !!user &&
+        (this.editName().trim() !== user.fullName || this.editRoleId() !== user.roleId);
+      if (dirty) {
+        this.dirtyForms.register('users-edit-drawer');
+      } else {
+        this.dirtyForms.clear('users-edit-drawer');
+      }
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     await this.store.loadRoles();

@@ -13,13 +13,16 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
         class="flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-3 md:px-6"
       >
         <div class="flex min-w-0 items-center gap-3">
-          <img
-            src="/brand/logo-kadr.png"
-            alt=""
-            width="36"
-            height="36"
-            class="size-9 shrink-0 object-contain"
-          />
+          <picture>
+            <source type="image/webp" srcset="/brand/logo-kadr-128.webp" />
+            <img
+              src="/brand/logo-kadr-128.png"
+              alt=""
+              width="36"
+              height="36"
+              class="size-9 shrink-0 object-contain"
+            />
+          </picture>
           <div class="min-w-0 text-start">
             <p class="truncate text-sm font-bold text-fg">{{ 'auth.shell.brand' | transloco }}</p>
             <p class="truncate text-xs text-fg-muted">{{ 'auth.shell.brandLine' | transloco }}</p>
@@ -45,13 +48,16 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
           <div class="flex flex-col gap-6 p-6 sm:p-8" data-testid="auth-form-column">
             <header class="flex flex-col gap-3 text-start">
               <div class="flex items-center gap-3">
-                <img
-                  src="/brand/logo-kadr.png"
-                  alt=""
-                  width="40"
-                  height="40"
-                  class="size-10 object-contain"
-                />
+                <picture>
+                  <source type="image/webp" srcset="/brand/logo-kadr-128.webp" />
+                  <img
+                    src="/brand/logo-kadr-128.png"
+                    alt=""
+                    width="40"
+                    height="40"
+                    class="size-10 object-contain"
+                  />
+                </picture>
                 <div>
                   <p class="text-sm font-bold text-fg">{{ 'auth.shell.brand' | transloco }}</p>
                   <p class="text-xs text-fg-muted">{{ 'auth.shell.brandLine' | transloco }}</p>
