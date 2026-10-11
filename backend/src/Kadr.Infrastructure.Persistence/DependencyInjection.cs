@@ -53,6 +53,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IEmailUniquenessChecker, EmailUniquenessChecker>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+        services.AddScoped<IGoogleAccountResolver, GoogleAccountResolver>();
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+        services.AddScoped<ISignInMethodsService, SignInMethodsService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<PermissionService>();
         services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());

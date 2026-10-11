@@ -1,9 +1,11 @@
+using Kadr.Identity.Application.Auth;
 using Kadr.Infrastructure.Persistence;
 using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Time;
 using Kadr.Testing.Support.Email;
 using Kadr.Testing.Support.Time;
+using Kadr.TenantIsolation.Tests.Auth;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,7 @@ namespace Kadr.TenantIsolation.Tests.Register;
 
 public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    public const string TestGoogleClientId = "kadr-test-client.apps.googleusercontent.com";
     public const string TestSigningKey = "TEST_ONLY_signing_key_at_least_32_chars_long!!";
 
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16-alpine")
@@ -42,6 +45,15 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("RateLimiting:RefreshPermitLimit", "1000");
         builder.UseSetting("RateLimiting:VerifyPermitLimit", "1000");
         builder.UseSetting("RateLimiting:ResendPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:ProvidersPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:GoogleNoncePermitLimit", "1000");
+        builder.UseSetting("RateLimiting:GoogleLoginPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:GoogleSelectPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:ForgotPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:ResetPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:MeSecurityPermitLimit", "1000");
+        builder.UseSetting("PasswordReset:EmailPermitLimit", "1000");
+        builder.UseSetting("Google:ClientId", TestGoogleClientId);
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
         builder.UseSetting("Jwt:Issuer", "kadr-test");
         builder.UseSetting("Jwt:Audience", "kadr-test-api");
@@ -50,6 +62,9 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+            // Replaceable per test class via WithWebHostBuilder; the default accepts the unsigned test credentials.
+            services.RemoveAll<IGoogleIdTokenValidator>();
+            services.AddSingleton<IGoogleIdTokenValidator, FakeGoogleIdTokenValidator>();
             services.RemoveAll<IClock>();
             services.AddSingleton<IClock>(Clock);
         });

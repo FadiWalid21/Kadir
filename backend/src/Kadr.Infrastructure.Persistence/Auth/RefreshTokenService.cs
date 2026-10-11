@@ -151,6 +151,57 @@ public sealed class RefreshTokenService(
         }
     }
 
+    public async Task RevokeAllExceptFamilyAsync(
+        Guid tenantId,
+        Guid userId,
+        Guid familyId,
+        CancellationToken cancellationToken = default)
+    {
+        tenantContext.Set(tenantId, userId);
+        var now = clock.UtcNow;
+        var tokens = await db.RefreshTokens
+            .Where(t => t.TenantId == tenantId
+                        && t.UserId == userId
+                        && t.RevokedAt == null
+                        && t.FamilyId != familyId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var token in tokens)
+        {
+            token.Revoke(now);
+        }
+
+        if (tokens.Count > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public async Task<Guid?> ResolveActiveFamilyIdAsync(
+        Guid tenantId,
+        Guid userId,
+        string opaqueToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(opaqueToken))
+        {
+            return null;
+        }
+
+        tenantContext.Set(tenantId, userId);
+        var hash = TokenHashing.Hash(opaqueToken);
+        var now = clock.UtcNow;
+        return await db.RefreshTokens.AsNoTracking()
+            .Where(t => t.TenantId == tenantId
+                        && t.UserId == userId
+                        && t.TokenHash == hash
+                        && t.RevokedAt == null
+                        && t.ExpiresAt > now)
+            .Select(t => (Guid?)t.FamilyId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     private async Task RevokeFamilyAsync(Guid familyId, Guid tenantId, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;

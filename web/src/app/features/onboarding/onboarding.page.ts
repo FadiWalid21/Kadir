@@ -8,8 +8,14 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { AuthProvidersService } from '../../core/auth/auth-providers.service';
+import { AuthAlertComponent } from '../auth/auth-alert.component';
 import { AuthShellLayout } from '../auth/auth-shell.layout';
+import { GoogleSignInFlow, googleAlertKindForCode, GoogleAlertKind } from '../auth/google-sign-in.flow';
+import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { GoogleSignInButtonComponent } from '../../shared/ui/google-sign-in-button/google-sign-in-button.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { StepperComponent, StepperStep } from '../../shared/ui/stepper/stepper.component';
 import {
@@ -29,6 +35,10 @@ const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
     InputComponent,
     StepperComponent,
     AuthShellLayout,
+    AuthAlertComponent,
+    BadgeComponent,
+    IconComponent,
+    GoogleSignInButtonComponent,
   ],
   template: `
     <kadr-auth-shell
@@ -51,7 +61,11 @@ const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
               <p class="text-sm text-fg-2">
                 {{ 'onboarding.doneBody' | transloco: { slug: store.draft().result?.slug } }}
               </p>
-              <p class="text-sm text-fg-2">{{ 'onboarding.verifyReminder' | transloco }}</p>
+              @if (store.draft().googleVerified) {
+                <p class="text-sm text-fg-2">{{ 'onboarding.google.doneHint' | transloco }}</p>
+              } @else {
+                <p class="text-sm text-fg-2">{{ 'onboarding.verifyReminder' | transloco }}</p>
+              }
               <a routerLink="/login">
                 <kadr-button variant="primary" type="button" class="w-full">
                   {{ 'onboarding.goToLogin' | transloco }}
@@ -63,24 +77,174 @@ const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
               @case ('account') {
                 <div class="flex flex-col gap-4">
                   <h2 class="text-lg font-bold text-fg">{{ 'onboarding.steps.account' | transloco }}</h2>
-                  <kadr-input
-                    [label]="'onboarding.fields.fullName' | transloco"
-                    [value]="store.draft().fullName"
-                    (valueChange)="store.patch({ fullName: $event })"
-                  />
-                  <kadr-input
-                    [label]="'ui.email' | transloco"
-                    type="email"
-                    [value]="store.draft().email"
-                    (valueChange)="store.patch({ email: $event })"
-                  />
-                  <kadr-input
-                    [label]="'auth.password' | transloco"
-                    type="password"
-                    [value]="store.draft().password"
-                    [hint]="'onboarding.fields.passwordHint' | transloco"
-                    (valueChange)="store.patch({ password: $event })"
-                  />
+
+                  @if (googleError(); as gErr) {
+                    <kadr-auth-alert
+                      [tone]="gErr === 'deactivated' ? 'danger' : 'warning'"
+                      [icon]="gErr === 'deactivated' ? 'lock' : 'alert'"
+                      [title]="('auth.googleAlert.' + gErr + '.title') | transloco"
+                      [message]="('auth.googleAlert.' + gErr + '.body') | transloco"
+                      data-testid="wizard-google-alert"
+                    />
+                  }
+
+                  @if (store.draft().googleVerified) {
+                    @if (store.googleExpired()) {
+                      <div class="flex flex-col gap-3" data-testid="google-expired">
+                        <kadr-auth-alert
+                          tone="warning"
+                          icon="alert"
+                          [title]="'onboarding.google.expiredTitle' | transloco"
+                          [message]="'onboarding.google.expiredBody' | transloco"
+                        />
+                        @if (googleEnabled()) {
+                          <kadr-google-sign-in-button
+                            text="continue_with"
+                            [disabled]="googleBusy()"
+                            (credential)="onGoogleCredential($event)"
+                          />
+                        }
+                      </div>
+                    } @else {
+                      <div
+                        class="flex items-start gap-3 rounded-md border border-line bg-subtle px-4 py-3 text-start"
+                        data-testid="google-banner"
+                      >
+                        <span
+                          class="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-line bg-surface"
+                        >
+                          <img src="/brand/google-g.svg" alt="" width="24" height="24" class="size-6" />
+                        </span>
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <p class="text-sm font-bold text-fg">{{ 'onboarding.google.bannerTitle' | transloco }}</p>
+                            <kadr-badge tone="success" [label]="'onboarding.google.verifiedTag' | transloco" />
+                          </div>
+                          <p class="text-sm text-fg-2">{{ 'onboarding.google.bannerBody' | transloco }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    <kadr-input
+                      [label]="'onboarding.fields.fullName' | transloco"
+                      autocomplete="name"
+                      [value]="store.draft().fullName"
+                      (valueChange)="store.patch({ fullName: $event })"
+                    />
+
+                    <div class="flex flex-col gap-2" data-testid="google-email">
+                      <kadr-input
+                        [label]="'ui.email' | transloco"
+                        type="email"
+                        [readOnly]="true"
+                        [value]="store.draft().email"
+                      />
+                      <div class="flex flex-wrap items-center gap-2 text-xs text-fg-2">
+                        <span
+                          class="inline-flex items-center gap-1 rounded-full bg-subtle px-2.5 py-1 font-medium"
+                        >
+                          <kadr-icon name="lock" size="sm" />
+                          {{ 'onboarding.google.accountBadge' | transloco }}
+                        </span>
+                        <span>{{ 'onboarding.google.emailVerified' | transloco }}</span>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 rounded-md border border-line px-4 py-3 text-start">
+                      <button
+                        type="button"
+                        class="flex w-full items-start gap-3 text-start focus-visible:outline-none"
+                        [attr.aria-expanded]="passwordOpen()"
+                        aria-controls="google-password-section"
+                        data-testid="google-password-toggle"
+                        (click)="togglePassword()"
+                      >
+                        <span class="mt-0.5 text-fg-2"><kadr-icon name="key" size="md" /></span>
+                        <span class="flex min-w-0 flex-1 flex-col gap-1">
+                          <span class="text-sm font-bold text-fg">{{ 'onboarding.google.passwordTitle' | transloco }}</span>
+                          <span class="text-sm text-fg-2">{{ 'onboarding.google.passwordBody' | transloco }}</span>
+                        </span>
+                        <span class="mt-0.5 text-fg-muted" [class.rotate-180]="passwordOpen()">
+                          <kadr-icon name="chevron-down" size="md" />
+                        </span>
+                      </button>
+                      @if (passwordOpen()) {
+                        <div id="google-password-section" class="flex flex-col gap-4" data-testid="google-password-fields">
+                          <kadr-input
+                            [label]="'onboarding.google.newPassword' | transloco"
+                            type="password"
+                            autocomplete="new-password"
+                            [revealable]="true"
+                            [showLabel]="'auth.showPassword' | transloco"
+                            [hideLabel]="'auth.hidePassword' | transloco"
+                            [hint]="'onboarding.fields.passwordHint' | transloco"
+                            [value]="store.draft().password"
+                            (valueChange)="store.patch({ password: $event })"
+                          />
+                          <kadr-input
+                            [label]="'onboarding.google.confirmPassword' | transloco"
+                            type="password"
+                            autocomplete="new-password"
+                            [revealable]="true"
+                            [showLabel]="'auth.showPassword' | transloco"
+                            [hideLabel]="'auth.hidePassword' | transloco"
+                            [value]="store.draft().passwordConfirm"
+                            (valueChange)="store.patch({ passwordConfirm: $event })"
+                          />
+                        </div>
+                      }
+                    </div>
+
+                    <button
+                      type="button"
+                      class="w-fit text-sm text-fg-2 underline-offset-2 hover:underline focus-visible:outline-none"
+                      data-testid="google-discard"
+                      (click)="discardGoogle()"
+                    >
+                      {{ 'onboarding.google.discard' | transloco }}
+                    </button>
+                  } @else {
+                    @if (googleEnabled()) {
+                      <div class="flex flex-col gap-3" data-testid="wizard-google-entry">
+                        <kadr-google-sign-in-button
+                          text="continue_with"
+                          [disabled]="googleBusy()"
+                          (credential)="onGoogleCredential($event)"
+                        />
+                        @if (googleBusy()) {
+                          <p class="text-center text-sm text-fg-2" role="status">
+                            {{ 'auth.google.verifying' | transloco }}
+                          </p>
+                        }
+                        <div class="flex items-center gap-3 text-sm text-fg-muted" aria-hidden="true">
+                          <span class="h-px flex-1 bg-line"></span>
+                          <span>{{ 'auth.or' | transloco }}</span>
+                          <span class="h-px flex-1 bg-line"></span>
+                        </div>
+                      </div>
+                    }
+                    <kadr-input
+                      [label]="'onboarding.fields.fullName' | transloco"
+                      autocomplete="name"
+                      [value]="store.draft().fullName"
+                      (valueChange)="store.patch({ fullName: $event })"
+                    />
+                    <kadr-input
+                      [label]="'ui.email' | transloco"
+                      type="email"
+                      autocomplete="email"
+                      [value]="store.draft().email"
+                      (valueChange)="store.patch({ email: $event })"
+                    />
+                    <kadr-input
+                      [label]="'auth.password' | transloco"
+                      type="password"
+                      autocomplete="new-password"
+                      [value]="store.draft().password"
+                      [hint]="'onboarding.fields.passwordHint' | transloco"
+                      (valueChange)="store.patch({ password: $event })"
+                    />
+                  }
                 </div>
               }
               @case ('company') {
@@ -295,6 +459,13 @@ const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 export class OnboardingPage implements OnInit {
   protected readonly store = inject(OnboardingStore);
   private readonly transloco = inject(TranslocoService);
+  private readonly providers = inject(AuthProvidersService);
+  private readonly googleFlow = inject(GoogleSignInFlow);
+
+  protected readonly googleEnabled = computed(() => this.providers.googleEnabled());
+  protected readonly googleBusy = signal(false);
+  protected readonly googleError = signal<GoogleAlertKind | null>(null);
+  protected readonly passwordOpen = signal(false);
 
   protected readonly dayCodes = DAY_CODES;
   protected readonly stepError = signal<string | null>(null);
@@ -318,6 +489,8 @@ export class OnboardingPage implements OnInit {
 
   ngOnInit(): void {
     this.store.hydrate();
+    this.passwordOpen.set(!!this.store.draft().password);
+    void this.providers.load();
     void this.reloadIndustries();
   }
 
@@ -328,6 +501,46 @@ export class OnboardingPage implements OnInit {
     } catch {
       this.industriesError.set('onboarding.errors.industries');
     }
+  }
+
+  async onGoogleCredential(credential: string): Promise<void> {
+    if (this.googleBusy()) {
+      return;
+    }
+    this.googleError.set(null);
+    this.stepError.set(null);
+    this.googleBusy.set(true);
+    try {
+      const result = await this.googleFlow.signIn(credential);
+      if (result.kind === 'not_found') {
+        // No account yet: continue the wizard with the Google-verified identity.
+        this.store.startGoogleRegistration({
+          token: result.registrationToken,
+          email: result.email,
+          fullName: result.name,
+        });
+        this.passwordOpen.set(false);
+      } else if (result.kind === 'error') {
+        this.googleError.set(googleAlertKindForCode(result.code));
+      }
+    } finally {
+      this.googleBusy.set(false);
+    }
+  }
+
+  togglePassword(): void {
+    const open = !this.passwordOpen();
+    this.passwordOpen.set(open);
+    if (!open) {
+      this.store.patch({ password: '', passwordConfirm: '' });
+    }
+  }
+
+  discardGoogle(): void {
+    this.googleError.set(null);
+    this.stepError.set(null);
+    this.passwordOpen.set(false);
+    this.store.discardGoogleRegistration();
   }
 
   onCountry(event: Event): void {

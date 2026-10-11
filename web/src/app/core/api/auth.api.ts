@@ -5,10 +5,17 @@ import { environment } from '../../../environments/environment';
 import { AuthHttpConstants } from './auth.constants';
 import {
   AccessTokenResponse,
+  AuthProvidersResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  GoogleLoginResponse,
+  GoogleNonceResponse,
+  GoogleSelectTenantRequest,
   LoginRequest,
   ProblemDetails,
   RegisterTenantRequest,
   RegisterTenantResponse,
+  ResetPasswordRequest,
   VerifyEmailRequest,
 } from './auth.models';
 
@@ -31,6 +38,47 @@ export class AuthApi {
         withCredentials: true,
       }),
     );
+  }
+
+  getProviders(): Promise<AuthProvidersResponse> {
+    return firstValueFrom(this.http.get<AuthProvidersResponse>(`${this.base}/providers`));
+  }
+
+  issueGoogleNonce(): Promise<GoogleNonceResponse> {
+    return firstValueFrom(this.http.post<GoogleNonceResponse>(`${this.base}/google/nonce`, {}));
+  }
+
+  googleLogin(credential: string): Promise<GoogleLoginResponse> {
+    return firstValueFrom(
+      this.http.post<GoogleLoginResponse>(
+        `${this.base}/google/login`,
+        { credential },
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  googleSelectTenant(body: GoogleSelectTenantRequest): Promise<AccessTokenResponse> {
+    return firstValueFrom(
+      this.http.post<AccessTokenResponse>(`${this.base}/google/select-tenant`, body, {
+        withCredentials: true,
+      }),
+    );
+  }
+
+  forgotPassword(body: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    return firstValueFrom(
+      this.http.post<ForgotPasswordResponse>(`${this.base}/forgot-password`, body),
+    );
+  }
+
+  resetPassword(body: ResetPasswordRequest): Promise<void> {
+    return firstValueFrom(
+      this.http.post(`${this.base}/reset-password`, body, {
+        observe: 'response',
+        responseType: 'text',
+      }),
+    ).then(() => undefined);
   }
 
   refresh(): Promise<AccessTokenResponse> {

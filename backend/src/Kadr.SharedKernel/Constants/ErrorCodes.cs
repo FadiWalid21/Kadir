@@ -50,4 +50,15 @@ public static class ErrorCodes
     public const string InvitationNotFound = "invitation.not_found";
     public const string AuditExportTooLarge = "audit.export_too_large";
     public const string AuditCursorInvalid = "audit.cursor_invalid";
+    public const string AuthGoogleAccountNotFound = "auth.google_account_not_found";
+    public const string AuthGoogleEmailUnverified = "auth.google_email_unverified";
+    public const string AuthAccountDisabled = "auth.account_disabled";
+    public const string AuthLastSignInMethod = "auth.last_sign_in_method";
+    public const string AuthGoogleTokenInvalid = "auth.google_token_invalid";
+    public const string AuthGoogleNonceInvalid = "auth.google_nonce_invalid";
+    public const string AuthGoogleSelectionInvalid = "auth.google_selection_invalid";
+    public const string AuthGoogleRegistrationInvalid = "auth.google_registration_invalid";
+    public const string AuthGoogleAlreadyLinked = "auth.google_already_linked";
+    public const string AuthPasswordResetInvalid = "auth.password_reset_invalid";
+    public const string AuthGoogleDisabled = "auth.google_disabled";
 }

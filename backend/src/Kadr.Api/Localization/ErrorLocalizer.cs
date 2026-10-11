@@ -56,6 +56,17 @@ public sealed class ErrorLocalizer : IErrorLocalizer
             "عدد سجلات التدقيق يتجاوز حد التصدير. ضيّق عوامل التصفية.",
             "Audit export exceeds the row limit. Narrow the filters."),
         [ErrorCodes.AuditCursorInvalid] = ("مؤشر الصفحة غير صالح.", "Audit page cursor is invalid."),
+        [ErrorCodes.AuthGoogleAccountNotFound] = ("لا يوجد حساب مرتبط ببريد جوجل هذا.", "No account is linked to this Google email."),
+        [ErrorCodes.AuthGoogleEmailUnverified] = ("بريد جوجل غير مؤكد.", "The Google email is not verified."),
+        [ErrorCodes.AuthAccountDisabled] = ("الحساب معطّل.", "The account is disabled."),
+        [ErrorCodes.AuthLastSignInMethod] = ("لا يمكن إزالة آخر طريقة لتسجيل الدخول. أضف كلمة مرور أولاً.", "You cannot remove your last sign-in method. Add a password first."),
+        [ErrorCodes.AuthGoogleTokenInvalid] = ("بيانات جوجل غير صالحة.", "The Google credential is invalid."),
+        [ErrorCodes.AuthGoogleNonceInvalid] = ("انتهت صلاحية طلب جوجل. حاول مرة أخرى.", "The Google request expired. Try again."),
+        [ErrorCodes.AuthGoogleSelectionInvalid] = ("انتهت صلاحية اختيار الشركة. سجّل الدخول مرة أخرى.", "The company selection expired. Sign in again."),
+        [ErrorCodes.AuthGoogleRegistrationInvalid] = ("انتهت صلاحية التسجيل عبر جوجل. ابدأ من جديد.", "The Google registration expired. Start again."),
+        [ErrorCodes.AuthGoogleAlreadyLinked] = ("حساب جوجل مرتبط بالفعل.", "A Google account is already linked."),
+        [ErrorCodes.AuthPasswordResetInvalid] = ("رابط إعادة التعيين غير صالح أو منتهٍ.", "The reset link is invalid or expired."),
+        [ErrorCodes.AuthGoogleDisabled] = ("تسجيل الدخول عبر جوجل غير مفعّل.", "Google sign-in is not enabled."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

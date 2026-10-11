@@ -8,9 +8,14 @@ public static class AuthConstants
     public static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(30);
     public static readonly TimeSpan EmailVerificationLifetime = TimeSpan.FromDays(2);
     public static readonly TimeSpan InvitationLifetime = TimeSpan.FromDays(7);
+    public static readonly TimeSpan GoogleNonceLifetime = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan GoogleSelectionLifetime = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan GoogleRegistrationLifetime = TimeSpan.FromMinutes(30);
+    public static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromMinutes(30);
 
     public const string RefreshCookieName = "kadr_refresh";
-    public const string RefreshCookiePath = "/api/v1/auth";
+    /// <summary>Wide enough for /auth refresh and /me session-revoke-others (IAM-07).</summary>
+    public const string RefreshCookiePath = "/api/v1";
     public const string CsrfHeaderName = "X-Requested-With";
     public const string CsrfHeaderValue = "XMLHttpRequest";
 }

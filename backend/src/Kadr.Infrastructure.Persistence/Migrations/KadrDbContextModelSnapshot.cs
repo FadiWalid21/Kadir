@@ -218,6 +218,54 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", (string)null);
                 });
 
+            modelBuilder.Entity("Kadr.Identity.Domain.Tokens.AuthOneTimeToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload_json");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("Id")
+                        .HasName("pk_auth_one_time_tokens");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_auth_one_time_tokens_expires_at");
+
+                    b.HasIndex("Purpose", "TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_auth_one_time_tokens_purpose_token_hash");
+
+                    b.ToTable("auth_one_time_tokens", (string)null);
+                });
+
             modelBuilder.Entity("Kadr.Identity.Domain.Tokens.EmailVerificationToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -261,6 +309,52 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_email_verification_tokens_tenant_id_user_id");
 
                     b.ToTable("email_verification_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Identity.Domain.Tokens.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_password_reset_tokens");
+
+                    b.HasIndex("TenantId", "TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_password_reset_tokens_tenant_id_token_hash");
+
+                    b.HasIndex("TenantId", "UserId", "ConsumedAt")
+                        .HasDatabaseName("ix_password_reset_tokens_tenant_id_user_id_consumed_at");
+
+                    b.ToTable("password_reset_tokens", (string)null);
                 });
 
             modelBuilder.Entity("Kadr.Identity.Domain.Tokens.RefreshToken", b =>
@@ -388,7 +482,6 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasColumnName("normalized_email");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
                         .HasColumnName("password_hash");
@@ -424,6 +517,59 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_app_users_tenant_id_normalized_email");
 
                     b.ToTable("app_users", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Identity.Domain.Users.ExternalLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ProviderSubject")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("provider_subject");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_external_logins");
+
+                    b.HasIndex("Provider", "ProviderSubject", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_external_logins_provider_provider_subject_user_id");
+
+                    b.HasIndex("TenantId", "Provider", "ProviderSubject")
+                        .HasDatabaseName("ix_external_logins_tenant_id_provider_provider_subject");
+
+                    b.HasIndex("TenantId", "UserId", "Provider")
+                        .HasDatabaseName("ix_external_logins_tenant_id_user_id_provider");
+
+                    b.ToTable("external_logins", (string)null);
                 });
 
             modelBuilder.Entity("Kadr.Platform.Domain.Audit.AuditLog", b =>

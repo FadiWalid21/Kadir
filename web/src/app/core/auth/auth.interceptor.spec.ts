@@ -107,4 +107,43 @@ describe('authInterceptor', () => {
     expect(logoutSpy).toHaveBeenCalled();
     httpMock.verify();
   });
+
+  describe('anonymous auth endpoints', () => {
+    const anonymousPaths = [
+      '/auth/providers',
+      '/auth/google/nonce',
+      '/auth/google/login',
+      '/auth/google/select-tenant',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+    ];
+
+    for (const path of anonymousPaths) {
+      it(`${path} sends no bearer token and does not refresh on 401`, async () => {
+        seedToken(auth, 'live-token');
+        const refreshSpy = vi.spyOn(auth, 'refreshAccessToken');
+        const url = `${environment.apiBaseUrl}${path}`;
+
+        const call = firstValueFrom(http.post(url, {})).catch((e: unknown) => e);
+        const req = httpMock.expectOne(url);
+        expect(req.request.headers.has('Authorization')).toBe(false);
+        req.flush({ code: 'auth.google_token_invalid' }, { status: 401, statusText: 'Unauthorized' });
+
+        await call;
+        expect(refreshSpy).not.toHaveBeenCalled();
+        httpMock.verify();
+      });
+    }
+
+    it('still sends the bearer token to the signed-in /me/google/link endpoint', async () => {
+      seedToken(auth, 'live-token');
+      const url = `${environment.apiBaseUrl}/me/google/link`;
+
+      const call = firstValueFrom(http.post(url, {}));
+      const req = httpMock.expectOne(url);
+      expect(req.request.headers.get('Authorization')).toBe('Bearer live-token');
+      req.flush({});
+      await call;
+    });
+  });
 });

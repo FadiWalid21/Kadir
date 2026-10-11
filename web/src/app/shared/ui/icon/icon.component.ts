@@ -20,7 +20,19 @@ export type IconName =
   | 'building'
   | 'file'
   | 'lock'
-  | 'fingerprint';
+  | 'fingerprint'
+  | 'info'
+  | 'alert'
+  | 'eye'
+  | 'eye-off'
+  | 'chevron-end'
+  | 'chevron-down'
+  | 'x'
+  | 'circle'
+  | 'key'
+  | 'link'
+  | 'unlink'
+  | 'logout';
 
 /** Inline stroke icons (Lucide-like). Logical flip via rtl-flip class when needed. */
 @Component({
@@ -145,6 +157,62 @@ export type IconName =
           <path d="M12 15v4" />
           <path d="M9 18.5V20" />
           <path d="M15 17v3" />
+        }
+        @case ('info') {
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        }
+        @case ('alert') {
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        }
+        @case ('eye') {
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+          <circle cx="12" cy="12" r="3" />
+        }
+        @case ('eye-off') {
+          <path d="M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9" />
+          <path d="M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.4-1" />
+          <path d="m3 3 18 18" />
+          <path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" />
+        }
+        @case ('chevron-end') {
+          <path d="m9 18 6-6-6-6" />
+        }
+        @case ('chevron-down') {
+          <path d="m6 9 6 6 6-6" />
+        }
+        @case ('x') {
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        }
+        @case ('circle') {
+          <circle cx="12" cy="12" r="9" />
+        }
+        @case ('key') {
+          <circle cx="8" cy="15" r="4" />
+          <path d="m10.8 12.2 9.2-9.2" />
+          <path d="m17 6 3 3" />
+          <path d="m14 9 2 2" />
+        }
+        @case ('link') {
+          <path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7" />
+          <path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7" />
+        }
+        @case ('unlink') {
+          <path d="m18.8 13.3 1.3-1.3a5 5 0 0 0-7.1-7.1l-1.3 1.3" />
+          <path d="m5.2 10.7-1.3 1.3a5 5 0 0 0 7.1 7.1l1.3-1.3" />
+          <path d="m8 2 1 3" />
+          <path d="m2 8 3 1" />
+          <path d="m16 22-1-3" />
+          <path d="m22 16-3-1" />
+        }
+        @case ('logout') {
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <path d="m16 17 5-5-5-5" />
+          <path d="M21 12H9" />
         }
       }
     </svg>

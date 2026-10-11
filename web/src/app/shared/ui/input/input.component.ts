@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { IconComponent } from '../icon/icon.component';
 
 let nextId = 0;
 
 @Component({
   selector: 'kadr-input',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IconComponent],
   template: `
     <div class="grid w-full gap-2">
       <label [attr.for]="controlId" class="text-sm font-medium text-fg">
@@ -13,22 +15,39 @@ let nextId = 0;
           <span class="text-danger" aria-hidden="true"> *</span>
         }
       </label>
-      <input
-        [id]="controlId"
-        [attr.type]="type()"
-        [attr.name]="name() || null"
-        [attr.placeholder]="placeholder() || null"
-        [attr.aria-invalid]="!!error() || null"
-        [attr.aria-required]="required() || null"
-        [attr.aria-describedby]="describedBy"
-        [disabled]="disabled()"
-        [value]="value()"
-        dir="auto"
-        class="h-control w-full rounded-md border bg-surface px-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-none disabled:opacity-50"
-        [class.border-danger]="!!error()"
-        [class.border-line-strong]="!error()"
-        (input)="onInput($event)"
-      />
+      <div class="relative flex w-full items-center">
+        <input
+          [id]="controlId"
+          [attr.type]="effectiveType()"
+          [attr.name]="name() || null"
+          [attr.placeholder]="placeholder() || null"
+          [attr.autocomplete]="autocomplete() || null"
+          [attr.aria-invalid]="!!error() || null"
+          [attr.aria-required]="required() || null"
+          [attr.aria-describedby]="describedBy"
+          [attr.readonly]="readOnly() ? '' : null"
+          [disabled]="disabled()"
+          [value]="value()"
+          dir="auto"
+          class="h-control w-full rounded-md border bg-surface px-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-none disabled:opacity-50"
+          [class.pe-11]="showToggle()"
+          [class.bg-subtle]="readOnly()"
+          [class.border-danger]="!!error()"
+          [class.border-line-strong]="!error()"
+          (input)="onInput($event)"
+        />
+        @if (showToggle()) {
+          <button
+            type="button"
+            class="absolute end-1 inline-flex size-9 items-center justify-center rounded-md text-fg-2 hover:bg-hover focus-visible:outline-none"
+            [attr.aria-label]="revealed() ? hideLabel() : showLabel()"
+            [attr.aria-pressed]="revealed()"
+            (click)="revealed.set(!revealed())"
+          >
+            <kadr-icon [name]="revealed() ? 'eye-off' : 'eye'" size="sm" />
+          </button>
+        }
+      </div>
       @if (error()) {
         <p [id]="errorId" class="text-xs text-danger" role="alert">{{ error() }}</p>
       } @else if (hint()) {
@@ -47,7 +66,19 @@ export class InputComponent {
   readonly value = input('');
   readonly disabled = input(false);
   readonly required = input(false);
+  readonly readOnly = input(false);
+  readonly autocomplete = input<string | undefined>(undefined);
+  /** Password fields only: shows a show/hide toggle. Requires both labels for accessibility. */
+  readonly revealable = input(false);
+  readonly showLabel = input('');
+  readonly hideLabel = input('');
   readonly valueChange = output<string>();
+
+  protected readonly revealed = signal(false);
+  protected readonly showToggle = computed(() => this.revealable() && this.type() === 'password');
+  protected readonly effectiveType = computed(() =>
+    this.showToggle() && this.revealed() ? 'text' : this.type(),
+  );
 
   protected readonly controlId = `kadr-input-${++nextId}`;
   protected readonly hintId = `${this.controlId}-hint`;

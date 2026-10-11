@@ -42,6 +42,12 @@ try
         .ValidateDataAnnotations()
         .ValidateOnStart();
 
+    builder.Services.AddOptions<GoogleAuthOptions>()
+        .Bind(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
+
+    builder.Services.AddOptions<PasswordResetOptions>()
+        .Bind(builder.Configuration.GetSection(PasswordResetOptions.SectionName));
+
     builder.Services.AddPlatformApplication();
     builder.Services.AddPlatformInfrastructure();
     builder.Services.AddIdentityApplication();
@@ -86,6 +92,13 @@ try
     var verifyLimit = builder.Configuration.GetValue("RateLimiting:VerifyPermitLimit", 10);
     var resendLimit = builder.Configuration.GetValue("RateLimiting:ResendPermitLimit", 5);
     var inviteValidateLimit = builder.Configuration.GetValue("RateLimiting:InviteValidatePermitLimit", 20);
+    var providersLimit = builder.Configuration.GetValue("RateLimiting:ProvidersPermitLimit", 60);
+    var googleNonceLimit = builder.Configuration.GetValue("RateLimiting:GoogleNoncePermitLimit", 20);
+    var googleLoginLimit = builder.Configuration.GetValue("RateLimiting:GoogleLoginPermitLimit", 10);
+    var googleSelectLimit = builder.Configuration.GetValue("RateLimiting:GoogleSelectPermitLimit", 20);
+    var forgotLimit = builder.Configuration.GetValue("RateLimiting:ForgotPermitLimit", 5);
+    var resetLimit = builder.Configuration.GetValue("RateLimiting:ResetPermitLimit", 10);
+    var meSecurityLimit = builder.Configuration.GetValue("RateLimiting:MeSecurityPermitLimit", 10);
 
     builder.Services.AddRateLimiter(options =>
     {
@@ -144,6 +157,70 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+        options.AddPolicy("auth-providers", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = providersLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("auth-google-nonce", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = googleNonceLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("auth-google-login", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = googleLoginLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("auth-google-select", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = googleSelectLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        // Per-IP window here; the per-email limit is enforced inside PasswordResetService (body is not readable this early).
+        options.AddPolicy("auth-forgot", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                PartitionKey(httpContext, "forgot"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = forgotLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("auth-reset", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                PartitionKey(httpContext, "reset"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = resetLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("me-security", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                PartitionKey(httpContext, "me-security"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = meSecurityLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
     });
 
     var app = builder.Build();
@@ -173,6 +250,7 @@ try
     app.MapGet("/api/v1/health", () => Results.Ok(new { status = "ok" }))
         .WithName("ApiHealth");
     app.MapAuthEndpoints();
+    app.MapGoogleAuthEndpoints();
     app.MapMeEndpoints();
     app.MapTenantEndpoints();
     app.MapTemplatesEndpoints();

@@ -1,12 +1,26 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthApi, problemDetailsFromError } from '../api/auth.api';
+import { GoogleCompanyOption, isTenantSelection } from '../api/auth.models';
 import { MeApi } from '../api/me.api';
 import { MeResponse } from '../api/me.models';
 import { SubscriptionStore } from '../subscription/subscription.store';
 import { PermissionCode } from './permission-codes';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'anonymous';
+
+export const GoogleErrorCodes = {
+  accountNotFound: 'auth.google_account_not_found',
+  emailUnverified: 'auth.google_email_unverified',
+  emailNotVerified: 'auth.email_not_verified',
+  accountDisabled: 'auth.account_disabled',
+  selectionInvalid: 'auth.google_selection_invalid',
+} as const;
+
+export type GoogleLoginOutcome =
+  | { kind: 'signed_in' }
+  | { kind: 'tenant_selection'; selectionToken: string; companies: GoogleCompanyOption[] }
+  | { kind: 'not_found'; registrationToken: string };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -49,6 +63,36 @@ export class AuthService {
     this.accessTokenSignal.set(tokens.accessToken);
     const me = await this.meApi.getMe();
     this.setMe(me);
+  }
+
+  /**
+   * Google sign-in with a GIS credential. Resolves with the next step; failures other than
+   * "no account" throw the HTTP error so the caller can map `problemDetailsFromError(...).code`.
+   */
+  async loginWithGoogle(credential: string): Promise<GoogleLoginOutcome> {
+    try {
+      const response = await this.authApi.googleLogin(credential);
+      if (isTenantSelection(response)) {
+        return {
+          kind: 'tenant_selection',
+          selectionToken: response.selectionToken,
+          companies: response.companies,
+        };
+      }
+      await this.completeSignIn(response.accessToken);
+      return { kind: 'signed_in' };
+    } catch (error) {
+      const problem = problemDetailsFromError(error);
+      if (problem?.code === GoogleErrorCodes.accountNotFound && problem.registrationToken) {
+        return { kind: 'not_found', registrationToken: problem.registrationToken };
+      }
+      throw error;
+    }
+  }
+
+  async selectGoogleTenant(selectionToken: string, tenantId: string): Promise<void> {
+    const tokens = await this.authApi.googleSelectTenant({ selectionToken, tenantId });
+    await this.completeSignIn(tokens.accessToken);
   }
 
   async logout(): Promise<void> {
@@ -99,6 +143,12 @@ export class AuthService {
       default:
         return 'auth.login_failed';
     }
+  }
+
+  private async completeSignIn(accessToken: string): Promise<void> {
+    this.accessTokenSignal.set(accessToken);
+    const me = await this.meApi.getMe();
+    this.setMe(me);
   }
 
   private async doRestore(): Promise<void> {

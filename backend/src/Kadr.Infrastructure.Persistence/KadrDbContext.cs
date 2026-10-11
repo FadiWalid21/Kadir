@@ -58,6 +58,9 @@ public class KadrDbContext : DbContext
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+    public DbSet<AuthOneTimeToken> AuthOneTimeTokens => Set<AuthOneTimeToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

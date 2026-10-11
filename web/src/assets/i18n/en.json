@@ -56,10 +56,6 @@
     "createCompany": "Create a company account",
     "registerPrompt": "Is your organization not on Kadr yet?",
     "registerCta": "Request a new account",
-    "orEmail": "Or use your work email",
-    "ssoNafath": "National unified access",
-    "ssoGoogle": "Google Workspace",
-    "ssoUnavailable": "Not available yet",
     "invalid_credentials": "Invalid sign-in details.",
     "email_not_verified": "Please verify your email first.",
     "account_locked": "Account temporarily locked. Try again later.",
@@ -108,7 +104,84 @@
     "acceptInviteGoLogin": "Go to sign in",
     "acceptInviteFailed": "Could not accept the invitation.",
     "password_too_short": "Password is too short.",
-    "password_too_common": "Password is too common."
+    "password_too_common": "Password is too common.",
+    "or": "or",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "forgotPasswordLink": "Forgot your password?",
+    "passwordRules": "At least 10 characters, and not a common password.",
+    "passwordMismatch": "The passwords do not match.",
+    "google": {
+      "loading": "Loading Google sign-in",
+      "loadFailed": "Could not load Google sign-in.",
+      "retry": "Try again",
+      "verifying": "Verifying...",
+      "note": "Works only with registered or invited accounts"
+    },
+    "googleAlert": {
+      "not_found": {
+        "title": "We could not find an account for this email",
+        "body": "Google sign-in is available only to registered or invited accounts.",
+        "create": "Create a new company account",
+        "usePassword": "Sign in with a password"
+      },
+      "unverified": {
+        "title": "Google email is not verified",
+        "body": "Verify your email in your Google account, then try again."
+      },
+      "kadr_unverified": {
+        "title": "Your account email is not confirmed",
+        "body": "Confirm your email from the activation message, then sign in."
+      },
+      "deactivated": {
+        "title": "Your account has been deactivated",
+        "body": "Contact your company administrator to reactivate it."
+      },
+      "generic": {
+        "title": "Could not complete Google sign-in",
+        "body": "Something went wrong. Please try again.",
+        "retry": "Try again"
+      }
+    },
+    "chooseCompany": {
+      "title": "Choose a company",
+      "subtitle": "This email belongs to more than one registered company.",
+      "verifiedBy": "Verified by Google",
+      "available": "Available companies ({{count}})",
+      "entering": "Signing in to the company",
+      "lastLogin": "Last sign-in: {{date}}",
+      "neverSignedIn": "Never signed in",
+      "useAnother": "Use another account",
+      "error": {
+        "title": "Could not sign in to this company",
+        "body": "Please try again.",
+        "expired": "The selection expired. Sign in again.",
+        "retry": "Try again"
+      }
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we will send you a link to set a new password.",
+      "submit": "Send link",
+      "sentTitle": "Check your email",
+      "sentBody": "If an account exists for this email, a link to set your password will arrive within minutes. The link expires after 30 minutes.",
+      "again": "Use a different email",
+      "failed": "Could not send the request. Please try again."
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Choose a new password for your account.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Save password",
+      "invalidTitle": "This link is invalid or expired",
+      "invalidBody": "Request a new link to set your password.",
+      "requestNew": "Request a new link",
+      "successTitle": "Password updated",
+      "successBody": "Sign in with your new password. Your other sessions were signed out.",
+      "goToLogin": "Go to sign in",
+      "failed": "Could not save the password. Please try again."
+    }
   },
   "shell": {
     "sidebar": "Sidebar",
@@ -130,7 +203,9 @@
       "reports": "Reports",
       "settings": "Settings",
       "profile": "Profile"
-    }
+    },
+    "account": "My account",
+    "switchLanguage": "Switch language"
   },
   "onboarding": {
     "title": "Create your company on Kadr",
@@ -195,7 +270,24 @@
       "industries": "Could not load industries",
       "registerFailed": "Could not create the account",
       "industryInvalid": "Industry is not supported",
-      "emailTaken": "Email is already used in this tenant"
+      "emailTaken": "Email is already used in this tenant",
+      "passwordMismatch": "The passwords do not match",
+      "googleExpired": "The Google confirmation expired. Continue with Google again."
+    },
+    "google": {
+      "bannerTitle": "Your identity is verified with Google",
+      "bannerBody": "Your details were imported securely.",
+      "verifiedTag": "Verified",
+      "accountBadge": "Google account",
+      "emailVerified": "This email was verified automatically through your Google account.",
+      "passwordTitle": "Add a password (optional)",
+      "passwordBody": "Lets you sign in with a password later, without relying only on Google.",
+      "newPassword": "Password",
+      "confirmPassword": "Confirm password",
+      "discard": "Register without Google",
+      "expiredTitle": "The Google confirmation expired",
+      "expiredBody": "Continue with Google again to confirm your email. The details you entered are kept.",
+      "doneHint": "Sign in with Google, or with the company code and a password if you added one."
     }
   },
   "settings": {
@@ -677,6 +769,67 @@
       "api": "API access",
       "compliance_dashboards": "Compliance dashboards",
       "priority_support": "Priority support"
+    }
+  },
+  "account": {
+    "title": "My account",
+    "subtitle": "Manage how you sign in to your account.",
+    "loadErrorTitle": "Could not load sign-in methods",
+    "loadErrorBody": "Check your connection and try again.",
+    "footerNote": "At least one sign-in method must stay enabled.",
+    "status": {
+      "enabled": "Enabled",
+      "notEnabled": "Not enabled",
+      "notLinked": "Not linked"
+    },
+    "errors": {
+      "title": "Could not complete the action",
+      "alreadyLinked": "This Google account is already linked.",
+      "googleUnverified": "The Google email is not verified. Verify it and try again.",
+      "linkFailed": "Could not link the Google account. Please try again.",
+      "lastMethod": "Google cannot be disconnected because it is your only sign-in method. Add a password first.",
+      "unlinkFailed": "Could not disconnect. Please try again."
+    },
+    "password": {
+      "cardTitle": "Email and password",
+      "enabledHint": "You can sign in with your email and password.",
+      "notEnabledHint": "You currently sign in with Google only.",
+      "change": "Change password",
+      "add": "Add a password",
+      "changeTitle": "Change password",
+      "changeSubtitle": "Enter your current password, then the new one.",
+      "addTitle": "Add a password",
+      "addSubtitle": "Add a password so you can sign in with it alongside Google.",
+      "close": "Close",
+      "current": "Current password",
+      "currentRequired": "Enter your current password",
+      "currentWrong": "The current password is incorrect.",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "rulesTitle": "Password rules",
+      "ruleLength": "At least 10 characters",
+      "ruleCommon": "Not a common password",
+      "status": {
+        "met": "Met",
+        "unmet": "Not met yet",
+        "failed": "Not met"
+      },
+      "save": "Save password",
+      "failed": "Could not save the password. Please try again.",
+      "changed": "Password changed",
+      "added": "Password added"
+    },
+    "google": {
+      "cardTitle": "Google account",
+      "notLinkedHint": "Link a Google account to sign in with one click.",
+      "disconnect": "Disconnect",
+      "lastMethodHint": "It cannot be disconnected because it is your only sign-in method. Add a password first.",
+      "linked": "Google account linked",
+      "unlinked": "Google account disconnected"
+    },
+    "disconnect": {
+      "title": "Disconnect Google account",
+      "message": "You will no longer be able to sign in with Google. You can still sign in with your email and password."
     }
   }
 }
