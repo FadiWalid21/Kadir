@@ -6,6 +6,7 @@ using Kadr.Infrastructure.Persistence.DomainEvents;
 using Kadr.Infrastructure.Persistence.Interceptors;
 using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.Infrastructure.Persistence.Audit;
+using Kadr.Infrastructure.Persistence.Roles;
 using Kadr.Infrastructure.Persistence.Templates;
 using Kadr.Infrastructure.Persistence.Tenancy;
 using Kadr.Infrastructure.Persistence.Users;
@@ -34,6 +35,10 @@ public static class DependencyInjection
         services.AddScoped<ITemplateApplyService, TemplateApplyService>();
         services.AddScoped<ITenantTemplateService, TenantTemplateService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
+        services.AddScoped<PrivilegeGuard>();
+        services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<IUserService, Users.UserService>();
+        services.AddScoped<IInvitationService, Invitations.InvitationService>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IEmailUniquenessChecker, EmailUniquenessChecker>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();

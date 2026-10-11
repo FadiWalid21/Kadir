@@ -91,6 +91,24 @@ type HomeState = 'loading' | 'ready' | 'error';
               <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
             }
           </li>
+          <li
+            class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+          >
+            <a
+              routerLink="/settings/users"
+              class="text-sm text-accent underline-offset-2 hover:underline"
+            >
+              {{ 'home.checklist.invite' | transloco }}
+            </a>
+            @if (inviteDone()) {
+              <span class="inline-flex items-center gap-1 text-sm text-success">
+                <kadr-icon name="check" size="sm" />
+                {{ 'home.checklistDone' | transloco }}
+              </span>
+            } @else {
+              <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
+            }
+          </li>
           @for (item of pendingChecklistKeys; track item) {
             <li
               class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
@@ -143,14 +161,16 @@ export class HomePage implements OnInit {
   protected readonly state = signal<HomeState>('loading');
 
   protected readonly pendingChecklistKeys = [
-    'home.checklist.invite',
     'home.checklist.template',
     'home.checklist.employee',
   ] as const;
 
   protected readonly hasLogo = computed(() => !!this.auth.me()?.tenant.logoUrl);
+  protected readonly inviteDone = computed(() => !!this.auth.me()?.checklist?.inviteTeamDone);
 
-  protected readonly checklistDone = computed(() => (this.hasLogo() ? 1 : 0));
+  protected readonly checklistDone = computed(
+    () => (this.hasLogo() ? 1 : 0) + (this.inviteDone() ? 1 : 0),
+  );
 
   protected readonly welcomeTitle = computed(() => {
     const name = this.auth.me()?.fullName ?? '';

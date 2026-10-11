@@ -31,4 +31,9 @@ public interface IRefreshTokenService
     Task RevokeFamilyByOpaqueTokenAsync(
         string opaqueToken,
         CancellationToken cancellationToken = default);
+
+    Task RevokeAllForUserAsync(
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

@@ -22,6 +22,7 @@ const sampleMe = {
     name: 'شركة الاختبار',
     slug: 'test-co',
   },
+  checklist: { inviteTeamDone: false },
 };
 
 async function waitForRequest(http: HttpTestingController, url: string): Promise<TestRequest> {

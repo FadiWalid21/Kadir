@@ -50,6 +50,16 @@ public static class MeEndpoints
         var perms = await permissions.GetPermissionsAsync(tenantId, userId, cancellationToken).ConfigureAwait(false);
         var logoUrl = tenant.LogoFileId is null ? null : $"/api/v1/files/{tenant.LogoFileId:D}";
 
+        var now = DateTimeOffset.UtcNow;
+        var inviteTeamDone = await db.Users.AsNoTracking()
+                .AnyAsync(u => u.Id != userId, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.Invitations.AsNoTracking()
+                .AnyAsync(
+                    i => i.AcceptedAt == null && i.RevokedAt == null && i.ExpiresAt > now,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
         return Results.Ok(new MeResponse(
             user.Id,
             user.FullName,
@@ -57,7 +67,8 @@ public static class MeEndpoints
             user.PreferredLanguage,
             roles,
             perms,
-            new MeTenant(tenant.Id, tenant.Name, tenant.Slug, logoUrl)));
+            new MeTenant(tenant.Id, tenant.Name, tenant.Slug, logoUrl),
+            new MeChecklist(inviteTeamDone)));
     }
 }
 
@@ -68,6 +79,9 @@ public sealed record MeResponse(
     string Language,
     IReadOnlyList<string> Roles,
     IReadOnlyList<string> Permissions,
-    MeTenant Tenant);
+    MeTenant Tenant,
+    MeChecklist Checklist);
 
 public sealed record MeTenant(Guid Id, string Name, string Slug, string? LogoUrl);
+
+public sealed record MeChecklist(bool InviteTeamDone);

@@ -1,3 +1,4 @@
+using Kadr.Identity.Domain.Invitations;
 using Kadr.Identity.Domain.Roles;
 using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
@@ -56,6 +57,7 @@ public class KadrDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

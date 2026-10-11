@@ -1,5 +1,6 @@
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Ids;
+using Kadr.SharedKernel.Tenancy;
 
 namespace Kadr.Identity.Domain.Roles;
 
@@ -24,5 +25,11 @@ public sealed class UserRole : Entity, ITenantOwned
             RoleId = roleId,
             DataScope = dataScope,
         };
+    }
+
+    public void ReplaceRole(Guid roleId, DataScope dataScope)
+    {
+        RoleId = roleId;
+        DataScope = dataScope;
     }
 }

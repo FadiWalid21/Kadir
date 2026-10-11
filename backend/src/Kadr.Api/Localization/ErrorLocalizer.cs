@@ -33,6 +33,21 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.TemplateValidationFailed] = ("بيانات عنصر القالب غير صالحة.", "Template item data is invalid."),
         [ErrorCodes.TemplateSectionInvalid] = ("قسم القالب غير معروف.", "Template section is invalid."),
         [ErrorCodes.TemplateItemNotFound] = ("عنصر القالب غير موجود.", "Template item was not found."),
+        [ErrorCodes.UsersPrivilegeEscalation] = ("لا يمكنك إدارة مستخدم بصلاحيات أعلى من صلاحياتك.", "You cannot manage a user with permissions beyond your own."),
+        [ErrorCodes.UsersLastOwnerProtected] = ("لا يمكن تعطيل أو تخفيض آخر مالك نشط.", "The last active Owner cannot be deactivated or demoted."),
+        [ErrorCodes.UsersSelfDeactivationForbidden] = ("لا يمكنك تعطيل حسابك بنفسك.", "You cannot deactivate your own account."),
+        [ErrorCodes.UsersNotFound] = ("المستخدم غير موجود.", "User was not found."),
+        [ErrorCodes.UsersValidationFailed] = ("بيانات المستخدم غير صالحة.", "User data is invalid."),
+        [ErrorCodes.RolesPrivilegeEscalation] = ("لا يمكنك منح أو إدارة صلاحيات أعلى من صلاحياتك.", "You cannot grant or manage permissions beyond your own."),
+        [ErrorCodes.RolesSystemReadonly] = ("أدوار النظام للقراءة فقط.", "System roles are read-only."),
+        [ErrorCodes.RolesInUse] = ("لا يمكن حذف دور مرتبط بمستخدمين أو دعوات معلقة.", "Cannot delete a role that has users or pending invitations."),
+        [ErrorCodes.RolesNotFound] = ("الدور غير موجود.", "Role was not found."),
+        [ErrorCodes.RolesValidationFailed] = ("بيانات الدور غير صالحة.", "Role data is invalid."),
+        [ErrorCodes.InvitationInvalid] = ("رابط الدعوة غير صالح.", "Invitation link is invalid."),
+        [ErrorCodes.InvitationExpired] = ("انتهت صلاحية الدعوة.", "Invitation has expired."),
+        [ErrorCodes.InvitationUsed] = ("تم استخدام هذه الدعوة مسبقاً.", "Invitation was already used."),
+        [ErrorCodes.InvitationRevoked] = ("تم إلغاء هذه الدعوة.", "Invitation was revoked."),
+        [ErrorCodes.InvitationNotFound] = ("الدعوة غير موجودة.", "Invitation was not found."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

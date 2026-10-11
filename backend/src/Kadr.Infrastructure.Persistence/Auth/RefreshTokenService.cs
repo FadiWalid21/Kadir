@@ -129,6 +129,28 @@ public sealed class RefreshTokenService(
         await RevokeFamilyAsync(existing.FamilyId, existing.TenantId, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task RevokeAllForUserAsync(
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        tenantContext.Set(tenantId, userId);
+        var now = clock.UtcNow;
+        var tokens = await db.RefreshTokens
+            .Where(t => t.TenantId == tenantId && t.UserId == userId && t.RevokedAt == null)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var token in tokens)
+        {
+            token.Revoke(now);
+        }
+
+        if (tokens.Count > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private async Task RevokeFamilyAsync(Guid familyId, Guid tenantId, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
