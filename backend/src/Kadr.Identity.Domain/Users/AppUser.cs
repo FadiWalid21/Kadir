@@ -15,7 +15,7 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
     public string Email { get; private set; } = string.Empty;
     public string NormalizedEmail { get; private set; } = string.Empty;
     public string? PhoneNumber { get; private set; }
-    public string PasswordHash { get; private set; } = string.Empty;
+    public string? PasswordHash { get; private set; }
     public string FullName { get; private set; } = string.Empty;
     public string PreferredLanguage { get; private set; } = "ar";
     public bool IsActive { get; private set; } = true;
@@ -28,6 +28,8 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
     public Guid? CreatedBy { get; private set; }
     public DateTimeOffset? UpdatedAt { get; private set; }
     public Guid? UpdatedBy { get; private set; }
+
+    public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
 
     public static AppUser CreateOwner(
         Guid tenantId,
@@ -53,6 +55,34 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
             PreferredLanguage = preferredLanguage,
             IsActive = true,
             EmailConfirmed = false,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
+    public static AppUser CreateOwnerWithOptionalPassword(
+        Guid tenantId,
+        string email,
+        string normalizedEmail,
+        string? passwordHash,
+        string fullName,
+        string preferredLanguage,
+        bool emailConfirmed)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(normalizedEmail);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fullName);
+
+        return new AppUser
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            Email = email,
+            NormalizedEmail = normalizedEmail,
+            PasswordHash = string.IsNullOrWhiteSpace(passwordHash) ? null : passwordHash,
+            FullName = fullName.Trim(),
+            PreferredLanguage = preferredLanguage,
+            IsActive = true,
+            EmailConfirmed = emailConfirmed,
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
@@ -91,6 +121,13 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
     {
         ResetAccessFailedCount(clock);
         LastLoginAt = clock.UtcNow;
+    }
+
+    public void SetPassword(string passwordHash, IClock clock)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        PasswordHash = passwordHash;
+        UpdatedAt = clock.UtcNow;
     }
 
     public static AppUser CreateInvited(

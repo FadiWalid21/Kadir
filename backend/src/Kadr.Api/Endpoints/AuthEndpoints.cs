@@ -4,6 +4,7 @@ using Kadr.Api.Http;
 using Kadr.Api.Localization;
 using Kadr.Identity.Application.Auth;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Auth;
 using Kadr.Platform.Application.Invitations;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Application;
@@ -49,7 +50,60 @@ public static class AuthEndpoints
             .RequireRateLimiting("auth-invite-validate")
             .WithName("AcceptInvitation");
 
+        app.MapPost("/api/v1/auth/forgot-password", ForgotPasswordAsync)
+            .RequireRateLimiting("auth-forgot")
+            .WithName("ForgotPassword");
+
+        app.MapPost("/api/v1/auth/reset-password", ResetPasswordAsync)
+            .RequireRateLimiting("auth-reset")
+            .WithName("ResetPassword");
+
         return app;
+    }
+
+    private static async Task<IResult> ForgotPasswordAsync(
+        [FromBody] ForgotPasswordRequest request,
+        HttpContext httpContext,
+        IPasswordResetService passwordReset,
+        CancellationToken cancellationToken)
+    {
+        await passwordReset.RequestAsync(
+                request.Email,
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                httpContext.Request.Headers.UserAgent.ToString(),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        // Identical response whether or not an account exists.
+        return Results.Accepted(uri: null, value: new ForgotPasswordResponse(ForgotPasswordStatuses.Accepted));
+    }
+
+    private static async Task<IResult> ResetPasswordAsync(
+        [FromBody] ResetPasswordRequest request,
+        HttpContext httpContext,
+        IPasswordResetService passwordReset,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await passwordReset.ResetAsync(
+                request.Token,
+                request.NewPassword,
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                httpContext.Request.Headers.UserAgent.ToString(),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result.IsFailure)
+        {
+            return Results.Problem(ApiProblemDetails.Create(
+                httpContext,
+                StatusCodes.Status400BadRequest,
+                result.ErrorCode ?? ErrorCodes.AuthPasswordResetInvalid,
+                localizer));
+        }
+
+        // No auto-login: the user signs in again with the new password.
+        return Results.NoContent();
     }
 
     private static async Task<IResult> RegisterAsync(
@@ -95,7 +149,8 @@ public static class AuthEndpoints
             request.DefaultWorkStart,
             request.DefaultWorkEnd,
             request.FirstBranchName,
-            idempotencyKey);
+            idempotencyKey,
+            request.GoogleRegistrationToken);
 
         var validation = await validator.ValidateAsync(command, cancellationToken).ConfigureAwait(false);
         if (!validation.IsValid)
@@ -310,7 +365,7 @@ public static class AuthEndpoints
 public sealed record RegisterTenantRequest(
     string FullName,
     string Email,
-    string Password,
+    string? Password,
     string CompanyName,
     string IndustryCode,
     string? TimeZone,
@@ -320,7 +375,8 @@ public sealed record RegisterTenantRequest(
     IReadOnlyList<string>? WorkWeekWeekend = null,
     string? DefaultWorkStart = null,
     string? DefaultWorkEnd = null,
-    string? FirstBranchName = null);
+    string? FirstBranchName = null,
+    string? GoogleRegistrationToken = null);
 
 public sealed record RegisterTenantResponse(Guid TenantId, string Slug, DateTimeOffset TrialEndsAt);
 

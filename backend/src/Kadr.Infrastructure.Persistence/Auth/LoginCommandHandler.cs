@@ -61,6 +61,11 @@ public sealed class LoginCommandHandler(
         }
 
         var hashToVerify = user?.PasswordHash ?? dummyPasswordHash.Value;
+        if (user is not null && string.IsNullOrEmpty(user.PasswordHash))
+        {
+            hashToVerify = dummyPasswordHash.Value;
+        }
+
         var passwordValid = passwordHasher.VerifyPassword(hashToVerify, command.Password);
 
         if (user is null || !user.IsActive || !passwordValid)
@@ -129,7 +134,11 @@ public sealed class LoginCommandHandler(
             "Auth",
             user.Id,
             null,
-            EmailJson(command.Email),
+            JsonSerializer.Serialize(new
+            {
+                email = EmailNormalizer.Normalize(command.Email),
+                method = "password",
+            }),
             command.ClientIp,
             command.DeviceInfo);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

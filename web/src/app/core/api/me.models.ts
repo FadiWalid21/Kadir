@@ -22,3 +22,13 @@ export interface MeResponse {
   checklist: MeChecklistDto;
   subscription?: MeSubscriptionSummary | null;
 }
+
+export interface SignInMethodsResponse {
+  password: { enabled: boolean };
+  google: { linked: boolean; email?: string | null };
+}
+
+export interface SetPasswordRequest {
+  currentPassword?: string;
+  newPassword: string;
+}

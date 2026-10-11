@@ -5,7 +5,7 @@ namespace Kadr.Platform.Application.Tenants;
 public sealed record RegisterTenantCommand(
     string FullName,
     string Email,
-    string Password,
+    string? Password,
     string CompanyName,
     string IndustryCode,
     string? TimeZone,
@@ -16,7 +16,8 @@ public sealed record RegisterTenantCommand(
     string? DefaultWorkStart = null,
     string? DefaultWorkEnd = null,
     string? FirstBranchName = null,
-    string? IdempotencyKey = null) : ICommand<RegisterTenantResult>;
+    string? IdempotencyKey = null,
+    string? GoogleRegistrationToken = null) : ICommand<RegisterTenantResult>;
 
 public sealed record RegisterTenantResult(
     Guid TenantId,

@@ -36,4 +36,21 @@ public interface IRefreshTokenService
         Guid tenantId,
         Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Revokes every active refresh token of the user except those in the given family.</summary>
+    Task RevokeAllExceptFamilyAsync(
+        Guid tenantId,
+        Guid userId,
+        Guid familyId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves the family of an active refresh token that belongs to the given user.
+    /// Returns null when the token is unknown, revoked, expired, or owned by someone else.
+    /// </summary>
+    Task<Guid?> ResolveActiveFamilyIdAsync(
+        Guid tenantId,
+        Guid userId,
+        string opaqueToken,
+        CancellationToken cancellationToken = default);
 }

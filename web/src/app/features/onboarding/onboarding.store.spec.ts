@@ -85,4 +85,70 @@ describe('OnboardingStore', () => {
     expect(body.workWeekDays).toEqual(['sun', 'mon']);
     expect(body.firstBranchName).toBe('Branch');
   });
+
+  describe('Google registration', () => {
+    it('keeps the registration token in memory only (never sessionStorage)', () => {
+      store.startGoogleRegistration({
+        token: 'reg-secret-token',
+        email: 'g@example.com',
+        fullName: 'Google User',
+      });
+      expect(store.draft().googleVerified).toBe(true);
+      expect(store.draft().googleRegistrationToken).toBe('reg-secret-token');
+      expect(store.draft().email).toBe('g@example.com');
+      const raw = sessionStorage.getItem(ONBOARDING_DRAFT_KEY) ?? '';
+      expect(raw).not.toContain('reg-secret-token');
+      expect(raw).toContain('g@example.com');
+    });
+
+    it('register body sends the token and omits email; password is optional', () => {
+      store.startGoogleRegistration({
+        token: 'reg-1',
+        email: 'g@example.com',
+        fullName: 'G',
+      });
+      store.patch({
+        companyName: 'Co',
+        industryCode: 'office',
+        industryConfirmed: true,
+        firstBranchName: 'HQ',
+      });
+      expect(store.toRegisterBody()).toMatchObject({
+        fullName: 'G',
+        googleRegistrationToken: 'reg-1',
+        companyName: 'Co',
+      });
+      expect(store.toRegisterBody().email).toBeUndefined();
+      expect(store.toRegisterBody().password).toBeUndefined();
+
+      store.patch({ password: 'Str0ngPass!!', passwordConfirm: 'Str0ngPass!!' });
+      expect(store.toRegisterBody().password).toBe('Str0ngPass!!');
+      expect(store.validateCurrentStep()).toBeNull();
+    });
+
+    it('marks Google confirmation expired and blocks submit', () => {
+      store.startGoogleRegistration({
+        token: 'reg-1',
+        email: 'g@example.com',
+        fullName: 'G',
+      });
+      store.patch({ googleRegisteredAt: Date.now() - 31 * 60 * 1000 });
+      expect(store.checkGoogleExpiry()).toBe(true);
+      expect(store.draft().googleRegistrationToken).toBeNull();
+      expect(store.draft().stepIndex).toBe(0);
+      expect(store.validateCurrentStep()).toBe('onboarding.errors.googleExpired');
+    });
+
+    it('discard returns step 1 to the normal email/password form', () => {
+      store.startGoogleRegistration({
+        token: 'reg-1',
+        email: 'g@example.com',
+        fullName: 'G',
+      });
+      store.discardGoogleRegistration();
+      expect(store.draft().googleVerified).toBe(false);
+      expect(store.draft().googleRegistrationToken).toBeNull();
+      expect(store.draft().email).toBe('');
+    });
+  });
 });

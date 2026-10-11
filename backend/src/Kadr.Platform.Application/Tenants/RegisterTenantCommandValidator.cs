@@ -19,8 +19,16 @@ public sealed class RegisterTenantCommandValidator : AbstractValidator<RegisterT
     public RegisterTenantCommandValidator()
     {
         RuleFor(x => x.FullName).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(320);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(PasswordRules.MinimumLength);
+
+        // With a Google registration token the identity email comes from the token, so the body email is not required.
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(320)
+            .When(x => !HasGoogleToken(x));
+        RuleFor(x => x.GoogleRegistrationToken).MaximumLength(512);
+
+        // Either a valid password or a Google registration token. A password sent alongside the token must still pass the rules.
+        RuleFor(x => x.Password).NotEmpty().When(x => !HasGoogleToken(x));
+        RuleFor(x => x.Password!).MinimumLength(PasswordRules.MinimumLength)
+            .When(x => !string.IsNullOrEmpty(x.Password));
         RuleFor(x => x.CompanyName).NotEmpty().MaximumLength(200);
         RuleFor(x => x.IndustryCode)
             .NotEmpty()
@@ -64,4 +72,7 @@ public sealed class RegisterTenantCommandValidator : AbstractValidator<RegisterT
             })
             .WithMessage("defaultWorkEnd must be after defaultWorkStart.");
     }
+
+    private static bool HasGoogleToken(RegisterTenantCommand command) =>
+        !string.IsNullOrWhiteSpace(command.GoogleRegistrationToken);
 }

@@ -11,6 +11,24 @@ export const routes: Routes = [
       import('./features/auth/login.page').then((m) => m.LoginPage),
   },
   {
+    path: 'login/choose-company',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/choose-company.page').then((m) => m.ChooseCompanyPage),
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password.page').then((m) => m.ForgotPasswordPage),
+  },
+  {
+    // Public on purpose: a signed-in user can still open a reset link from their email.
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/reset-password.page').then((m) => m.ResetPasswordPage),
+  },
+  {
     path: 'register',
     canActivate: [guestGuard],
     loadComponent: () =>
@@ -43,6 +61,11 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
         pathMatch: 'full',
+      },
+      {
+        path: 'account',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/account/account.page').then((m) => m.AccountPage),
       },
       {
         path: 'settings/company',

@@ -1,11 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Kadr.Identity.Application.Auth;
 using Kadr.Identity.Application.Security;
 using Kadr.Identity.Domain.Roles;
 using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Auth;
 using Kadr.Platform.Application.Tenants;
 using Kadr.Platform.Domain.Org;
 using Kadr.Platform.Domain.Settings;
@@ -18,6 +20,7 @@ using Kadr.SharedKernel.Ids;
 using Kadr.SharedKernel.Results;
 using Kadr.Infrastructure.Persistence.Users;
 using Kadr.SharedKernel.Tenancy;
+using Kadr.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,6 +35,8 @@ public sealed class RegisterTenantCommandHandler(
     IEmailUniquenessChecker emailUniqueness,
     IRegisterTenantFailureInjector failureInjector,
     ITemplateApplyService templateApply,
+    IAuditLogWriter audit,
+    IClock clock,
     ILogger<RegisterTenantCommandHandler> logger)
     : ICommandHandler<RegisterTenantCommand, RegisterTenantResult>
 {
@@ -43,10 +48,16 @@ public sealed class RegisterTenantCommandHandler(
         RegisterTenantCommand command,
         CancellationToken cancellationToken = default)
     {
-        var passwordError = PasswordRules.Validate(command.Password, commonPasswords.Passwords);
-        if (passwordError is not null)
+        var useGoogle = !string.IsNullOrWhiteSpace(command.GoogleRegistrationToken);
+
+        // Password is mandatory without a Google token; with one it is optional but must pass the rules when present.
+        if (!useGoogle || !string.IsNullOrEmpty(command.Password))
         {
-            return Result.Failure<RegisterTenantResult>(passwordError, passwordError);
+            var passwordError = PasswordRules.Validate(command.Password ?? string.Empty, commonPasswords.Passwords);
+            if (passwordError is not null)
+            {
+                return Result.Failure<RegisterTenantResult>(passwordError, passwordError);
+            }
         }
 
         if (!IndustryCodes.IsAllowed(command.IndustryCode))
@@ -54,8 +65,25 @@ public sealed class RegisterTenantCommandHandler(
             return Result.Failure<RegisterTenantResult>(ErrorCodes.IndustryInvalid, ErrorCodes.IndustryInvalid);
         }
 
-        var email = EmailNormalizer.ForDisplay(command.Email);
-        var normalizedEmail = EmailNormalizer.Normalize(command.Email);
+        AuthOneTimeToken? googleToken = null;
+        GoogleRegistrationPayload? googlePayload = null;
+        if (useGoogle)
+        {
+            googleToken = await FindUsableGoogleTokenAsync(command.GoogleRegistrationToken!, cancellationToken)
+                .ConfigureAwait(false);
+            googlePayload = googleToken is null ? null : ReadPayload(googleToken);
+            if (googleToken is null || googlePayload is null)
+            {
+                return Result.Failure<RegisterTenantResult>(
+                    ErrorCodes.AuthGoogleRegistrationInvalid,
+                    ErrorCodes.AuthGoogleRegistrationInvalid);
+            }
+        }
+
+        // Identity email comes only from the Google token when present; the body email is ignored.
+        var identityEmail = googlePayload?.Email ?? command.Email;
+        var email = EmailNormalizer.ForDisplay(identityEmail);
+        var normalizedEmail = EmailNormalizer.Normalize(identityEmail);
         var language = string.Equals(command.DefaultLanguage, "en", StringComparison.OrdinalIgnoreCase)
             ? TenantLanguage.En
             : TenantLanguage.Ar;
@@ -84,7 +112,9 @@ public sealed class RegisterTenantCommandHandler(
             return Result.Failure<RegisterTenantResult>(ErrorCodes.TenantSlugUnavailable, ErrorCodes.TenantSlugUnavailable);
         }
 
-        var passwordHash = passwordHasher.HashPassword(command.Password);
+        var passwordHash = string.IsNullOrEmpty(command.Password)
+            ? null
+            : passwordHasher.HashPassword(command.Password);
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var tokenHash = HashToken(rawToken);
 
@@ -102,6 +132,24 @@ public sealed class RegisterTenantCommandHandler(
                 language,
                 timeZone,
                 trialEndsAt);
+
+            if (googleToken is not null)
+            {
+                // Atomic single-use consume; rolls back with the registration if anything below fails.
+                var consumed = await db.AuthOneTimeTokens
+                    .Where(t => t.Id == googleToken.Id && t.ConsumedAt == null && t.ExpiresAt > clock.UtcNow)
+                    .ExecuteUpdateAsync(
+                        setters => setters.SetProperty(t => t.ConsumedAt, clock.UtcNow),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                if (consumed == 0)
+                {
+                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                    return Result.Failure<RegisterTenantResult>(
+                        ErrorCodes.AuthGoogleRegistrationInvalid,
+                        ErrorCodes.AuthGoogleRegistrationInvalid);
+                }
+            }
 
             // Subscription is ITenantOwned — ambient tenant must be set before SaveChanges.
             tenantContext.Set(tenantId);
@@ -133,15 +181,42 @@ public sealed class RegisterTenantCommandHandler(
                 }
             }
 
-            var owner = AppUser.CreateOwner(
-                tenantId,
-                email,
-                normalizedEmail,
-                passwordHash,
-                command.FullName,
-                preferredLanguage);
+            var owner = googlePayload is null
+                ? AppUser.CreateOwner(
+                    tenantId,
+                    email,
+                    normalizedEmail,
+                    passwordHash!,
+                    command.FullName,
+                    preferredLanguage)
+                : AppUser.CreateOwnerWithOptionalPassword(
+                    tenantId,
+                    email,
+                    normalizedEmail,
+                    passwordHash,
+                    command.FullName,
+                    preferredLanguage,
+                    emailConfirmed: true);
 
             db.Users.Add(owner);
+
+            if (googlePayload is not null)
+            {
+                db.ExternalLogins.Add(ExternalLogin.Create(
+                    tenantId,
+                    owner.Id,
+                    ExternalLoginProviders.Google,
+                    googlePayload.Subject,
+                    googlePayload.Email));
+                audit.Stage(
+                    tenantId,
+                    owner.Id,
+                    AuditActions.TenantRegisteredWithGoogle,
+                    "Tenant",
+                    tenantId,
+                    null,
+                    JsonSerializer.Serialize(new { email = normalizedEmail, method = "google" }));
+            }
 
             var ownerRole = roles.Single(r => r.Name == SystemRoleNames.Owner);
             db.UserRoles.Add(UserRole.Create(tenantId, owner.Id, ownerRole.Id));
@@ -156,8 +231,11 @@ public sealed class RegisterTenantCommandHandler(
 
             SeedDefaultSettings(tenantId, country, command);
 
-            db.EmailVerificationTokens.Add(
-                EmailVerificationToken.Create(tenantId, owner.Id, tokenHash, now.Add(VerificationLifetime)));
+            if (googlePayload is null)
+            {
+                db.EmailVerificationTokens.Add(
+                    EmailVerificationToken.Create(tenantId, owner.Id, tokenHash, now.Add(VerificationLifetime)));
+            }
 
             await templateApply.ApplyAsync(tenantId, command.IndustryCode, cancellationToken)
                 .ConfigureAwait(false);
@@ -167,22 +245,26 @@ public sealed class RegisterTenantCommandHandler(
 
             tenantContext.Set(tenantId, owner.Id);
 
-            try
+            // Google identities are already verified, so no verification email is sent.
+            if (googlePayload is null)
             {
-                await emailSender.SendAsync(
-                    new EmailMessage(
-                        email,
-                        "Verify your Kadr email / تأكيد البريد",
-                        $"Verify your email with token: {rawToken}"),
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(
-                    ex,
-                    "Failed to send verification email for tenant {TenantId} user {UserId}",
-                    tenantId,
-                    owner.Id);
+                try
+                {
+                    await emailSender.SendAsync(
+                        new EmailMessage(
+                            email,
+                            "Verify your Kadr email / تأكيد البريد",
+                            $"Verify your email with token: {rawToken}"),
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Failed to send verification email for tenant {TenantId} user {UserId}",
+                        tenantId,
+                        owner.Id);
+                }
             }
 
             logger.LogInformation(
@@ -203,6 +285,42 @@ public sealed class RegisterTenantCommandHandler(
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             tenantContext.Clear();
             throw;
+        }
+    }
+
+    private async Task<AuthOneTimeToken?> FindUsableGoogleTokenAsync(
+        string rawToken,
+        CancellationToken cancellationToken)
+    {
+        var hash = TokenHashing.Hash(rawToken.Trim());
+        var row = await db.AuthOneTimeTokens.AsNoTracking()
+            .SingleOrDefaultAsync(
+                t => t.Purpose == AuthOneTimeTokenPurpose.GoogleRegistration && t.TokenHash == hash,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return row is not null && row.ConsumedAt is null && row.ExpiresAt > clock.UtcNow ? row : null;
+    }
+
+    private static GoogleRegistrationPayload? ReadPayload(AuthOneTimeToken token)
+    {
+        if (string.IsNullOrWhiteSpace(token.PayloadJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            var payload = JsonSerializer.Deserialize<GoogleRegistrationPayload>(token.PayloadJson);
+            return payload is null
+                   || string.IsNullOrWhiteSpace(payload.Subject)
+                   || string.IsNullOrWhiteSpace(payload.Email)
+                ? null
+                : payload;
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

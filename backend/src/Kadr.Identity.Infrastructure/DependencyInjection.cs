@@ -9,6 +9,7 @@ public static class DependencyInjection
     public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
         return services;
     }
 }

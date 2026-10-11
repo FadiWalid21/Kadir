@@ -9,7 +9,11 @@ function isAuthBootstrapUrl(url: string): boolean {
     url.includes('/auth/refresh') ||
     url.includes('/auth/logout') ||
     url.includes('/auth/register') ||
-    url.includes('/auth/verify-email')
+    url.includes('/auth/verify-email') ||
+    url.includes('/auth/providers') ||
+    url.includes('/auth/google/') ||
+    url.includes('/auth/forgot-password') ||
+    url.includes('/auth/reset-password')
   );
 }
 
