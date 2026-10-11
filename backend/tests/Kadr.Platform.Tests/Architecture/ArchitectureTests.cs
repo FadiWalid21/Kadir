@@ -82,6 +82,8 @@ public sealed class ArchitectureTests
         "VerifyEmailCommandHandler.cs",
         "PlatformTenantQueries.cs",
         "PlatformAuditLogQueries.cs",
+        "ActiveEmployeeCounter.cs",
+        "SystemRolePermissionSeeder.cs",
     };
 
     [Fact]

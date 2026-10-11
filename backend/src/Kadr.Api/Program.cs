@@ -249,6 +249,7 @@ try
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<SystemRolePermissionSeeder>().SeedAsync();
     }
 
     app.MapHealthChecks("/health");
@@ -270,6 +271,7 @@ try
     app.MapInvitationsEndpoints();
     app.MapSubscriptionEndpoints();
     app.MapAuditLogEndpoints();
+    app.MapEmployeesEndpoints();
 
     app.Run();
 }

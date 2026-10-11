@@ -67,4 +67,13 @@ public static class ErrorCodes
     public const string PlatformNoChange = "platform.no_change";
     public const string PlatformPlanNotFound = "platform.plan_not_found";
     public const string PlatformPlanProtected = "platform.plan_protected";
+    public const string EmployeesNotFound = "employees.not_found";
+    public const string EmployeesValidationFailed = "employees.validation_failed";
+    public const string EmployeesDuplicateNumber = "employees.duplicate_number";
+    public const string EmployeesDuplicateNationalId = "employees.duplicate_national_id";
+    public const string EmployeesManagerCycle = "employees.manager_cycle";
+    public const string EmployeesImportInvalid = "employees.import_invalid";
+    public const string EmployeesForbidden = "employees.forbidden";
+    public const string OrgDepartmentCycle = "org.department_cycle";
+    public const string OrgNotFound = "org.not_found";
 }

@@ -49,11 +49,12 @@ describe('HomePage', () => {
     let text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('جاهزية مكان العمل');
     expect(text).toContain('إضافة شعار الشركة');
-    expect(text).toContain('غير متاح بعد');
+    expect(text).toContain('إضافة أول موظف');
     expect(text).toContain('ابدأ');
     expect(text).toContain('0 / 4');
     expect(text).toContain('الموافقات');
     expect(fixture.nativeElement.querySelector('a[href="/settings/company"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('a[href="/employees"]')).toBeTruthy();
 
     page.setStateForTest('loading');
     fixture.detectChanges();

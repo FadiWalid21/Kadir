@@ -13,6 +13,8 @@ public sealed class Department : AggregateRoot, ITenantOwned, IAuditable, ITempl
     public string NameAr { get; private set; } = string.Empty;
     public string NameEn { get; private set; } = string.Empty;
     public string SearchName { get; private set; } = string.Empty;
+    public Guid? ParentId { get; private set; }
+    public Guid? ManagerEmployeeId { get; private set; }
     public string? SourceKey { get; private set; }
     public Guid? SourceTemplateId { get; private set; }
     public int SourceVersion { get; private set; }
@@ -75,6 +77,18 @@ public sealed class Department : AggregateRoot, ITenantOwned, IAuditable, ITempl
     public void SetActive(bool isActive)
     {
         IsActive = isActive;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetHierarchy(Guid? parentId, Guid? managerEmployeeId)
+    {
+        if (parentId == Id)
+        {
+            throw new InvalidOperationException("org.department_cycle");
+        }
+
+        ParentId = parentId;
+        ManagerEmployeeId = managerEmployeeId;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 

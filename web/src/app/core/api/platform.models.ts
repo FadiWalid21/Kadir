@@ -20,6 +20,7 @@ export interface PlatformTenantListItem {
   subscriptionStatus: string;
   trialEndsAt: string | null;
   userCount: number;
+  activeEmployeeCount: number;
   createdAt: string;
 }
 

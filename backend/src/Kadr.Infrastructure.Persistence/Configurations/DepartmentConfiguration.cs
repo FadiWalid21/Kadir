@@ -19,6 +19,7 @@ public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departmen
             .HasFilter("source_key IS NOT NULL");
         builder.HasIndex(x => new { x.TenantId, x.SearchName });
         builder.HasIndex(x => new { x.TenantId, x.IsActive });
+        builder.HasIndex(x => new { x.TenantId, x.ParentId });
         builder.Ignore(x => x.DomainEvents);
     }
 }

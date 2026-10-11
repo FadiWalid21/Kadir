@@ -5,6 +5,7 @@ using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Infrastructure.Persistence.DomainEvents;
 using Kadr.Platform.Domain.Audit;
+using Kadr.Platform.Domain.Employees;
 using Kadr.Platform.Domain.Files;
 using Kadr.Platform.Domain.Idempotency;
 using Kadr.Platform.Domain.Org;
@@ -51,6 +52,9 @@ public class KadrDbContext : DbContext
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
+    public DbSet<EmployeeDocument> EmployeeDocuments => Set<EmployeeDocument>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Role> Roles => Set<Role>();

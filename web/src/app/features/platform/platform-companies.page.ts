@@ -206,12 +206,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty';
                   <td class="px-3 py-3 text-fg">{{ planName(row) }}</td>
                   <td class="px-3 py-3 text-fg">{{ row.industryCode }}</td>
                   <td class="px-3 py-3 tabular-nums text-fg">{{ row.userCount }}</td>
-                  <td class="px-3 py-3 tabular-nums text-fg-2">
-                    0
-                    <span class="block text-xs text-fg-muted">{{
-                      'platform.companies.employeesStub' | transloco
-                    }}</span>
-                  </td>
+                  <td class="px-3 py-3 tabular-nums text-fg">{{ row.activeEmployeeCount }}</td>
                   <td class="px-3 py-3 tabular-nums text-fg-2">{{ row.createdAt | dateFmt }}</td>
                   <td class="px-3 py-3 text-fg-2">{{ trialLabel(row) }}</td>
                   <td class="px-3 py-3">
@@ -248,8 +243,8 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty';
                   </div>
                   <p class="mt-2 text-xs text-fg-2">
                     {{ 'platform.companies.colUsers' | transloco }}: {{ row.userCount }} ·
-                    {{ 'platform.companies.colEmployees' | transloco }}: 0
-                    ({{ 'platform.companies.employeesStub' | transloco }})
+                    {{ 'platform.companies.colEmployees' | transloco }}:
+                    {{ row.activeEmployeeCount }}
                   </p>
                 </div>
               </div>

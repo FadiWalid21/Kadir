@@ -14,6 +14,14 @@ public static class PermissionCodes
     public const string AuditRead = "audit.read";
     public const string SubscriptionRead = "subscription.read";
     public const string SubscriptionManage = "subscription.manage";
+    public const string EmployeesRead = "employees.read";
+    public const string EmployeesCreate = "employees.create";
+    public const string EmployeesUpdate = "employees.update";
+    public const string EmployeesTerminate = "employees.terminate";
+    public const string EmployeesDocumentsManage = "employees.documents.manage";
+    public const string EmployeesImport = "employees.import";
+    public const string OrgRead = "org.read";
+    public const string OrgManage = "org.manage";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -29,5 +37,13 @@ public static class PermissionCodes
         AuditRead,
         SubscriptionRead,
         SubscriptionManage,
+        EmployeesRead,
+        EmployeesCreate,
+        EmployeesUpdate,
+        EmployeesTerminate,
+        EmployeesDocumentsManage,
+        EmployeesImport,
+        OrgRead,
+        OrgManage,
     ];
 }
