@@ -63,13 +63,26 @@ import { PermissionCodes } from '../../core/auth/permission-codes';
           {{ 'settings.nav.subscription' | transloco }}
         </a>
       }
+      @if (showAudit()) {
+        <a
+          routerLink="/settings/audit"
+          routerLinkActive="border-accent text-fg"
+          class="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-fg-2 hover:text-fg"
+          [class.!border-accent]="active() === 'audit'"
+          [class.!text-fg]="active() === 'audit'"
+        >
+          {{ 'settings.nav.audit' | transloco }}
+        </a>
+      }
     </nav>
   `,
 })
 export class SettingsSubnavComponent {
   private readonly auth = inject(AuthService);
 
-  readonly active = input<'company' | 'templates' | 'users' | 'roles' | 'subscription'>('company');
+  readonly active = input<'company' | 'templates' | 'users' | 'roles' | 'subscription' | 'audit'>(
+    'company',
+  );
   readonly showTemplates = input(true);
 
   protected readonly showUsers = computed(() => this.auth.hasPermission(PermissionCodes.UsersRead));
@@ -77,4 +90,5 @@ export class SettingsSubnavComponent {
   protected readonly showSubscription = computed(() =>
     this.auth.hasPermission(PermissionCodes.SubscriptionRead),
   );
+  protected readonly showAudit = computed(() => this.auth.hasPermission(PermissionCodes.AuditRead));
 }

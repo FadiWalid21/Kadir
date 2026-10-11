@@ -381,19 +381,18 @@ public sealed class InvitationService(
         db.Users.Add(user);
         db.UserRoles.Add(UserRole.Create(invitation.TenantId, user.Id, invitation.RoleId));
 
+        // Suppress auto AppUser create audit that would include PasswordHash (redacted anyway);
+        // keep a single invitation.accepted row keyed to the new user id.
+        audit.Stage(
+            invitation.TenantId,
+            user.Id,
+            "invitation.accepted",
+            "invitation",
+            user.Id,
+            null,
+            JsonSerializer.Serialize(new { userId = user.Id, invitation.Email, invitation.RoleId, invitationId = invitation.Id }));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-
-        await audit.WriteAsync(
-                invitation.TenantId,
-                user.Id,
-                "invitation.accepted",
-                "invitation",
-                invitation.Id,
-                null,
-                JsonSerializer.Serialize(new { userId = user.Id, invitation.Email, invitation.RoleId }),
-                cancellationToken)
-            .ConfigureAwait(false);
 
         return Result.Success();
     }

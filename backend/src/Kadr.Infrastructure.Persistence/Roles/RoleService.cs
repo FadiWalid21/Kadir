@@ -111,17 +111,15 @@ public sealed class RoleService(
             db.RolePermissions.Add(RolePermission.Create(tenantId, role.Id, code));
         }
 
+        audit.Stage(
+            tenantId,
+            tenantContext.UserId,
+            "role.created",
+            "role",
+            role.Id,
+            null,
+            JsonSerializer.Serialize(new { role.Name, permissions = perms }));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await audit.WriteAsync(
-                tenantId,
-                tenantContext.UserId,
-                "role.created",
-                "role",
-                role.Id,
-                null,
-                JsonSerializer.Serialize(new { role.Name, permissions = perms }),
-                cancellationToken)
-            .ConfigureAwait(false);
 
         return Result.Success(await ToDetailAsync(role, cancellationToken).ConfigureAwait(false));
     }
@@ -206,6 +204,20 @@ public sealed class RoleService(
             db.RolePermissions.Add(RolePermission.Create(role.TenantId, role.Id, code));
         }
 
+        audit.Stage(
+            role.TenantId,
+            tenantContext.UserId,
+            "role.updated",
+            "role",
+            role.Id,
+            oldJson,
+            JsonSerializer.Serialize(new
+            {
+                role.Name,
+                role.DescriptionAr,
+                role.DescriptionEn,
+                permissions = perms,
+            }));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var userIds = await db.UserRoles.AsNoTracking()
@@ -218,23 +230,6 @@ public sealed class RoleService(
         {
             cacheInvalidator.Invalidate(role.TenantId, userId);
         }
-
-        await audit.WriteAsync(
-                role.TenantId,
-                tenantContext.UserId,
-                "role.updated",
-                "role",
-                role.Id,
-                oldJson,
-                JsonSerializer.Serialize(new
-                {
-                    role.Name,
-                    role.DescriptionAr,
-                    role.DescriptionEn,
-                    permissions = perms,
-                }),
-                cancellationToken)
-            .ConfigureAwait(false);
 
         return Result.Success(await ToDetailAsync(role, cancellationToken).ConfigureAwait(false));
     }
@@ -286,18 +281,15 @@ public sealed class RoleService(
             .ConfigureAwait(false);
         db.RolePermissions.RemoveRange(perms);
         db.Roles.Remove(role);
+        audit.Stage(
+            role.TenantId,
+            tenantContext.UserId,
+            "role.deleted",
+            "role",
+            role.Id,
+            JsonSerializer.Serialize(new { role.Name }),
+            null);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        await audit.WriteAsync(
-                role.TenantId,
-                tenantContext.UserId,
-                "role.deleted",
-                "role",
-                role.Id,
-                JsonSerializer.Serialize(new { role.Name }),
-                null,
-                cancellationToken)
-            .ConfigureAwait(false);
 
         return Result.Success();
     }

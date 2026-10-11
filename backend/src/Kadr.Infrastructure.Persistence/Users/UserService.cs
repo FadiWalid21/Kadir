@@ -238,6 +238,55 @@ public sealed class UserService(
             user.SetActive(request.IsActive);
         }
 
+        var actorId = tenantContext.UserId;
+        if (deactivating)
+        {
+            audit.Stage(
+                user.TenantId,
+                actorId,
+                "user.deactivated",
+                "user",
+                user.Id,
+                oldJson,
+                JsonSerializer.Serialize(new { isActive = false }));
+        }
+
+        if (reactivating)
+        {
+            audit.Stage(
+                user.TenantId,
+                actorId,
+                "user.reactivated",
+                "user",
+                user.Id,
+                oldJson,
+                JsonSerializer.Serialize(new { isActive = true }));
+        }
+
+        if (roleChanging)
+        {
+            audit.Stage(
+                user.TenantId,
+                actorId,
+                "user.role_changed",
+                "user",
+                user.Id,
+                JsonSerializer.Serialize(new { roleId = currentRoleId }),
+                JsonSerializer.Serialize(new { roleId = request.RoleId, dataScope = request.DataScope.ToString() }));
+        }
+
+        if (nameChanged)
+        {
+            audit.Stage(
+                user.TenantId,
+                actorId,
+                "user.updated",
+                "user",
+                user.Id,
+                JsonSerializer.Serialize(new { fullName = oldFullName }),
+                JsonSerializer.Serialize(new { fullName = user.FullName }));
+        }
+
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         if (deactivating)
@@ -250,63 +299,6 @@ public sealed class UserService(
         if (deactivating || reactivating || roleChanging)
         {
             cacheInvalidator.Invalidate(user.TenantId, user.Id);
-        }
-
-        var actorId = tenantContext.UserId;
-        if (deactivating)
-        {
-            await audit.WriteAsync(
-                    user.TenantId,
-                    actorId,
-                    "user.deactivated",
-                    "user",
-                    user.Id,
-                    oldJson,
-                    JsonSerializer.Serialize(new { isActive = false }),
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        if (reactivating)
-        {
-            await audit.WriteAsync(
-                    user.TenantId,
-                    actorId,
-                    "user.reactivated",
-                    "user",
-                    user.Id,
-                    oldJson,
-                    JsonSerializer.Serialize(new { isActive = true }),
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        if (roleChanging)
-        {
-            await audit.WriteAsync(
-                    user.TenantId,
-                    actorId,
-                    "user.role_changed",
-                    "user",
-                    user.Id,
-                    JsonSerializer.Serialize(new { roleId = currentRoleId }),
-                    JsonSerializer.Serialize(new { roleId = request.RoleId, dataScope = request.DataScope.ToString() }),
-                    cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        if (nameChanged)
-        {
-            await audit.WriteAsync(
-                    user.TenantId,
-                    actorId,
-                    "user.updated",
-                    "user",
-                    user.Id,
-                    JsonSerializer.Serialize(new { fullName = oldFullName }),
-                    JsonSerializer.Serialize(new { fullName = user.FullName }),
-                    cancellationToken)
-                .ConfigureAwait(false);
         }
 
         return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));

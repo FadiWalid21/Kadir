@@ -77,6 +77,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/audit',
+        canActivate: [permissionGuard(PermissionCodes.AuditRead)],
+        loadComponent: () =>
+          import('./features/settings/audit-settings.page').then((m) => m.AuditSettingsPage),
+      },
+      {
         path: 'feature-locked',
         loadComponent: () =>
           import('./features/subscription/feature-locked.page').then((m) => m.FeatureLockedPage),

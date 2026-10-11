@@ -453,6 +453,11 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("entity_type");
 
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("ip_address");
+
                     b.Property<string>("NewValuesJson")
                         .HasColumnType("jsonb")
                         .HasColumnName("new_values_json");
@@ -465,6 +470,11 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("user_agent");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
@@ -475,8 +485,14 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "At")
                         .HasDatabaseName("ix_audit_logs_tenant_id_at");
 
+                    b.HasIndex("TenantId", "Action", "At")
+                        .HasDatabaseName("ix_audit_logs_tenant_id_action_at");
+
                     b.HasIndex("TenantId", "EntityType", "EntityId")
                         .HasDatabaseName("ix_audit_logs_tenant_id_entity_type_entity_id");
+
+                    b.HasIndex("TenantId", "UserId", "At")
+                        .HasDatabaseName("ix_audit_logs_tenant_id_user_id_at");
 
                     b.ToTable("audit_logs", (string)null);
                 });

@@ -52,6 +52,10 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.InvitationUsed] = ("تم استخدام هذه الدعوة مسبقاً.", "Invitation was already used."),
         [ErrorCodes.InvitationRevoked] = ("تم إلغاء هذه الدعوة.", "Invitation was revoked."),
         [ErrorCodes.InvitationNotFound] = ("الدعوة غير موجودة.", "Invitation was not found."),
+        [ErrorCodes.AuditExportTooLarge] = (
+            "عدد سجلات التدقيق يتجاوز حد التصدير. ضيّق عوامل التصفية.",
+            "Audit export exceeds the row limit. Narrow the filters."),
+        [ErrorCodes.AuditCursorInvalid] = ("مؤشر الصفحة غير صالح.", "Audit page cursor is invalid."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)
