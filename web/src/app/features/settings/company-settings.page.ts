@@ -11,8 +11,10 @@ import { problemDetailsFromError } from '../../core/api/auth.api';
 import { TenantApi } from '../../core/api/tenant.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.component';
@@ -31,6 +33,7 @@ type PageState = 'loading' | 'ready' | 'error';
     EmptyStateComponent,
     TenantLogoComponent,
     SettingsSubnavComponent,
+    IconComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -83,13 +86,13 @@ type PageState = 'loading' | 'ready' | 'error';
                     type="file"
                     class="sr-only"
                     accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg"
-                    [disabled]="!canUpdate() || logoBusy()"
+                    [disabled]="!canMutate() || logoBusy()"
                     (change)="onLogoSelected($event)"
                   />
                   <kadr-button
                     variant="secondary"
                     type="button"
-                    [disabled]="!canUpdate() || logoBusy()"
+                    [disabled]="!canMutate() || logoBusy()"
                     [loading]="logoBusy()"
                     (click)="fileInput.click()"
                   >
@@ -100,7 +103,7 @@ type PageState = 'loading' | 'ready' | 'error';
                   <kadr-button
                     variant="ghost"
                     type="button"
-                    [disabled]="!canUpdate() || logoBusy()"
+                    [disabled]="!canMutate() || logoBusy()"
                     (click)="removeLogo()"
                   >
                     {{ 'settings.company.removeLogo' | transloco }}
@@ -114,7 +117,7 @@ type PageState = 'loading' | 'ready' | 'error';
             [label]="'settings.company.name' | transloco"
             [value]="name()"
             [error]="nameError()"
-            [disabled]="!canUpdate()"
+            [disabled]="!canMutate()"
             (valueChange)="name.set($event)"
           />
 
@@ -126,15 +129,23 @@ type PageState = 'loading' | 'ready' | 'error';
           }
 
           <div class="flex justify-end">
-            <kadr-button
-              variant="primary"
-              type="button"
-              [disabled]="!canUpdate()"
-              [loading]="saving()"
-              (click)="save()"
+            <span
+              class="inline-flex"
+              [attr.title]="readOnly() ? ('subscription.readOnlyHint' | transloco) : null"
             >
-              {{ 'settings.company.save' | transloco }}
-            </kadr-button>
+              <kadr-button
+                variant="primary"
+                type="button"
+                [disabled]="!canMutate()"
+                [loading]="saving()"
+                (click)="save()"
+              >
+                @if (readOnly()) {
+                  <kadr-icon name="lock" size="sm" />
+                }
+                {{ 'settings.company.save' | transloco }}
+              </kadr-button>
+            </span>
           </div>
         </section>
       </div>
@@ -144,6 +155,7 @@ type PageState = 'loading' | 'ready' | 'error';
 export class CompanySettingsPage implements OnInit {
   private readonly tenantApi = inject(TenantApi);
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionStore);
   private readonly transloco = inject(TranslocoService);
 
   protected readonly state = signal<PageState>('loading');
@@ -159,6 +171,10 @@ export class CompanySettingsPage implements OnInit {
   protected readonly canUpdate = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantSettingsUpdate),
   );
+
+  protected readonly readOnly = computed(() => this.subscription.readOnly());
+
+  protected readonly canMutate = computed(() => this.canUpdate() && !this.readOnly());
 
   protected readonly showTemplates = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
@@ -199,7 +215,7 @@ export class CompanySettingsPage implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file || !this.canUpdate()) {
+    if (!file || !this.canMutate()) {
       return;
     }
     this.logoBusy.set(true);
@@ -217,7 +233,7 @@ export class CompanySettingsPage implements OnInit {
   }
 
   async removeLogo(): Promise<void> {
-    if (!this.canUpdate()) {
+    if (!this.canMutate()) {
       return;
     }
     this.logoBusy.set(true);

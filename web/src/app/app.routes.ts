@@ -68,6 +68,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/roles-settings.page').then((m) => m.RolesSettingsPage),
       },
+      {
+        path: 'settings/subscription',
+        canActivate: [permissionGuard(PermissionCodes.SubscriptionRead)],
+        loadComponent: () =>
+          import('./features/settings/subscription-settings.page').then(
+            (m) => m.SubscriptionSettingsPage,
+          ),
+      },
+      {
+        path: 'feature-locked',
+        loadComponent: () =>
+          import('./features/subscription/feature-locked.page').then((m) => m.FeatureLockedPage),
+      },
     ],
   },
   ...devRoutes,

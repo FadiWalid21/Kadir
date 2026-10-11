@@ -9,11 +9,13 @@ import {
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { CheckboxComponent } from '../../shared/ui/checkbox/checkbox.component';
 import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -34,6 +36,7 @@ import { SettingsSubnavComponent } from './settings-subnav.component';
     SkeletonComponent,
     EmptyStateComponent,
     ConfirmDialogComponent,
+    IconComponent,
   ],
   template: `
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
@@ -66,16 +69,30 @@ import { SettingsSubnavComponent } from './settings-subnav.component';
                 [value]="roleQuery()"
                 (valueChange)="roleQuery.set($event)"
               />
-              @if (canManage()) {
-                <kadr-button variant="primary" type="button" (click)="startCreate()">
-                  <span class="inline-flex items-center gap-2">
-                    <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M12 5v14" />
-                      <path d="M5 12h14" />
-                    </svg>
-                    {{ 'settings.roles.newRole' | transloco }}
-                  </span>
-                </kadr-button>
+              @if (canManagePerm()) {
+                <span
+                  class="inline-flex"
+                  [attr.title]="readOnly() ? ('subscription.readOnlyHint' | transloco) : null"
+                >
+                  <kadr-button
+                    variant="primary"
+                    type="button"
+                    [disabled]="readOnly()"
+                    (click)="startCreate()"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      @if (readOnly()) {
+                        <kadr-icon name="lock" size="sm" />
+                      } @else {
+                        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path d="M12 5v14" />
+                          <path d="M5 12h14" />
+                        </svg>
+                      }
+                      {{ 'settings.roles.newRole' | transloco }}
+                    </span>
+                  </kadr-button>
+                </span>
               }
             </div>
 
@@ -279,6 +296,7 @@ import { SettingsSubnavComponent } from './settings-subnav.component';
 export class RolesSettingsPage implements OnInit {
   protected readonly store = inject(RolesStore);
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionStore);
   private readonly toast = inject(ToastService);
   private readonly i18n = inject(TranslocoService);
 
@@ -290,7 +308,11 @@ export class RolesSettingsPage implements OnInit {
   protected readonly draftDescEn = signal('');
   protected readonly draftPerms = signal(new Set<string>());
 
-  protected readonly canManage = computed(() => this.auth.hasPermission(PermissionCodes.RolesManage));
+  protected readonly readOnly = computed(() => this.subscription.readOnly());
+  protected readonly canManagePerm = computed(() =>
+    this.auth.hasPermission(PermissionCodes.RolesManage),
+  );
+  protected readonly canManage = computed(() => this.canManagePerm() && !this.readOnly());
   protected readonly canTemplates = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
   );

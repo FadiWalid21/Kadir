@@ -1,3 +1,6 @@
+using Kadr.Api.Filters;
+using Kadr.Api.Http;
+using Kadr.Api.Localization;
 using Kadr.Infrastructure.Persistence;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.SharedKernel.Constants;
@@ -18,7 +21,36 @@ public static class DevEndpoints
             .RequireAuthorization(PermissionCodes.TenantTemplatesManage)
             .WithName("DevBackfillTemplates");
 
+        app.MapPost("/api/v1/dev/subscription", SetSubscriptionAsync)
+            .RequireAuthorization()
+            .WithName("DevSetSubscription");
+
+        app.MapPost("/api/v1/dev/feature-check", () => Results.Ok(new { ok = true }))
+            .RequireAuthorization()
+            .RequireFeature(FeatureKeys.Shifts)
+            .WithName("DevFeatureCheck");
+
         return app;
+    }
+
+    private static async Task<IResult> SetSubscriptionAsync(
+        HttpContext httpContext,
+        DevSubscriptionRequest body,
+        IDevSubscriptionService service,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await service.ApplyAsync(body, cancellationToken).ConfigureAwait(false);
+        if (result.IsSuccess)
+        {
+            return Results.NoContent();
+        }
+
+        var code = result.ErrorCode ?? ErrorCodes.SubscriptionNotFound;
+        var status = code is ErrorCodes.PlanNotFound or ErrorCodes.SubscriptionNotFound
+            ? StatusCodes.Status404NotFound
+            : StatusCodes.Status400BadRequest;
+        return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));
     }
 
     private static async Task<IResult> BackfillTemplatesAsync(

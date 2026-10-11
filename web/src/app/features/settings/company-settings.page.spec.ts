@@ -6,11 +6,15 @@ import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantApi } from '../../core/api/tenant.api';
 import { AuthService } from '../../core/auth/auth.service';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { provideTestTransloco } from '../../testing/transloco-testing';
 import { CompanySettingsPage } from './company-settings.page';
 
 describe('CompanySettingsPage', () => {
+  const readOnly = signal(false);
+
   beforeEach(async () => {
+    readOnly.set(false);
     await TestBed.configureTestingModule({
       imports: [CompanySettingsPage],
       providers: [
@@ -44,9 +48,16 @@ describe('CompanySettingsPage', () => {
               roles: ['Owner'],
               permissions: ['tenant.settings.read', 'tenant.settings.update'],
               tenant: { id: 't1', name: 'شركة الاختبار', slug: 'test', logoUrl: null },
+              checklist: { inviteTeamDone: false },
             }),
             hasPermission: () => true,
             refreshMe: vi.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: SubscriptionStore,
+          useValue: {
+            readOnly,
           },
         },
       ],
@@ -64,5 +75,17 @@ describe('CompanySettingsPage', () => {
     expect(text).toContain('الهوية البصرية للمنشأة');
     expect(text).toContain('حفظ التغييرات');
     expect(fixture.nativeElement.querySelector('kadr-tenant-logo')).toBeTruthy();
+  });
+
+  it('disables primary save with lock when read-only', async () => {
+    readOnly.set(true);
+    const fixture = TestBed.createComponent(CompanySettingsPage);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('kadr-button button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('kadr-icon')).toBeTruthy();
   });
 });

@@ -225,7 +225,8 @@
       "company": "الشركة",
       "templates": "القوالب",
       "users": "المستخدمون",
-      "roles": "الأدوار والصلاحيات"
+      "roles": "الأدوار والصلاحيات",
+      "subscription": "الاشتراك"
     },
     "templates": {
       "title": "قوالب القطاع",
@@ -362,6 +363,44 @@
       "customGroup": "أدوار مخصصة",
       "searchRoles": "ابحث عن دور...",
       "linkedUsers": "{{count}} مستخدم مرتبط"
+    },
+    "subscription": {
+      "title": "الاشتراك والخطة",
+      "subtitle": "راجع خطتك واستخدامك وخيارات الترقية عبر التواصل معنا.",
+      "loadErrorTitle": "تعذر تحميل الاشتراك",
+      "loadErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "endsOn": "تنتهي في {{date}}",
+      "statusActive": "اشتراك نشط",
+      "daysLeft": "{{days}} يوم متبقٍ",
+      "contactUs": "تواصل معنا",
+      "usageTitle": "الاستخدام",
+      "activeEmployees": "الموظفون النشطون",
+      "includesTitle": "ما تتضمنه خطتك",
+      "compareTitle": "مقارنة الخطط",
+      "pricingToggleAria": "نموذج التسعير",
+      "flatTier": "باقات ثابتة",
+      "perEmployee": "لكل موظف",
+      "perEmployeeExplain": "تُحسب الفاتورة بعدد الموظفين مع حد أدنى للفوترة.",
+      "perEmployeeExample": "مثال: {{unit}} {{currency}} × {{min}} موظف = {{total}} {{currency}} / شهر",
+      "colFeature": "الميزة",
+      "colPrice": "السعر",
+      "enterprise": "المؤسسات",
+      "customPrice": "سعر مخصص",
+      "yes": "نعم",
+      "priceMonthly": "{{price}} {{currency}} / شهر",
+      "pricePerSeat": "{{price}} {{currency}} / موظف",
+      "tierCore": "الأساسي",
+      "tierCorePayroll": "الأساسي + الرواتب (قريباً)",
+      "tierComplete": "الشامل (قريباً)",
+      "manualChangeNote": "تغيير الخطة يتم يدوياً عبر فريق كادر. لا يوجد دفع ذاتي بعد.",
+      "states": {
+        "trialRunning": "تجربة",
+        "trialExpired": "انتهت التجربة",
+        "active": "نشط",
+        "suspended": "موقوف",
+        "cancelled": "ملغى",
+        "pastDue": "متأخر"
+      }
     }
   },
   "home": {
@@ -438,5 +477,60 @@
     "checkbox": "مربع اختيار",
     "radioCard": "بطاقة اختيار",
     "confirmDialog": "حوار تأكيد"
+  },
+  "subscription": {
+    "readOnlyHint": "الحساب للقراءة فقط بسبب انتهاء الاشتراك أو التجربة.",
+    "banner": {
+      "trialInfo": "تجربتك مستمرة — متبقٍ {{days}} يوم.",
+      "trialWarn": "تنتهي تجربتك خلال {{days}} يوم. تواصل معنا للمتابعة.",
+      "readOnly": "انتهت التجربة أو الاشتراك. يمكنك العرض والتصدير فقط.",
+      "viewSubscription": "عرض الاشتراك",
+      "dismiss": "إخفاء"
+    },
+    "errors": {
+      "expired": "الحساب للقراءة فقط. راجع صفحة الاشتراك.",
+      "viewPlans": "عرض الخطط",
+      "capExceeded": "تم تجاوز حد الموظفين في خطتك.",
+      "featureLocked": "هذه الميزة غير متاحة في خطتك."
+    },
+    "seatLimit": {
+      "title": "حد المقاعد",
+      "body": "خطتك تسمح بـ {{cap}} موظفاً نشطاً، ولديك حالياً {{active}}.",
+      "close": "إغلاق",
+      "viewPlans": "عرض الخطط"
+    },
+    "featureLocked": {
+      "title": "ميزة مقفلة",
+      "body": "هذه الميزة متاحة في خطة {{plan}}.",
+      "viewPlans": "عرض الخطط",
+      "back": "رجوع"
+    },
+    "featurePlans": {
+      "default": "النمو أو أعلى",
+      "shifts": "النمو",
+      "workflows": "النمو",
+      "reports": "النمو",
+      "documents": "النمو",
+      "device_import": "النمو",
+      "custom_fields": "الأعمال",
+      "api": "الأعمال",
+      "compliance_dashboards": "الأعمال",
+      "priority_support": "الأعمال"
+    },
+    "features": {
+      "core_hr": "الموارد البشرية الأساسية",
+      "attendance": "الحضور",
+      "leave": "الإجازات",
+      "ess": "الخدمة الذاتية للموظف",
+      "shifts": "الورديات",
+      "workflows": "مسارات الموافقة",
+      "reports": "التقارير",
+      "documents": "المستندات",
+      "device_import": "استيراد الأجهزة",
+      "custom_fields": "حقول مخصصة",
+      "api": "واجهة البرمجة API",
+      "compliance_dashboards": "لوحات الامتثال",
+      "priority_support": "دعم ذو أولوية"
+    }
   }
 }

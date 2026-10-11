@@ -52,15 +52,29 @@ import { PermissionCodes } from '../../core/auth/permission-codes';
           {{ 'settings.nav.roles' | transloco }}
         </a>
       }
+      @if (showSubscription()) {
+        <a
+          routerLink="/settings/subscription"
+          routerLinkActive="border-accent text-fg"
+          class="border-b-2 border-transparent px-3 py-2 text-sm font-medium text-fg-2 hover:text-fg"
+          [class.!border-accent]="active() === 'subscription'"
+          [class.!text-fg]="active() === 'subscription'"
+        >
+          {{ 'settings.nav.subscription' | transloco }}
+        </a>
+      }
     </nav>
   `,
 })
 export class SettingsSubnavComponent {
   private readonly auth = inject(AuthService);
 
-  readonly active = input<'company' | 'templates' | 'users' | 'roles'>('company');
+  readonly active = input<'company' | 'templates' | 'users' | 'roles' | 'subscription'>('company');
   readonly showTemplates = input(true);
 
   protected readonly showUsers = computed(() => this.auth.hasPermission(PermissionCodes.UsersRead));
   protected readonly showRoles = computed(() => this.auth.hasPermission(PermissionCodes.RolesRead));
+  protected readonly showSubscription = computed(() =>
+    this.auth.hasPermission(PermissionCodes.SubscriptionRead),
+  );
 }

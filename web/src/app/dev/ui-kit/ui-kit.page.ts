@@ -13,6 +13,7 @@ import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.com
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { CheckboxComponent } from '../../shared/ui/checkbox/checkbox.component';
 import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
+import { SeatLimitDialogComponent } from '../../shared/ui/seat-limit-dialog/seat-limit-dialog.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
 import { RadioCardComponent } from '../../shared/ui/radio-card/radio-card.component';
@@ -70,6 +71,7 @@ const SWATCHES = [
     CheckboxComponent,
     RadioCardComponent,
     ConfirmDialogComponent,
+    SeatLimitDialogComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
@@ -346,6 +348,17 @@ const SWATCHES = [
                 (cancelled)="confirmOpen.set(false)"
               />
             </div>
+            <div>
+              <kadr-button variant="secondary" type="button" (click)="seatOpen.set(true)">
+                {{ 'subscription.seatLimit.title' | transloco }}
+              </kadr-button>
+              <kadr-seat-limit-dialog
+                [open]="seatOpen()"
+                [cap]="25"
+                [active]="26"
+                (closed)="seatOpen.set(false)"
+              />
+            </div>
           </div>
         </kadr-card>
 
@@ -382,6 +395,7 @@ export class UiKitPage {
   protected readonly demoChecked = signal(true);
   protected readonly demoRadio = signal(true);
   protected readonly confirmOpen = signal(false);
+  protected readonly seatOpen = signal(false);
   protected readonly demoSelectOptions = [
     { value: 'a', label: 'A' },
     { value: 'b', label: 'B' },

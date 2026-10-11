@@ -10,7 +10,7 @@ public sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subscri
     {
         builder.ToTable("subscriptions");
         builder.HasKey(x => x.Id);
-        builder.HasIndex(x => x.TenantId);
+        builder.HasIndex(x => x.TenantId).IsUnique();
         builder.HasIndex(x => new { x.TenantId, x.Status });
         builder.Ignore(x => x.DomainEvents);
     }
