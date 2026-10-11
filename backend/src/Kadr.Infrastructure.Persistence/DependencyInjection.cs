@@ -52,7 +52,11 @@ public static class DependencyInjection
         services.AddScoped<IUserService, Users.UserService>();
         services.AddScoped<IInvitationService, Invitations.InvitationService>();
         services.AddSingleton<ISubscriptionCache, MemorySubscriptionCache>();
-        services.AddScoped<IActiveEmployeeCounter, StubActiveEmployeeCounter>();
+        services.AddScoped<IActiveEmployeeCounter, Employees.ActiveEmployeeCounter>();
+        services.AddScoped<IEmployeeService, Employees.EmployeeService>();
+        services.AddScoped<IOrgService, Employees.OrgService>();
+        services.AddScoped<IEmployeeImportService, Employees.EmployeeImportService>();
+        services.AddScoped<SystemRolePermissionSeeder>();
         services.AddScoped<ISubscriptionGuard, SubscriptionGuard>();
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IDevSubscriptionService, DevSubscriptionService>();

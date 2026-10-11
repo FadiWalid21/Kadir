@@ -170,4 +170,10 @@ public sealed class AppUser : AggregateRoot, ITenantOwned, IAuditable
         IsActive = isActive;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    public void SetEmployeeId(Guid? employeeId)
+    {
+        EmployeeId = employeeId;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

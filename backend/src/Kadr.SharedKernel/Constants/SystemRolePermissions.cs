@@ -15,8 +15,13 @@ public static class SystemRolePermissions
             PermissionCodes.RolesRead,
             PermissionCodes.AuditRead,
             PermissionCodes.SubscriptionRead,
+            PermissionCodes.EmployeesRead,
+            PermissionCodes.OrgRead,
         ],
-        SystemRoleNames.Employee => [],
+        SystemRoleNames.Employee =>
+        [
+            PermissionCodes.EmployeesRead,
+        ],
         SystemRoleNames.Accountant =>
         [
             PermissionCodes.SubscriptionRead,

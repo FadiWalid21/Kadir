@@ -73,6 +73,15 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.PlatformNoChange] = ("لا يوجد تغيير: القيمة المطلوبة مطابقة للحالية.", "No change: the requested value matches the current one."),
         [ErrorCodes.PlatformPlanNotFound] = ("الباقة غير موجودة.", "The plan was not found."),
         [ErrorCodes.PlatformPlanProtected] = ("لا يمكن تعطيل الباقة الافتراضية للتجربة المجانية.", "The default trial plan cannot be deactivated."),
+        [ErrorCodes.EmployeesNotFound] = ("الموظف غير موجود.", "Employee was not found."),
+        [ErrorCodes.EmployeesValidationFailed] = ("بيانات الموظف غير صالحة.", "Employee data is invalid."),
+        [ErrorCodes.EmployeesDuplicateNumber] = ("الرقم الوظيفي مستخدم بالفعل.", "Employee number is already used."),
+        [ErrorCodes.EmployeesDuplicateNationalId] = ("الرقم القومي مستخدم بالفعل.", "National ID is already used."),
+        [ErrorCodes.EmployeesManagerCycle] = ("لا يمكن إنشاء حلقة في سلسلة المديرين.", "Cannot create a manager reporting cycle."),
+        [ErrorCodes.EmployeesImportInvalid] = ("ملف الاستيراد غير صالح. استخدم CSV وفق النموذج.", "Import file is invalid. Use the CSV template."),
+        [ErrorCodes.EmployeesForbidden] = ("ليست لديك صلاحية لهذا الإجراء على الموظفين.", "You are not allowed to perform this employee action."),
+        [ErrorCodes.OrgDepartmentCycle] = ("لا يمكن إنشاء حلقة في هيكل الإدارات.", "Cannot create a department hierarchy cycle."),
+        [ErrorCodes.OrgNotFound] = ("عنصر الهيكل غير موجود.", "Org item was not found."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

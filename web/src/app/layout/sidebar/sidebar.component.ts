@@ -92,7 +92,13 @@ export class SidebarComponent {
 
   private readonly items: NavItem[] = [
     { labelKey: 'shell.nav.home', icon: 'home', route: '/' },
-    { labelKey: 'shell.nav.employees', icon: 'users', disabled: true },
+    {
+      labelKey: 'shell.nav.employees',
+      icon: 'users',
+      route: '/employees',
+      permission: PermissionCodes.EmployeesRead,
+    },
+    { labelKey: 'shell.nav.org', icon: 'building', route: '/org', permission: PermissionCodes.OrgRead },
     { labelKey: 'shell.nav.attendance', icon: 'clock', disabled: true },
     { labelKey: 'shell.nav.leave', icon: 'calendar', disabled: true },
     { labelKey: 'shell.nav.requests', icon: 'inbox', disabled: true },

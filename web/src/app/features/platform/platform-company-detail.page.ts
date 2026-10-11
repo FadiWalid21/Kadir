@@ -243,13 +243,10 @@ type AuditPeriod = '7' | '30';
                 <li class="flex justify-between gap-3">
                   <span class="text-fg-2">{{ 'platform.detail.employees' | transloco }}</span>
                   <span class="text-end tabular-nums">
-                    0
+                    {{ d.usage.activeEmployeeCount }}
                     @if (d.usage.employeeCap !== null) {
                       / {{ d.usage.employeeCap }}
                     }
-                    <span class="block text-xs text-fg-muted">{{
-                      'platform.detail.employeesStub' | transloco
-                    }}</span>
                   </span>
                 </li>
                 @if (d.owner?.lastLoginAt) {
@@ -406,14 +403,16 @@ type AuditPeriod = '7' | '30';
                   <div>
                     <p class="text-xs text-fg-muted">{{ 'platform.detail.employees' | transloco }}</p>
                     <p class="mt-1 text-sm tabular-nums text-fg">
-                      0
+                      {{ d.usage.activeEmployeeCount }}
                       @if (sub.employeeCap !== null) {
                         / {{ sub.employeeCap }}
                       }
                     </p>
-                    <p class="text-xs text-fg-muted">{{ 'platform.detail.employeesStub' | transloco }}</p>
                     <div class="mt-2 h-2 overflow-hidden rounded-full bg-subtle">
-                      <div class="h-full w-0 rounded-full bg-accent"></div>
+                      <div
+                        class="h-full rounded-full bg-accent"
+                        [style.width.%]="employeeUsagePct(d.usage.activeEmployeeCount, sub.employeeCap)"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -854,6 +853,13 @@ export class PlatformCompanyDetailPage implements OnInit {
 
   trialProgress(daysLeft: number): number {
     return Math.max(4, Math.min(100, Math.round((daysLeft / 14) * 100)));
+  }
+
+  employeeUsagePct(active: number, cap: number | null): number {
+    if (cap == null || cap <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, Math.round((active / cap) * 100)));
   }
 
   isTrialExpired(d: PlatformTenantDetail): boolean {

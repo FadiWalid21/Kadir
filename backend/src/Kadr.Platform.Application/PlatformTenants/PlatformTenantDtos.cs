@@ -20,6 +20,7 @@ public sealed record PlatformTenantListItemDto(
     string SubscriptionStatus,
     DateTimeOffset? TrialEndsAt,
     int UserCount,
+    int ActiveEmployeeCount,
     DateTimeOffset CreatedAt);
 
 public sealed record PlatformTenantSummaryDto(int Total, int Trial, int ExpiringSoon, int Suspended);

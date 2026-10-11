@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guard';
 import { PermissionCodes } from './core/auth/permission-codes';
 import { platformAuthGuard, platformGuestGuard } from './core/platform/platform-auth.guard';
+import { featureGuard } from './core/subscription/feature.guard';
+import { FeatureKeys } from './core/subscription/feature-keys';
 import { devRoutes } from './dev/dev.routes';
 
 export const routes: Routes = [
@@ -109,6 +111,71 @@ export const routes: Routes = [
         path: 'account',
         canActivate: [authGuard],
         loadComponent: () => import('./features/account/account.page').then((m) => m.AccountPage),
+      },
+      {
+        path: 'employees',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesRead),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/employees-list.page').then((m) => m.EmployeesListPage),
+      },
+      {
+        path: 'employees/new',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesCreate),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/employee-form.page').then((m) => m.EmployeeFormPage),
+      },
+      {
+        path: 'employees/import',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesImport),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/employees-import.page').then((m) => m.EmployeesImportPage),
+      },
+      {
+        path: 'employees/:id/edit',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesUpdate),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/employee-form.page').then((m) => m.EmployeeFormPage),
+      },
+      {
+        path: 'employees/:id',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesRead),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/employee-profile.page').then((m) => m.EmployeeProfilePage),
+      },
+      {
+        path: 'documents/expiring',
+        canActivate: [
+          permissionGuard(PermissionCodes.EmployeesRead),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/documents-expiring.page').then(
+            (m) => m.DocumentsExpiringPage,
+          ),
+      },
+      {
+        path: 'org',
+        canActivate: [
+          permissionGuard(PermissionCodes.OrgRead),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/org-tree.page').then((m) => m.OrgTreePage),
       },
       {
         path: 'settings/company',

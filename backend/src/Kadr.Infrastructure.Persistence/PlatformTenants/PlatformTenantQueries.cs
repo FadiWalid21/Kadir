@@ -112,6 +112,12 @@ public sealed class PlatformTenantQueries(
                 .ToDictionaryAsync(x => x.TenantId, x => x.Count, cancellationToken)
                 .ConfigureAwait(false);
 
+        var employeeCounts = new Dictionary<Guid, int>();
+        foreach (var id in ids)
+        {
+            employeeCounts[id] = await employeeCounter.CountAsync(id, cancellationToken).ConfigureAwait(false);
+        }
+
         var items = rows
             .Select(r => new PlatformTenantListItemDto(
                 r.Id,
@@ -125,6 +131,7 @@ public sealed class PlatformTenantQueries(
                 r.SubscriptionStatus.ToString(),
                 r.TrialEndsAt,
                 userCounts.GetValueOrDefault(r.Id),
+                employeeCounts.GetValueOrDefault(r.Id),
                 r.CreatedAt))
             .ToList();
 

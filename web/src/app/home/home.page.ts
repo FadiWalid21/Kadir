@@ -112,14 +112,28 @@ type HomeState = 'loading' | 'ready' | 'error';
               <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
             }
           </li>
-          @for (item of pendingChecklistKeys; track item) {
-            <li
-              class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+          <li
+            class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+          >
+            <a
+              routerLink="/settings/templates"
+              class="text-sm text-accent underline-offset-2 hover:underline"
             >
-              <span class="text-sm text-fg">{{ item | transloco }}</span>
-              <kadr-badge tone="neutral" [label]="'home.notAvailable' | transloco" />
-            </li>
-          }
+              {{ 'home.checklist.template' | transloco }}
+            </a>
+            <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
+          </li>
+          <li
+            class="flex items-center justify-between gap-3 rounded-md border border-line bg-app px-4 py-3"
+          >
+            <a
+              routerLink="/employees"
+              class="text-sm text-accent underline-offset-2 hover:underline"
+            >
+              {{ 'home.checklist.employee' | transloco }}
+            </a>
+            <kadr-badge tone="neutral" [label]="'home.checklistAction' | transloco" />
+          </li>
         </ul>
       </section>
 
@@ -162,11 +176,6 @@ export class HomePage implements OnInit {
 
   protected readonly showUiKit = isDevMode();
   protected readonly state = signal<HomeState>('loading');
-
-  protected readonly pendingChecklistKeys = [
-    'home.checklist.template',
-    'home.checklist.employee',
-  ] as const;
 
   protected readonly hasLogo = computed(() => !!this.auth.me()?.tenant.logoUrl);
   protected readonly inviteDone = computed(() => !!this.auth.me()?.checklist?.inviteTeamDone);
