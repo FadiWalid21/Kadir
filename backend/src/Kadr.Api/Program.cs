@@ -6,6 +6,7 @@ using Kadr.Api.Endpoints;
 using Kadr.Api.Http;
 using Kadr.Api.Localization;
 using Kadr.Api.Middleware;
+using Kadr.Api.Options;
 using Kadr.Identity.Application;
 using Kadr.Identity.Application.Options;
 using Kadr.Identity.Infrastructure;
@@ -16,6 +17,7 @@ using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Infrastructure;
 using Kadr.SharedKernel.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -50,6 +52,36 @@ try
 
     builder.Services.AddOptions<PlatformAdminOptions>()
         .Bind(builder.Configuration.GetSection(PlatformAdminOptions.SectionName));
+
+    builder.Services.AddOptions<CorsHostOptions>()
+        .Bind(builder.Configuration.GetSection(CorsHostOptions.SectionName));
+    builder.Services.AddOptions<AuthHostOptions>()
+        .Bind(builder.Configuration.GetSection(AuthHostOptions.SectionName));
+    builder.Services.AddOptions<DatabaseHostOptions>()
+        .Bind(builder.Configuration.GetSection(DatabaseHostOptions.SectionName));
+
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // Demo hosts (IIS / reverse proxy) — trust proxy headers from the platform.
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
+    var corsOrigins = ParseCorsOrigins(builder.Configuration);
+    if (corsOrigins.Length > 0)
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(
+                "KadrBrowser",
+                policy => policy
+                    .WithOrigins(corsOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials());
+        });
+    }
 
     builder.Services.AddPlatformApplication();
     builder.Services.AddPlatformInfrastructure();
@@ -238,9 +270,21 @@ try
 
     var app = builder.Build();
 
+    var authHost = app.Configuration.GetSection(AuthHostOptions.SectionName).Get<AuthHostOptions>()
+        ?? new AuthHostOptions();
+    RefreshCookie.Configure(authHost.CrossSiteCookies);
+    PlatformRefreshCookie.Configure(authHost.CrossSiteCookies);
+
+    app.UseForwardedHeaders();
+
     // Default Serilog request logging: method, path, status, elapsed — never request bodies or Authorization.
     app.UseSerilogRequestLogging();
     app.UseMiddleware<NoStoreCacheMiddleware>();
+    if (corsOrigins.Length > 0)
+    {
+        app.UseCors("KadrBrowser");
+    }
+
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseMiddleware<TenantContextMiddleware>();
@@ -248,11 +292,18 @@ try
     app.UseMiddleware<LogContextMiddleware>();
     app.UseAuthorization();
 
+    var migrateOnStartup = app.Configuration.GetValue("Database:MigrateOnStartup", false)
+        || app.Environment.IsDevelopment()
+        || app.Environment.IsEnvironment("Testing");
+
     if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
     {
         app.MapOpenApi();
         app.MapDevEndpoints();
+    }
 
+    if (migrateOnStartup)
+    {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
         await db.Database.MigrateAsync();
@@ -308,6 +359,31 @@ static string AttendancePunchPartitionKey(HttpContext httpContext)
                  ?? httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                  ?? "anon";
     return $"attendance-punch:{userId}";
+}
+
+static string[] ParseCorsOrigins(IConfiguration configuration)
+{
+    var section = configuration.GetSection("Cors:Origins");
+    if (section.GetChildren().Any())
+    {
+        return section.GetChildren()
+            .Select(c => c.Value?.Trim())
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    var raw = configuration["Cors:Origins"] ?? configuration["Cors__Origins"];
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        return [];
+    }
+
+    return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(v => !string.IsNullOrWhiteSpace(v))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
 }
 
 public partial class Program;

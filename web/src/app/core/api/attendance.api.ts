@@ -131,7 +131,7 @@ export interface WeekendSettings {
 @Injectable({ providedIn: 'root' })
 export class AttendanceApi {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiBaseUrl}/api/v1/attendance`;
+  private readonly base = `${environment.apiBaseUrl}/attendance`;
 
   punch(body: PunchRequest): Promise<PunchResult> {
     return firstValueFrom(this.http.post<PunchResult>(`${this.base}/punch`, body));
