@@ -168,7 +168,10 @@ public sealed class AuditSaveChangesInterceptor(
                || propertyName.Contains("Nonce", StringComparison.OrdinalIgnoreCase)
                || propertyName.Contains("IdToken", StringComparison.OrdinalIgnoreCase)
                || propertyName.Contains("SelectionToken", StringComparison.OrdinalIgnoreCase)
-               || propertyName.Contains("RegistrationToken", StringComparison.OrdinalIgnoreCase);
+               || propertyName.Contains("RegistrationToken", StringComparison.OrdinalIgnoreCase)
+               || propertyName.Contains("Latitude", StringComparison.OrdinalIgnoreCase)
+               || propertyName.Contains("Longitude", StringComparison.OrdinalIgnoreCase)
+               || propertyName.Contains("Coordinates", StringComparison.OrdinalIgnoreCase);
     }
 
     private static object? Normalize(object? value) =>

@@ -9,6 +9,7 @@ using Kadr.Identity.Domain.Users;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Auth;
 using Kadr.Platform.Application.Tenants;
+using Kadr.Platform.Domain.Attendance;
 using Kadr.Platform.Domain.Org;
 using Kadr.Platform.Domain.Settings;
 using Kadr.Platform.Domain.Subscriptions;
@@ -364,6 +365,7 @@ public sealed class RegisterTenantCommandHandler(
         var start = string.IsNullOrWhiteSpace(command.DefaultWorkStart) ? "09:00" : command.DefaultWorkStart.Trim();
         var end = string.IsNullOrWhiteSpace(command.DefaultWorkEnd) ? "17:00" : command.DefaultWorkEnd.Trim();
 
+        var defaults = AttendanceRuleSettings.Defaults;
         db.TenantSettings.AddRange(
             TenantSetting.Create(tenantId, SettingKeys.CompanyCountry, JsonSerializer.Serialize(country)),
             TenantSetting.Create(tenantId, SettingKeys.WorkWeekDays, JsonSerializer.Serialize(workDays)),
@@ -371,7 +373,26 @@ public sealed class RegisterTenantCommandHandler(
             TenantSetting.Create(tenantId, SettingKeys.WorkDayStart, JsonSerializer.Serialize(start)),
             TenantSetting.Create(tenantId, SettingKeys.WorkDayEnd, JsonSerializer.Serialize(end)),
             TenantSetting.Create(tenantId, SettingKeys.DateFormat, JsonSerializer.Serialize("yyyy-MM-dd")),
-            TenantSetting.Create(tenantId, SettingKeys.CalendarHijriEnabled, "false"));
+            TenantSetting.Create(tenantId, SettingKeys.CalendarHijriEnabled, "false"),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceGraceLateMinutes, JsonSerializer.Serialize(defaults.GraceLateMinutes)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceGraceEarlyLeaveMinutes, JsonSerializer.Serialize(defaults.GraceEarlyLeaveMinutes)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceAbsentAfterStartHours, JsonSerializer.Serialize(defaults.AbsentAfterStartHours)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeEnabled, JsonSerializer.Serialize(defaults.OvertimeEnabled)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeAfterEndMinutes, JsonSerializer.Serialize(defaults.OvertimeAfterEndMinutes)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeMinMinutes, JsonSerializer.Serialize(defaults.OvertimeMinMinutes)),
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceLocationAccuracyM, JsonSerializer.Serialize(100)));
+
+        foreach (var h in EgyptCivilHolidays.Placeholders)
+        {
+            db.Holidays.Add(Holiday.Create(
+                tenantId,
+                h.StartsOn,
+                h.EndsOn,
+                h.NameAr,
+                h.NameEn,
+                isOfficial: true,
+                repeatsYearly: true));
+        }
     }
 
     private static string[] NormalizeDays(IReadOnlyList<string>? days, string[] fallback) =>

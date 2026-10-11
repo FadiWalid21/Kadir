@@ -102,6 +102,7 @@ try
     var forgotLimit = builder.Configuration.GetValue("RateLimiting:ForgotPermitLimit", 5);
     var resetLimit = builder.Configuration.GetValue("RateLimiting:ResetPermitLimit", 10);
     var meSecurityLimit = builder.Configuration.GetValue("RateLimiting:MeSecurityPermitLimit", 10);
+    var attendancePunchLimit = builder.Configuration.GetValue("RateLimiting:AttendancePunchPermitLimit", 2);
 
     builder.Services.AddRateLimiter(options =>
     {
@@ -224,6 +225,15 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+        options.AddPolicy("attendance-punch", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                AttendancePunchPartitionKey(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = attendancePunchLimit,
+                    Window = TimeSpan.FromSeconds(30),
+                    QueueLimit = 0,
+                }));
     });
 
     var app = builder.Build();
@@ -272,6 +282,7 @@ try
     app.MapSubscriptionEndpoints();
     app.MapAuditLogEndpoints();
     app.MapEmployeesEndpoints();
+    app.MapAttendanceEndpoints();
 
     app.Run();
 }
@@ -289,6 +300,14 @@ static string PartitionKey(HttpContext httpContext, string prefix)
 {
     var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     return $"{prefix}:{ip}";
+}
+
+static string AttendancePunchPartitionKey(HttpContext httpContext)
+{
+    var userId = httpContext.User?.FindFirst("sub")?.Value
+                 ?? httpContext.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                 ?? "anon";
+    return $"attendance-punch:{userId}";
 }
 
 public partial class Program;

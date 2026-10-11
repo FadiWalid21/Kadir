@@ -79,6 +79,7 @@ public sealed class ArchitectureTests
         "RefreshTokenService.cs",
         "InvitationService.cs",
         "TrialExpiryRunner.cs",
+        "AttendanceAbsenceRunner.cs",
         "VerifyEmailCommandHandler.cs",
         "PlatformTenantQueries.cs",
         "PlatformAuditLogQueries.cs",

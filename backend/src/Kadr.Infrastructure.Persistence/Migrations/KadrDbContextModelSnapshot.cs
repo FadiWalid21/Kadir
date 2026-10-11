@@ -703,6 +703,352 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.ToTable("external_logins", (string)null);
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Attendance.AttendanceDaySummary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<int>("EarlyLeaveMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("early_leave_minutes");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTimeOffset?>("FirstInAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_in_at");
+
+                    b.Property<bool>("IsManualOverride")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_manual_override");
+
+                    b.Property<DateTimeOffset?>("LastOutAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_out_at");
+
+                    b.Property<int>("LateMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("late_minutes");
+
+                    b.Property<int>("OvertimeMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("overtime_minutes");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.Property<int>("WorkedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("worked_minutes");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attendance_day_summaries");
+
+                    b.HasIndex("TenantId", "WorkDate")
+                        .HasDatabaseName("ix_attendance_day_summaries_tenant_id_work_date");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attendance_day_summaries_tenant_id_employee_id_work_date");
+
+                    b.ToTable("attendance_day_summaries", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Attendance.AttendancePunch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<double?>("AccuracyM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("accuracy_m");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<Guid>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<double?>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<bool>("IsInside")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_inside");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("OutsideReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("outside_reason");
+
+                    b.Property<DateTimeOffset>("PunchedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("punched_at");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_id");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attendance_punches");
+
+                    b.HasIndex("TenantId", "WorkDate")
+                        .HasDatabaseName("ix_attendance_punches_tenant_id_work_date");
+
+                    b.HasIndex("TenantId", "EmployeeId", "ClientRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attendance_punches_tenant_id_employee_id_client_request_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .HasDatabaseName("ix_attendance_punches_tenant_id_employee_id_work_date");
+
+                    b.ToTable("attendance_punches", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Attendance.AttendancePunchAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<double?>("AccuracyM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("accuracy_m");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<Guid?>("ClientRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_request_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<double?>("DistanceM")
+                        .HasColumnType("double precision")
+                        .HasColumnName("distance_m");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reason_code");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attendance_punch_attempts");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("ix_attendance_punch_attempts_tenant_id_created_at");
+
+                    b.HasIndex("TenantId", "EmployeeId", "CreatedAt")
+                        .HasDatabaseName("ix_attendance_punch_attempts_tenant_id_employee_id_created_at");
+
+                    b.ToTable("attendance_punch_attempts", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Attendance.Holiday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("EndsOn")
+                        .HasColumnType("date")
+                        .HasColumnName("ends_on");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsOfficial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_official");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_en");
+
+                    b.Property<bool>("RepeatsYearly")
+                        .HasColumnType("boolean")
+                        .HasColumnName("repeats_yearly");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("date")
+                        .HasColumnName("starts_on");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holidays");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("ix_holidays_tenant_id_is_active");
+
+                    b.HasIndex("TenantId", "StartsOn", "EndsOn")
+                        .HasDatabaseName("ix_holidays_tenant_id_starts_on_ends_on");
+
+                    b.ToTable("holidays", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Attendance.ShiftAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<bool>("IsDayOff")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_day_off");
+
+                    b.Property<Guid?>("ShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_assignments");
+
+                    b.HasIndex("TenantId", "WorkDate")
+                        .HasDatabaseName("ix_shift_assignments_tenant_id_work_date");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shift_assignments_tenant_id_employee_id_work_date");
+
+                    b.ToTable("shift_assignments", (string)null);
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Audit.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1219,6 +1565,12 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
+
+                    b.Property<string>("OutOfRangePolicy")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("out_of_range_policy");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
@@ -1940,6 +2292,10 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("break_minutes");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1947,6 +2303,10 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
+
+                    b.Property<bool>("CrossesMidnight")
+                        .HasColumnType("boolean")
+                        .HasColumnName("crosses_midnight");
 
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time without time zone")
@@ -1963,6 +2323,10 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsCustomized")
                         .HasColumnType("boolean")
                         .HasColumnName("is_customized");
+
+                    b.Property<bool>("IsFlexible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_flexible");
 
                     b.Property<string>("NameAr")
                         .IsRequired()

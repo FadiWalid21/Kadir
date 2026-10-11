@@ -20,6 +20,13 @@ export const PermissionCodes = {
   EmployeesImport: 'employees.import',
   OrgRead: 'org.read',
   OrgManage: 'org.manage',
+  AttendancePunch: 'attendance.punch',
+  AttendanceReadOwn: 'attendance.read.own',
+  AttendanceReadTeam: 'attendance.read.team',
+  AttendanceReadAll: 'attendance.read.all',
+  AttendanceManage: 'attendance.manage',
+  AttendanceEdit: 'attendance.edit',
+  AttendanceReports: 'attendance.reports',
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];

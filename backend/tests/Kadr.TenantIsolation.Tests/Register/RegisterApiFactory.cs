@@ -52,6 +52,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("RateLimiting:ForgotPermitLimit", "1000");
         builder.UseSetting("RateLimiting:ResetPermitLimit", "1000");
         builder.UseSetting("RateLimiting:MeSecurityPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:AttendancePunchPermitLimit", "1000");
         builder.UseSetting("PasswordReset:EmailPermitLimit", "1000");
         builder.UseSetting("Google:ClientId", TestGoogleClientId);
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
