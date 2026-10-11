@@ -225,7 +225,8 @@
       "company": "Company",
       "templates": "Templates",
       "users": "Users",
-      "roles": "Roles & permissions"
+      "roles": "Roles & permissions",
+      "subscription": "Subscription"
     },
     "templates": {
       "title": "Industry templates",
@@ -362,6 +363,44 @@
       "customGroup": "Custom roles",
       "searchRoles": "Search roles...",
       "linkedUsers": "{{count}} linked users"
+    },
+    "subscription": {
+      "title": "Subscription & plan",
+      "subtitle": "Review your plan, usage, and contact us to change plans.",
+      "loadErrorTitle": "Could not load subscription",
+      "loadErrorBody": "Check your connection and try again.",
+      "endsOn": "Ends on {{date}}",
+      "statusActive": "Active subscription",
+      "daysLeft": "{{days}} days left",
+      "contactUs": "Contact us",
+      "usageTitle": "Usage",
+      "activeEmployees": "Active employees",
+      "includesTitle": "What your plan includes",
+      "compareTitle": "Compare plans",
+      "pricingToggleAria": "Pricing model",
+      "flatTier": "Flat tiers",
+      "perEmployee": "Per employee",
+      "perEmployeeExplain": "Billing is based on headcount with a minimum billed seats.",
+      "perEmployeeExample": "Example: {{unit}} {{currency}} × {{min}} employees = {{total}} {{currency}} / month",
+      "colFeature": "Feature",
+      "colPrice": "Price",
+      "enterprise": "Enterprise",
+      "customPrice": "Custom price",
+      "yes": "Yes",
+      "priceMonthly": "{{price}} {{currency}} / month",
+      "pricePerSeat": "{{price}} {{currency}} / seat",
+      "tierCore": "Core",
+      "tierCorePayroll": "Core + Payroll (coming soon)",
+      "tierComplete": "Complete (coming soon)",
+      "manualChangeNote": "Plan changes are handled manually by the Kadr team. Self-serve billing is not available yet.",
+      "states": {
+        "trialRunning": "Trial",
+        "trialExpired": "Trial expired",
+        "active": "Active",
+        "suspended": "Suspended",
+        "cancelled": "Cancelled",
+        "pastDue": "Past due"
+      }
     }
   },
   "home": {
@@ -438,5 +477,60 @@
     "checkbox": "Checkbox",
     "radioCard": "Radio card",
     "confirmDialog": "Confirm dialog"
+  },
+  "subscription": {
+    "readOnlyHint": "Account is read-only because the subscription or trial ended.",
+    "banner": {
+      "trialInfo": "Your trial is active — {{days}} days left.",
+      "trialWarn": "Your trial ends in {{days}} days. Contact us to continue.",
+      "readOnly": "Trial or subscription ended. You can view and export only.",
+      "viewSubscription": "View subscription",
+      "dismiss": "Dismiss"
+    },
+    "errors": {
+      "expired": "Account is read-only. See the subscription page.",
+      "viewPlans": "View plans",
+      "capExceeded": "Your plan employee limit was exceeded.",
+      "featureLocked": "This feature is not available on your plan."
+    },
+    "seatLimit": {
+      "title": "Seat limit",
+      "body": "Your plan allows {{cap}} active employees; you currently have {{active}}.",
+      "close": "Close",
+      "viewPlans": "View plans"
+    },
+    "featureLocked": {
+      "title": "Feature locked",
+      "body": "This feature is available on the {{plan}} plan.",
+      "viewPlans": "View plans",
+      "back": "Back"
+    },
+    "featurePlans": {
+      "default": "Growth or higher",
+      "shifts": "Growth",
+      "workflows": "Growth",
+      "reports": "Growth",
+      "documents": "Growth",
+      "device_import": "Growth",
+      "custom_fields": "Business",
+      "api": "Business",
+      "compliance_dashboards": "Business",
+      "priority_support": "Business"
+    },
+    "features": {
+      "core_hr": "Core HR",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "ess": "Employee self-service",
+      "shifts": "Shifts",
+      "workflows": "Workflows",
+      "reports": "Reports",
+      "documents": "Documents",
+      "device_import": "Device import",
+      "custom_fields": "Custom fields",
+      "api": "API access",
+      "compliance_dashboards": "Compliance dashboards",
+      "priority_support": "Priority support"
+    }
   }
 }

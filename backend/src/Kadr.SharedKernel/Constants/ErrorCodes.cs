@@ -17,6 +17,10 @@ public static class ErrorCodes
     public const string IdempotencyKeyReuse = "idempotency.key_reuse";
     public const string TenantSlugUnavailable = "tenant.slug_unavailable";
     public const string PlanNotFound = "plan.not_found";
+    public const string PlanEmployeeCapExceeded = "plan.employee_cap_exceeded";
+    public const string PlanFeatureNotAvailable = "plan.feature_not_available";
+    public const string SubscriptionExpired = "subscription.expired";
+    public const string SubscriptionNotFound = "subscription.not_found";
     public const string RegistrationFailed = "auth.registration_failed";
     public const string IndustryInvalid = "industry.invalid";
     public const string FileTooLarge = "file.too_large";

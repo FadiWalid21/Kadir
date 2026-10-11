@@ -150,6 +150,7 @@ try
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseMiddleware<TenantContextMiddleware>();
+    app.UseMiddleware<SubscriptionReadOnlyMiddleware>();
     app.UseMiddleware<LogContextMiddleware>();
     app.UseAuthorization();
 
@@ -176,6 +177,7 @@ try
     app.MapRolesEndpoints();
     app.MapUsersEndpoints();
     app.MapInvitationsEndpoints();
+    app.MapSubscriptionEndpoints();
 
     app.Run();
 }

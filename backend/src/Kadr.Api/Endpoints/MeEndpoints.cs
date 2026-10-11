@@ -1,5 +1,7 @@
 using Kadr.Identity.Application.Auth;
 using Kadr.Infrastructure.Persistence;
+using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Subscriptions;
 using Kadr.SharedKernel.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,7 @@ public static class MeEndpoints
         ITenantContext tenantContext,
         KadrDbContext db,
         IPermissionService permissions,
+        ISubscriptionService subscriptions,
         CancellationToken cancellationToken)
     {
         if (tenantContext.TenantId is null || tenantContext.UserId is null)
@@ -60,6 +63,13 @@ public static class MeEndpoints
                     cancellationToken)
                 .ConfigureAwait(false);
 
+        MeSubscriptionSummary? subscription = null;
+        var subResult = await subscriptions.GetMeSummaryAsync(cancellationToken).ConfigureAwait(false);
+        if (subResult.IsSuccess)
+        {
+            subscription = subResult.Value;
+        }
+
         return Results.Ok(new MeResponse(
             user.Id,
             user.FullName,
@@ -68,7 +78,8 @@ public static class MeEndpoints
             roles,
             perms,
             new MeTenant(tenant.Id, tenant.Name, tenant.Slug, logoUrl),
-            new MeChecklist(inviteTeamDone)));
+            new MeChecklist(inviteTeamDone),
+            subscription));
     }
 }
 
@@ -80,7 +91,8 @@ public sealed record MeResponse(
     IReadOnlyList<string> Roles,
     IReadOnlyList<string> Permissions,
     MeTenant Tenant,
-    MeChecklist Checklist);
+    MeChecklist Checklist,
+    MeSubscriptionSummary? Subscription);
 
 public sealed record MeTenant(Guid Id, string Name, string Slug, string? LogoUrl);
 

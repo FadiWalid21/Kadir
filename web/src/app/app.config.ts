@@ -11,6 +11,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
+import { subscriptionErrorInterceptor } from './core/subscription/subscription-error.interceptor';
 import { ThemeService } from './core/theme/theme.service';
 
 function initApp(theme: ThemeService, transloco: TranslocoService, auth: AuthService) {
@@ -24,7 +25,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, subscriptionErrorInterceptor])),
     provideTransloco({
       config: {
         availableLangs: ['ar', 'en'],

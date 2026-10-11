@@ -103,13 +103,13 @@ public sealed class RegisterTenantCommandHandler(
                 timeZone,
                 trialEndsAt);
 
+            // Subscription is ITenantOwned — ambient tenant must be set before SaveChanges.
+            tenantContext.Set(tenantId);
             db.Tenants.Add(tenant);
             db.Subscriptions.Add(Subscription.CreateTrial(tenantId, plan.Id, now, trialEndsAt));
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             failureInjector.AfterTenantInserted();
-
-            tenantContext.Set(tenantId);
 
             var emailCheck = await emailUniqueness
                 .EnsureAvailableAsync(tenantId, normalizedEmail, cancellationToken)

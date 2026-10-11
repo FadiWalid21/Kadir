@@ -29,6 +29,7 @@ public sealed class Plan : AggregateRoot, IPlatformEntity, IAuditable
         string nameAr,
         string nameEn,
         int employeeCap,
+        decimal monthlyPrice,
         string featuresJson)
     {
         return new Plan
@@ -39,6 +40,7 @@ public sealed class Plan : AggregateRoot, IPlatformEntity, IAuditable
             NameEn = nameEn,
             PricingModel = PricingModel.FlatTier,
             EmployeeCap = employeeCap,
+            UnitPrice = monthlyPrice,
             Currency = "EGP",
             FeaturesJson = featuresJson,
             IsActive = true,
@@ -68,5 +70,27 @@ public sealed class Plan : AggregateRoot, IPlatformEntity, IAuditable
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    public void ApplySeed(
+        string nameAr,
+        string nameEn,
+        PricingModel pricingModel,
+        int? employeeCap,
+        decimal? unitPrice,
+        int? minBilledEmployees,
+        string featuresJson,
+        bool isActive = true)
+    {
+        NameAr = nameAr;
+        NameEn = nameEn;
+        PricingModel = pricingModel;
+        EmployeeCap = employeeCap;
+        UnitPrice = unitPrice;
+        MinBilledEmployees = minBilledEmployees;
+        FeaturesJson = featuresJson;
+        IsActive = isActive;
+        Currency = "EGP";
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

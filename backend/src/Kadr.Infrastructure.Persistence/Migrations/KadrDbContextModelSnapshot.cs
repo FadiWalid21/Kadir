@@ -894,6 +894,10 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<DateTimeOffset?>("TrialEndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("trial_ends_at");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -906,6 +910,7 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasName("pk_subscriptions");
 
                     b.HasIndex("TenantId")
+                        .IsUnique()
                         .HasDatabaseName("ix_subscriptions_tenant_id");
 
                     b.HasIndex("TenantId", "Status")

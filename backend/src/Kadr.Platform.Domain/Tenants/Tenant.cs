@@ -86,4 +86,22 @@ public sealed class Tenant : AggregateRoot, IPlatformEntity, IAuditable
         IndustryCode = industryCode.Trim().ToLowerInvariant();
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    public void Suspend()
+    {
+        Status = TenantStatus.Suspended;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void ResumeTrial()
+    {
+        Status = TenantStatus.Trial;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetTrialEndsAt(DateTimeOffset? trialEndsAt)
+    {
+        TrialEndsAt = trialEndsAt;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

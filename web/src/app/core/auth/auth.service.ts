@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthApi, problemDetailsFromError } from '../api/auth.api';
 import { MeApi } from '../api/me.api';
 import { MeResponse } from '../api/me.models';
+import { SubscriptionStore } from '../subscription/subscription.store';
 import { PermissionCode } from './permission-codes';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'anonymous';
@@ -11,6 +12,7 @@ export type AuthStatus = 'unknown' | 'authenticated' | 'anonymous';
 export class AuthService {
   private readonly authApi = inject(AuthApi);
   private readonly meApi = inject(MeApi);
+  private readonly subscriptionStore = inject(SubscriptionStore);
   private readonly router = inject(Router);
 
   private readonly accessTokenSignal = signal<string | null>(null);
@@ -46,8 +48,7 @@ export class AuthService {
     const tokens = await this.authApi.login({ companySlug, email, password });
     this.accessTokenSignal.set(tokens.accessToken);
     const me = await this.meApi.getMe();
-    this.meSignal.set(me);
-    this.statusSignal.set('authenticated');
+    this.setMe(me);
   }
 
   async logout(): Promise<void> {
@@ -64,13 +65,13 @@ export class AuthService {
     this.accessTokenSignal.set(null);
     this.meSignal.set(null);
     this.statusSignal.set('anonymous');
+    this.subscriptionStore.clear();
   }
 
   /** Reload `/me` after tenant branding changes. */
   async refreshMe(): Promise<void> {
     const me = await this.meApi.getMe();
-    this.meSignal.set(me);
-    this.statusSignal.set('authenticated');
+    this.setMe(me);
   }
 
   /**
@@ -108,11 +109,16 @@ export class AuthService {
         return;
       }
       const me = await this.meApi.getMe();
-      this.meSignal.set(me);
-      this.statusSignal.set('authenticated');
+      this.setMe(me);
     } catch {
       this.clearSession();
     }
+  }
+
+  private setMe(me: MeResponse): void {
+    this.meSignal.set(me);
+    this.statusSignal.set('authenticated');
+    this.subscriptionStore.applyFromMe(me.subscription);
   }
 
   private async doRefresh(): Promise<boolean> {

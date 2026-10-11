@@ -12,7 +12,9 @@ import { problemDetailsFromError } from '../../core/api/auth.api';
 import { InvitationListItem, UserListItem } from '../../core/api/users.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
@@ -49,6 +51,7 @@ import { UsersStore } from './users.store';
     EmptyStateComponent,
     DropdownMenuComponent,
     ConfirmDialogComponent,
+    IconComponent,
   ],
   template: `
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
@@ -59,16 +62,30 @@ import { UsersStore } from './users.store';
           <h1 class="text-2xl font-bold leading-tight text-fg">{{ 'settings.users.title' | transloco }}</h1>
           <p class="mt-1 max-w-2xl text-sm text-fg-2">{{ 'settings.users.subtitle' | transloco }}</p>
         </div>
-        @if (canInvite()) {
-          <kadr-button variant="primary" type="button" class="shrink-0" (click)="openInvite()">
-            <span class="inline-flex items-center gap-2">
-              <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              {{ 'settings.users.invite' | transloco }}
-            </span>
-          </kadr-button>
+        @if (canInvitePerm()) {
+          <span
+            class="inline-flex shrink-0"
+            [attr.title]="readOnly() ? ('subscription.readOnlyHint' | transloco) : null"
+          >
+            <kadr-button
+              variant="primary"
+              type="button"
+              [disabled]="readOnly()"
+              (click)="openInvite()"
+            >
+              <span class="inline-flex items-center gap-2">
+                @if (readOnly()) {
+                  <kadr-icon name="lock" size="sm" />
+                } @else {
+                  <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                }
+                {{ 'settings.users.invite' | transloco }}
+              </span>
+            </kadr-button>
+          </span>
         }
       </header>
 
@@ -369,6 +386,7 @@ import { UsersStore } from './users.store';
 export class UsersSettingsPage implements OnInit {
   protected readonly store = inject(UsersStore);
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionStore);
   private readonly toast = inject(ToastService);
   private readonly i18n = inject(TranslocoService);
 
@@ -382,8 +400,14 @@ export class UsersSettingsPage implements OnInit {
   protected readonly editRoleId = signal('');
   protected readonly revokeTarget = signal<InvitationListItem | null>(null);
 
-  protected readonly canInvite = computed(() => this.auth.hasPermission(PermissionCodes.UsersInvite));
-  protected readonly canUpdate = computed(() => this.auth.hasPermission(PermissionCodes.UsersUpdate));
+  protected readonly readOnly = computed(() => this.subscription.readOnly());
+  protected readonly canInvitePerm = computed(() =>
+    this.auth.hasPermission(PermissionCodes.UsersInvite),
+  );
+  protected readonly canInvite = computed(() => this.canInvitePerm() && !this.readOnly());
+  protected readonly canUpdate = computed(
+    () => this.auth.hasPermission(PermissionCodes.UsersUpdate) && !this.readOnly(),
+  );
   protected readonly canTemplates = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
   );

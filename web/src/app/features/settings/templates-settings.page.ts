@@ -11,6 +11,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
 import { TemplateItem, TemplateSection } from '../../core/api/tenant-templates.api';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
@@ -42,7 +43,7 @@ import { TemplatesStore } from './templates.store';
   ],
   template: `
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-5">
-      <kadr-settings-subnav active="templates" [showTemplates]="canManage()" />
+      <kadr-settings-subnav active="templates" [showTemplates]="canManagePerm()" />
 
       <header class="flex flex-col gap-2 text-start">
         <h1 class="text-2xl font-bold leading-tight text-fg">
@@ -252,11 +253,15 @@ import { TemplatesStore } from './templates.store';
 export class TemplatesSettingsPage implements OnInit {
   protected readonly store = inject(TemplatesStore);
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionStore);
   private readonly toast = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly canManage = computed(() =>
+  protected readonly canManagePerm = computed(() =>
     this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
+  );
+  protected readonly canManage = computed(
+    () => this.canManagePerm() && !this.subscription.readOnly(),
   );
 
   protected readonly activeTab = signal<string>('shifts');
