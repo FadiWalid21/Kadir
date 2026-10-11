@@ -80,6 +80,8 @@ public sealed class ArchitectureTests
         "InvitationService.cs",
         "TrialExpiryRunner.cs",
         "VerifyEmailCommandHandler.cs",
+        "PlatformTenantQueries.cs",
+        "PlatformAuditLogQueries.cs",
     };
 
     [Fact]

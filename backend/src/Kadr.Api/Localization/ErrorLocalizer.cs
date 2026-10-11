@@ -67,6 +67,12 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.AuthGoogleAlreadyLinked] = ("حساب جوجل مرتبط بالفعل.", "A Google account is already linked."),
         [ErrorCodes.AuthPasswordResetInvalid] = ("رابط إعادة التعيين غير صالح أو منتهٍ.", "The reset link is invalid or expired."),
         [ErrorCodes.AuthGoogleDisabled] = ("تسجيل الدخول عبر جوجل غير مفعّل.", "Google sign-in is not enabled."),
+        [ErrorCodes.PlatformReasonRequired] = ("سبب الإجراء مطلوب.", "A reason for this action is required."),
+        [ErrorCodes.PlatformValidationFailed] = ("بيانات الطلب غير صالحة.", "The request data is invalid."),
+        [ErrorCodes.PlatformTenantStateInvalid] = ("لا يمكن تنفيذ هذا الإجراء على المنشأة في حالتها الحالية.", "This action is not allowed for the tenant in its current state."),
+        [ErrorCodes.PlatformNoChange] = ("لا يوجد تغيير: القيمة المطلوبة مطابقة للحالية.", "No change: the requested value matches the current one."),
+        [ErrorCodes.PlatformPlanNotFound] = ("الباقة غير موجودة.", "The plan was not found."),
+        [ErrorCodes.PlatformPlanProtected] = ("لا يمكن تعطيل الباقة الافتراضية للتجربة المجانية.", "The default trial plan cannot be deactivated."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

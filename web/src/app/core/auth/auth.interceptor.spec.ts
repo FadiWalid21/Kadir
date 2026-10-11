@@ -9,6 +9,7 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { environment } from '../../../environments/environment';
+import { PlatformAuthService } from '../platform/platform-auth.service';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
 
@@ -144,6 +145,40 @@ describe('authInterceptor', () => {
       expect(req.request.headers.get('Authorization')).toBe('Bearer live-token');
       req.flush({});
       await call;
+    });
+  });
+
+  describe('platform API routes', () => {
+    it('uses the platform token and refreshes via platform auth on 401', async () => {
+      const platformAuth = TestBed.inject(PlatformAuthService);
+      const platformInternals = platformAuth as unknown as AuthInternals;
+      platformInternals.accessTokenSignal.set('platform-old');
+      platformInternals.statusSignal.set('authenticated');
+      seedToken(auth, 'tenant-token');
+
+      const call = firstValueFrom(http.get(`${environment.apiBaseUrl}/platform/tenants`));
+
+      httpMock
+        .expectOne(`${environment.apiBaseUrl}/platform/tenants`)
+        .flush({ code: 'unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+
+      const refresh = await waitForRequest(
+        httpMock,
+        `${environment.apiBaseUrl}/platform/auth/refresh`,
+      );
+      refresh.flush({
+        accessToken: 'platform-new',
+        expiresIn: 900,
+        tokenType: 'Bearer',
+      });
+
+      const retry = await waitForRequest(httpMock, `${environment.apiBaseUrl}/platform/tenants`);
+      expect(retry.request.headers.get('Authorization')).toBe('Bearer platform-new');
+      expect(httpMock.match(`${environment.apiBaseUrl}/auth/refresh`).length).toBe(0);
+      retry.flush({ items: [] });
+      await call;
+      expect(platformAuth.accessToken()).toBe('platform-new');
+      httpMock.verify();
     });
   });
 });

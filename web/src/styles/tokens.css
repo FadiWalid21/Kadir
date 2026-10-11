@@ -16,6 +16,8 @@
   --bg-surface: #FFFFFF;
   --bg-subtle: #EFEDE8;
   --bg-hover: color-mix(in oklab, var(--text-primary) 5%, transparent);
+  /* Console strip: stays dark in light and dark themes */
+  --bg-ink: #1F2328;
   --border: #E3E0D8;
   --border-strong: #CFCBC0;
 
@@ -24,6 +26,7 @@
   --text-secondary: #555B62;
   --text-muted: #6B7177;
   --text-on-accent: var(--on-brand);
+  --text-on-ink: #F6F5F2;
 
   /* ===== ACCENT (semantic) ===== */
   --accent: var(--brand-600);
@@ -95,6 +98,7 @@
   --bg-app: #14171A;
   --bg-surface: #1B1F23;
   --bg-subtle: #23282D;
+  --bg-ink: #0B1012;
   --border: #2E343A;
   --border-strong: #3B434B;
   --text-primary: #E8EAED;
@@ -105,6 +109,7 @@
   --accent-soft: color-mix(in oklab, var(--brand-base) 20%, #14171A);
   --accent-soft-text: color-mix(in oklab, var(--brand-base) 45%, white);
   --text-on-accent: #0B1012;
+  --text-on-ink: #E8EAED;
   --success-soft: #16301F;
   --warning-soft: #33250F;
   --danger-soft: #3A1B18;

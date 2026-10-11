@@ -16,14 +16,21 @@ import { ButtonComponent } from '../button/button.component';
           (click)="cancelled.emit()"
         ></button>
         <div
-          class="relative z-10 w-full max-w-sm rounded-lg border border-line bg-surface p-4 shadow-lg"
+          class="relative z-10 w-full max-w-md rounded-lg border border-line bg-surface p-4 shadow-lg"
           role="alertdialog"
           aria-modal="true"
           [attr.aria-labelledby]="titleId"
           [attr.aria-describedby]="bodyId"
         >
           <h2 [id]="titleId" class="text-start text-lg font-bold text-fg">{{ title() }}</h2>
-          <p [id]="bodyId" class="mt-2 text-start text-sm text-fg-2">{{ message() }}</p>
+          @if (message()) {
+            <p [id]="bodyId" class="mt-2 text-start text-sm text-fg-2">{{ message() }}</p>
+          } @else {
+            <span [id]="bodyId" class="sr-only">{{ title() }}</span>
+          }
+          <div class="mt-3">
+            <ng-content />
+          </div>
           <div class="mt-4 flex flex-wrap justify-end gap-2">
             <kadr-button variant="secondary" type="button" (click)="cancelled.emit()">
               {{ cancelLabel() }}
@@ -45,7 +52,8 @@ import { ButtonComponent } from '../button/button.component';
 export class ConfirmDialogComponent {
   readonly open = input(false);
   readonly title = input.required<string>();
-  readonly message = input.required<string>();
+  /** Optional body text; projected content can replace or supplement it. */
+  readonly message = input('');
   readonly confirmLabel = input.required<string>();
   readonly cancelLabel = input.required<string>();
   readonly danger = input(false);

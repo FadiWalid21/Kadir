@@ -1,4 +1,5 @@
 using Kadr.Identity.Domain.Invitations;
+using Kadr.Identity.Domain.PlatformAdmins;
 using Kadr.Identity.Domain.Roles;
 using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
@@ -61,6 +62,8 @@ public class KadrDbContext : DbContext
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<AuthOneTimeToken> AuthOneTimeTokens => Set<AuthOneTimeToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<PlatformAdmin> PlatformAdmins => Set<PlatformAdmin>();
+    public DbSet<PlatformRefreshToken> PlatformRefreshTokens => Set<PlatformRefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

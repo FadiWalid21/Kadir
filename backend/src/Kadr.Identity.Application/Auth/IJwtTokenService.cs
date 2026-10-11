@@ -12,5 +12,8 @@ public interface IJwtTokenService
         IReadOnlyCollection<string> roles,
         string language);
 
+    /// <summary>JWT for platform operators: no tenant_id; claim platform_admin=true.</summary>
+    AccessTokenResult CreatePlatformAccessToken(Guid platformAdminId, string language);
+
     ClaimsPrincipal? ValidateAccessToken(string token);
 }

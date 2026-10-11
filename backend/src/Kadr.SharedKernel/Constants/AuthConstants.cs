@@ -16,6 +16,14 @@ public static class AuthConstants
     public const string RefreshCookieName = "kadr_refresh";
     /// <summary>Wide enough for /auth refresh and /me session-revoke-others (IAM-07).</summary>
     public const string RefreshCookiePath = "/api/v1";
+    public const string PlatformRefreshCookieName = "kadr_platform_refresh";
+    public const string PlatformRefreshCookiePath = "/api/v1/platform";
     public const string CsrfHeaderName = "X-Requested-With";
     public const string CsrfHeaderValue = "XMLHttpRequest";
+}
+
+/// <summary>ASP.NET authorization policy names.</summary>
+public static class AuthorizationPolicies
+{
+    public const string PlatformAdmin = "PlatformAdmin";
 }

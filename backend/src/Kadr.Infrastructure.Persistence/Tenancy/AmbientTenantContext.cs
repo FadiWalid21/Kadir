@@ -10,16 +10,26 @@ public sealed class AmbientTenantContext : ITenantContextAccessor
     public Guid? TenantId { get; private set; }
     public Guid? UserId { get; private set; }
     public bool HasTenant => TenantId.HasValue;
+    public bool IsPlatformAdmin { get; private set; }
 
     public void Set(Guid tenantId, Guid? userId = null)
     {
         TenantId = tenantId;
         UserId = userId;
+        IsPlatformAdmin = false;
+    }
+
+    public void SetPlatformAdmin(Guid platformAdminId)
+    {
+        TenantId = null;
+        UserId = platformAdminId;
+        IsPlatformAdmin = true;
     }
 
     public void Clear()
     {
         TenantId = null;
         UserId = null;
+        IsPlatformAdmin = false;
     }
 }

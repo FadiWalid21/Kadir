@@ -6,5 +6,6 @@ namespace Kadr.SharedKernel.Tenancy;
 public interface ITenantContextAccessor : ITenantContext
 {
     void Set(Guid tenantId, Guid? userId = null);
+    void SetPlatformAdmin(Guid platformAdminId);
     void Clear();
 }

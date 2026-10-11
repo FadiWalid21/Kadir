@@ -99,6 +99,13 @@ public sealed class Tenant : AggregateRoot, IPlatformEntity, IAuditable
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
+    /// <summary>Platform-admin path: restores a suspended tenant whose subscription is active.</summary>
+    public void Activate()
+    {
+        Status = TenantStatus.Active;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     public void SetTrialEndsAt(DateTimeOffset? trialEndsAt)
     {
         TrialEndsAt = trialEndsAt;
