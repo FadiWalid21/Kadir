@@ -15,6 +15,8 @@ import { BadgeComponent } from '../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../shared/ui/empty-state/empty-state.component';
 import { IconComponent } from '../shared/ui/icon/icon.component';
+import { InstallCardComponent } from '../shared/ui/pwa/install-card.component';
+import { NetworkErrorComponent } from '../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../shared/ui/skeleton/skeleton.component';
 
 type HomeState = 'loading' | 'ready' | 'error';
@@ -30,6 +32,8 @@ type HomeState = 'loading' | 'ready' | 'error';
     EmptyStateComponent,
     SkeletonComponent,
     IconComponent,
+    InstallCardComponent,
+    NetworkErrorComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -43,15 +47,14 @@ type HomeState = 'loading' | 'ready' | 'error';
         </div>
       </div>
     } @else if (state() === 'error') {
-      <kadr-empty-state
+      <kadr-network-error
         [title]="'home.loadErrorTitle' | transloco"
         [description]="'home.loadErrorBody' | transloco"
-      >
-        <kadr-button variant="secondary" type="button" (click)="reload()">
-          {{ 'home.retry' | transloco }}
-        </kadr-button>
-      </kadr-empty-state>
+        (retry)="reload()"
+      />
     } @else {
+      <kadr-install-card />
+
       <header class="mb-8 flex flex-col gap-2 text-start">
         <h1 class="text-2xl font-bold leading-tight text-fg md:text-3xl">
           {{ welcomeTitle() }}

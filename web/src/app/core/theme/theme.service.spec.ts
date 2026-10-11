@@ -14,6 +14,13 @@ describe('ThemeService', () => {
       providers: [ThemeService],
     });
     documentRef = TestBed.inject(DOCUMENT);
+    if (!documentRef.querySelector('meta[name="theme-color"]')) {
+      const meta = documentRef.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      meta.setAttribute('content', '#FFFFFF');
+      documentRef.head.appendChild(meta);
+    }
+    documentRef.documentElement.style.setProperty('--bg-surface', '#FFFFFF');
     service = TestBed.inject(ThemeService);
   });
 
@@ -75,5 +82,16 @@ describe('ThemeService', () => {
 
     service.setBrand('#B42318');
     expect(service.brandNearDanger()).toBe(true);
+  });
+
+  it('updates theme-color meta from the surface token on light/dark switch', () => {
+    const meta = documentRef.querySelector('meta[name="theme-color"]');
+    documentRef.documentElement.style.setProperty('--bg-surface', '#FFFFFF');
+    service.setTheme('light');
+    expect(meta?.getAttribute('content')).toBe('#FFFFFF');
+
+    documentRef.documentElement.style.setProperty('--bg-surface', '#1B1F23');
+    service.setTheme('dark');
+    expect(meta?.getAttribute('content')).toBe('#1B1F23');
   });
 });

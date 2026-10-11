@@ -24,6 +24,15 @@ import { TableComponent } from '../../shared/ui/table/table.component';
 import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
 import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { InstallCardComponent } from '../../shared/ui/pwa/install-card.component';
+import { IosInstallSheetComponent } from '../../shared/ui/pwa/ios-install-sheet.component';
+import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
+import { OfflineBannerComponent } from '../../shared/ui/pwa/offline-banner.component';
+import { UpdateNoticeComponent } from '../../shared/ui/pwa/update-notice.component';
+import { OfflineService } from '../../core/pwa/offline.service';
+import { UpdateService } from '../../core/pwa/update.service';
+import { InstallService } from '../../core/pwa/install.service';
+import { DirtyFormRegistry } from '../../core/forms/dirty-form.registry';
 
 const SWATCHES = [
   '--brand-50',
@@ -72,6 +81,11 @@ const SWATCHES = [
     RadioCardComponent,
     ConfirmDialogComponent,
     SeatLimitDialogComponent,
+    OfflineBannerComponent,
+    UpdateNoticeComponent,
+    InstallCardComponent,
+    NetworkErrorComponent,
+    IosInstallSheetComponent,
   ],
   template: `
     <div class="min-h-dvh bg-app text-fg">
@@ -299,6 +313,29 @@ const SWATCHES = [
           </kadr-drawer>
         </kadr-card>
 
+        <kadr-card [title]="'uiKit.pwa' | transloco">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap gap-2">
+              <kadr-button variant="secondary" type="button" (click)="demoOffline()">
+                {{ 'uiKit.pwaOfflineBanner' | transloco }}
+              </kadr-button>
+              <kadr-button variant="secondary" type="button" (click)="demoUpdate()">
+                {{ 'uiKit.pwaUpdateNotice' | transloco }}
+              </kadr-button>
+              <kadr-button variant="secondary" type="button" (click)="demoIosSheet()">
+                {{ 'uiKit.pwaIosSheet' | transloco }}
+              </kadr-button>
+            </div>
+            <kadr-offline-banner />
+            <kadr-update-notice />
+            <p class="text-xs text-fg-2">{{ 'uiKit.pwaInstallCard' | transloco }}</p>
+            <kadr-install-card />
+            <p class="text-xs text-fg-2">{{ 'uiKit.pwaNetworkError' | transloco }}</p>
+            <kadr-network-error (retry)="showToast()" />
+            <kadr-ios-install-sheet />
+          </div>
+        </kadr-card>
+
         <kadr-card [title]="'uiKit.table' | transloco">
           <kadr-table [columns]="demoColumns">
             <tr class="border-b border-line">
@@ -383,6 +420,10 @@ export class UiKitPage {
   protected readonly theme = inject(ThemeService);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  private readonly offline = inject(OfflineService);
+  private readonly updates = inject(UpdateService);
+  private readonly install = inject(InstallService);
+  private readonly dirtyForms = inject(DirtyFormRegistry);
   protected readonly swatches = SWATCHES;
   protected readonly stepperDemo = [
     { id: 'a', label: '1' },
@@ -431,5 +472,22 @@ export class UiKitPage {
 
   showToast(): void {
     this.toast.show(this.transloco.translate('shell.notAvailableYet'), 'info');
+  }
+
+  demoOffline(): void {
+    if (this.offline.offline()) {
+      this.offline.noteSuccessfulRequest();
+    } else {
+      this.offline.noteFailedRequest();
+    }
+  }
+
+  demoUpdate(): void {
+    this.dirtyForms.register('ui-kit-demo');
+    this.updates.previewReady();
+  }
+
+  demoIosSheet(): void {
+    this.install.showIosSheet.set(true);
   }
 }

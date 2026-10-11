@@ -227,6 +227,7 @@ try
 
     // Default Serilog request logging: method, path, status, elapsed — never request bodies or Authorization.
     app.UseSerilogRequestLogging();
+    app.UseMiddleware<NoStoreCacheMiddleware>();
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseMiddleware<TenantContextMiddleware>();

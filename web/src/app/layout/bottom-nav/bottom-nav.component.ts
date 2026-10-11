@@ -10,7 +10,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
   imports: [TranslocoPipe, RouterLink, RouterLinkActive, IconComponent],
   template: `
     <nav
-      class="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden"
+      class="kadr-safe-bottom fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface md:hidden"
       [attr.aria-label]="'shell.bottomNav' | transloco"
     >
       <a

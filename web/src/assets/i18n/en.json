@@ -27,6 +27,7 @@
   "ui": {
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete",
     "skip": "Skip",
     "addEmployee": "Add employee",
@@ -43,6 +44,41 @@
     "statusPending": "Pending",
     "statusRejected": "Rejected",
     "statusNew": "New"
+  },
+  "pwa": {
+    "offline": {
+      "banner": "You are offline. Some actions may fail until the connection returns.",
+      "recheck": "Recheck connection",
+      "restored": "You are back online",
+      "errorTitle": "No connection",
+      "errorBody": "Check your network, then try again.",
+      "retry": "Retry"
+    },
+    "update": {
+      "title": "A new version of Kadr is available",
+      "body": "Update now to get the latest improvements.",
+      "unsavedBody": "Save your changes first, then update. Unsaved work will be lost.",
+      "now": "Update now",
+      "later": "Later",
+      "updating": "Updating"
+    },
+    "install": {
+      "cardTitle": "Install Kadr",
+      "cardBody": "Add Kadr to your home screen for faster access and a full-screen experience.",
+      "cta": "Install",
+      "notNow": "Not now",
+      "dismiss": "Dismiss install suggestion",
+      "menu": "Install the app"
+    },
+    "ios": {
+      "title": "Install Kadr on iPhone",
+      "step1": "Tap Share in Safari’s toolbar.",
+      "step2": "Choose Add to Home Screen.",
+      "step3": "Confirm with Add.",
+      "safariOnly": "Works in Safari only.",
+      "gotIt": "Got it",
+      "never": "Don’t show this again"
+    }
   },
   "auth": {
     "loginTitle": "Sign in to the platform",
@@ -714,7 +750,13 @@
     "select": "Select",
     "checkbox": "Checkbox",
     "radioCard": "Radio card",
-    "confirmDialog": "Confirm dialog"
+    "confirmDialog": "Confirm dialog",
+    "pwa": "PWA states",
+    "pwaOfflineBanner": "Show offline banner",
+    "pwaUpdateNotice": "Show update notice",
+    "pwaInstallCard": "Install card",
+    "pwaNetworkError": "Network error",
+    "pwaIosSheet": "iOS install sheet"
   },
   "subscription": {
     "readOnlyHint": "Account is read-only because the subscription or trial ended.",

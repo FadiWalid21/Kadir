@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../core/auth/auth.service';
+import { InstallService } from '../../core/pwa/install.service';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { DropdownMenuComponent } from '../../shared/ui/dropdown-menu/dropdown-menu.component';
@@ -13,7 +14,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
   imports: [TranslocoPipe, RouterLink, AvatarComponent, DropdownMenuComponent, IconComponent],
   template: `
     <header
-      class="flex h-14 items-center gap-3 border-b border-line bg-surface px-4 md:px-6"
+      class="kadr-safe-top flex h-14 items-center gap-3 border-b border-line bg-surface px-4 md:px-6"
       [attr.aria-label]="'shell.topBar' | transloco"
     >
       <div
@@ -88,6 +89,18 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
               <kadr-icon name="user" size="sm" />
               {{ 'shell.account' | transloco }}
             </a>
+            @if (install.showMenuItem()) {
+              <button
+                type="button"
+                class="flex items-center gap-3 rounded-sm px-3 py-2 text-start text-sm text-fg hover:bg-hover focus-visible:outline-none"
+                role="menuitem"
+                data-testid="menu-install"
+                (click)="onInstall()"
+              >
+                <kadr-icon name="download" size="sm" />
+                {{ 'pwa.install.menu' | transloco }}
+              </button>
+            }
             <button
               type="button"
               class="flex items-center gap-3 rounded-sm px-3 py-2 text-start text-sm text-fg hover:bg-hover focus-visible:outline-none"
@@ -99,7 +112,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             </button>
             <button
               type="button"
-              class="flex items-center gap-3 rounded-sm px-3 py-2 text-start text-sm text-danger hover:bg-hover focus-visible:outline-none"
+              class="flex items-center gap-3 rounded-sm px-3 py-2 text-start text-sm text-fg hover:bg-hover focus-visible:outline-none"
               role="menuitem"
               (click)="onLogout()"
             >
@@ -116,6 +129,7 @@ export class TopBarComponent {
   private readonly auth = inject(AuthService);
   private readonly transloco = inject(TranslocoService);
   protected readonly theme = inject(ThemeService);
+  protected readonly install = inject(InstallService);
 
   protected readonly userName = computed(() => this.auth.me()?.fullName ?? '');
   protected readonly userEmail = computed(() => this.auth.me()?.email ?? '');
@@ -133,5 +147,9 @@ export class TopBarComponent {
 
   onLogout(): void {
     void this.auth.logout();
+  }
+
+  onInstall(): void {
+    void this.install.install();
   }
 }

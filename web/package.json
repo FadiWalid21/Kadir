@@ -8,7 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint && stylelint \"src/**/*.css\" && node scripts/lint-design-tokens.mjs",
-    "lint:tokens": "node scripts/lint-design-tokens.mjs"
+    "lint:tokens": "node scripts/lint-design-tokens.mjs",
+    "icons:generate": "node scripts/generate-pwa-icons.mjs",
+    "pwa:serve": "node scripts/pwa-serve.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
@@ -20,6 +22,7 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@angular/service-worker": "^22.2.2",
     "@jsverse/transloco": "^8.4.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -35,6 +38,7 @@
     "jsdom": "^30.0.0",
     "postcss": "^8.5.29",
     "prettier": "^3.8.1",
+    "sharp": "^0.34.4",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
     "tailwindcss": "^4.3.3",

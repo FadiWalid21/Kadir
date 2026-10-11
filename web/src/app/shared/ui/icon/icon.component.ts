@@ -32,7 +32,12 @@ export type IconName =
   | 'key'
   | 'link'
   | 'unlink'
-  | 'logout';
+  | 'logout'
+  | 'download'
+  | 'wifi-off'
+  | 'refresh'
+  | 'share'
+  | 'plus-square';
 
 /** Inline stroke icons (Lucide-like). Logical flip via rtl-flip class when needed. */
 @Component({
@@ -213,6 +218,34 @@ export type IconName =
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
           <path d="m16 17 5-5-5-5" />
           <path d="M21 12H9" />
+        }
+        @case ('download') {
+          <path d="M12 3v12" />
+          <path d="m7 10 5 5 5-5" />
+          <path d="M5 21h14" />
+        }
+        @case ('wifi-off') {
+          <path d="M12 20h.01" />
+          <path d="M8.5 16.4a5 5 0 0 1 7 0" />
+          <path d="M5 12.9a10 10 0 0 1 5.2-2.7" />
+          <path d="M19 12.9a10 10 0 0 0-2.1-1.5" />
+          <path d="M2 8.8A16 16 0 0 1 8.4 5.3" />
+          <path d="M22 8.8a16 16 0 0 0-9.2-3.5" />
+          <path d="m2 2 20 20" />
+        }
+        @case ('refresh') {
+          <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+          <path d="M21 3v6h-6" />
+        }
+        @case ('share') {
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <path d="m16 6-4-4-4 4" />
+          <path d="M12 2v13" />
+        }
+        @case ('plus-square') {
+          <rect width="18" height="18" x="3" y="3" rx="2" />
+          <path d="M12 8v8" />
+          <path d="M8 12h8" />
         }
       }
     </svg>
