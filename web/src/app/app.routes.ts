@@ -417,7 +417,7 @@ export const routes: Routes = [
           },
           {
             path: 'invitations',
-            canActivate: [permissionGuard(PermissionCodes.UsersRead)],
+            canActivate: [permissionGuard(PermissionCodes.UsersInvite)],
             loadComponent: () =>
               import('./features/settings/invitations-settings.page').then(
                 (m) => m.InvitationsSettingsPage,

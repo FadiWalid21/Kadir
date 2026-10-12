@@ -100,7 +100,7 @@ export class SettingsLayout {
             id: 'invitations',
             labelKey: 'settings.nav.invitations',
             route: '/settings/invitations',
-            visible: can(PermissionCodes.UsersRead),
+            visible: can(PermissionCodes.UsersInvite),
           },
           {
             id: 'roles',

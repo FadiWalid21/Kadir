@@ -14,7 +14,6 @@ import { PermissionCodes } from '../../core/auth/permission-codes';
 import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
-import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.component';
@@ -31,7 +30,6 @@ type PageState = 'loading' | 'ready' | 'error';
     SkeletonComponent,
     EmptyStateComponent,
     TenantLogoComponent,
-    IconComponent,
   ],
   template: `
     @if (state() === 'loading') {
@@ -76,37 +74,39 @@ type PageState = 'loading' | 'ready' | 'error';
             </div>
             <div class="flex min-w-0 flex-1 flex-col gap-2 text-start">
               <p class="text-sm text-fg-2">{{ 'settings.company.logoHint' | transloco }}</p>
-              <div class="flex flex-wrap gap-2">
-                <label class="inline-flex">
-                  <input
-                    #fileInput
-                    type="file"
-                    class="sr-only"
-                    accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg"
-                    [disabled]="!canMutate() || logoBusy()"
-                    (change)="onLogoSelected($event)"
-                  />
-                  <kadr-button
-                    variant="secondary"
-                    type="button"
-                    [disabled]="!canMutate() || logoBusy()"
-                    [loading]="logoBusy()"
-                    (click)="fileInput.click()"
-                  >
-                    {{ 'settings.company.changeLogo' | transloco }}
-                  </kadr-button>
-                </label>
-                @if (logoUrl()) {
-                  <kadr-button
-                    variant="ghost"
-                    type="button"
-                    [disabled]="!canMutate() || logoBusy()"
-                    (click)="removeLogo()"
-                  >
-                    {{ 'settings.company.removeLogo' | transloco }}
-                  </kadr-button>
-                }
-              </div>
+              @if (canMutate()) {
+                <div class="flex flex-wrap gap-2">
+                  <label class="inline-flex">
+                    <input
+                      #fileInput
+                      type="file"
+                      class="sr-only"
+                      accept="image/png,image/jpeg,image/svg+xml,.png,.jpg,.jpeg,.svg"
+                      [disabled]="logoBusy()"
+                      (change)="onLogoSelected($event)"
+                    />
+                    <kadr-button
+                      variant="secondary"
+                      type="button"
+                      [disabled]="logoBusy()"
+                      [loading]="logoBusy()"
+                      (click)="fileInput.click()"
+                    >
+                      {{ 'settings.company.changeLogo' | transloco }}
+                    </kadr-button>
+                  </label>
+                  @if (logoUrl()) {
+                    <kadr-button
+                      variant="ghost"
+                      type="button"
+                      [disabled]="logoBusy()"
+                      (click)="removeLogo()"
+                    >
+                      {{ 'settings.company.removeLogo' | transloco }}
+                    </kadr-button>
+                  }
+                </div>
+              }
             </div>
           </div>
 
@@ -125,25 +125,23 @@ type PageState = 'loading' | 'ready' | 'error';
             <p class="text-sm text-success" role="status">{{ 'settings.company.saved' | transloco }}</p>
           }
 
-          <div class="flex justify-end">
-            <span
-              class="inline-flex"
-              [attr.title]="readOnly() ? ('subscription.readOnlyHint' | transloco) : null"
-            >
-              <kadr-button
-                variant="primary"
-                type="button"
-                [disabled]="!canMutate()"
-                [loading]="saving()"
-                (click)="save()"
+          @if (canMutate()) {
+            <div class="flex justify-end">
+              <span
+                class="inline-flex"
+                [attr.title]="readOnly() ? ('subscription.readOnlyHint' | transloco) : null"
               >
-                @if (readOnly()) {
-                  <kadr-icon name="lock" size="sm" />
-                }
-                {{ 'settings.company.save' | transloco }}
-              </kadr-button>
-            </span>
-          </div>
+                <kadr-button
+                  variant="primary"
+                  type="button"
+                  [loading]="saving()"
+                  (click)="save()"
+                >
+                  {{ 'settings.company.save' | transloco }}
+                </kadr-button>
+              </span>
+            </div>
+          }
         </section>
       </div>
     }

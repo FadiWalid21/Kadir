@@ -77,15 +77,14 @@ describe('CompanySettingsPage', () => {
     expect(fixture.nativeElement.querySelector('kadr-tenant-logo')).toBeTruthy();
   });
 
-  it('disables primary save with lock when read-only', async () => {
+  it('hides primary save when subscription is read-only', async () => {
     readOnly.set(true);
     const fixture = TestBed.createComponent(CompanySettingsPage);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const button = fixture.nativeElement.querySelector('kadr-button button') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(fixture.nativeElement.querySelector('kadr-icon')).toBeTruthy();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).not.toContain('حفظ التغييرات');
   });
 });
