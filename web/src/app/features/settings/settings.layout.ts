@@ -129,6 +129,18 @@ export class SettingsLayout {
         ],
       },
       {
+        id: 'payroll',
+        labelKey: 'settings.nav.groups.payroll',
+        items: [
+          {
+            id: 'payComponents',
+            labelKey: 'settings.nav.payComponents',
+            route: '/settings/pay-components',
+            visible: can(PermissionCodes.SalaryRead),
+          },
+        ],
+      },
+      {
         id: 'billing',
         labelKey: 'settings.nav.groups.billing',
         items: [

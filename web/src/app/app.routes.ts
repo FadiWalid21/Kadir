@@ -391,6 +391,14 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'pay-components',
+            canActivate: [permissionGuard(PermissionCodes.SalaryRead)],
+            loadComponent: () =>
+              import('./features/settings/pay-components-settings.page').then(
+                (m) => m.PayComponentsSettingsPage,
+              ),
+          },
+          {
             path: 'workflows',
             canActivate: [
               permissionGuard(PermissionCodes.WorkflowsManage),

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Templates;
+using Kadr.Platform.Domain.Payroll;
 using Kadr.Platform.Domain.Templates;
 using Kadr.SharedKernel.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -264,6 +265,14 @@ public sealed class TemplateApplyService(KadrDbContext db) : ITemplateApplyServi
                 template.Version,
                 item.NameAr,
                 item.NameEn));
+        }
+
+        // First industry apply (existingKeys == null): seed the default basic pay component.
+        // Existing tenants without components get it on first pay-components list (EnsureBasicSeeded).
+        if (existingKeys is null
+            && !db.PayComponents.Local.Any(c => c.TenantId == tenantId && c.Key == PayComponent.BasicKey))
+        {
+            db.PayComponents.Add(PayComponent.CreateBasic(tenantId));
         }
     }
 

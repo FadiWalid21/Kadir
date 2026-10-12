@@ -122,6 +122,9 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.ReportsExportTooLarge] = ("التصدير يتجاوز حد الصفوف. ضيّق عوامل التصفية.", "Export exceeds the row limit. Narrow the filters."),
         [ErrorCodes.ReportsValidationFailed] = ("بيانات التقرير غير صالحة.", "Report request is invalid."),
         [ErrorCodes.ReportsNotFound] = ("التقرير غير موجود.", "Report was not found."),
+        [ErrorCodes.SalaryValidationFailed] = ("بيانات مكون الراتب غير صالحة.", "Pay component data is invalid."),
+        [ErrorCodes.SalaryNotFound] = ("مكون الراتب غير موجود.", "Pay component was not found."),
+        [ErrorCodes.SalaryDuplicateKey] = ("يوجد مكون راتب بنفس المفتاح.", "A pay component with the same key already exists."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

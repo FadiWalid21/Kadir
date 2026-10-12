@@ -38,6 +38,8 @@ export const PermissionCodes = {
   NotificationsManagePrefs: 'notifications.manage_prefs',
   ReportsRead: 'reports.read',
   ReportsExport: 'reports.export',
+  SalaryRead: 'salary.read',
+  SalaryManage: 'salary.manage',
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];
