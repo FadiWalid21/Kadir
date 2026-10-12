@@ -180,7 +180,9 @@ internal sealed class AuthTestHelper(RegisterApiFactory factory)
     {
         var messages = Factory.Emails.Messages;
         var message = emailIndex < 0 ? messages[^1] : messages[emailIndex];
-        return Regex.Matches(message.HtmlBody, @"Reset token: (\S+)")
+        // Prefer text body: HTML wraps the token in <code>…</code> and \S+ would swallow tags.
+        var body = !string.IsNullOrEmpty(message.TextBody) ? message.TextBody : message.HtmlBody;
+        return Regex.Matches(body, @"Reset token: ([^<\s]+)")
             .Select(m => m.Groups[1].Value)
             .ToList();
     }
