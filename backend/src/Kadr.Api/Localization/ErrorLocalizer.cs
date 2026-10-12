@@ -132,6 +132,16 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.InsuranceNotFound] = ("ملف التأمين غير موجود.", "Insurance profile was not found."),
         [ErrorCodes.InsuranceEmployeeNotFound] = ("الموظف غير موجود.", "Employee was not found."),
         [ErrorCodes.SalaryImportInvalid] = ("ملف استيراد الرواتب غير صالح.", "Salary import file is invalid."),
+        [ErrorCodes.PayrollRulesValidationFailed] = ("قيم قواعد الرواتب غير صالحة.", "Payroll rule values are invalid."),
+        [ErrorCodes.PayrollRulesNotFound] = ("قاعدة الرواتب غير موجودة.", "Payroll rule was not found."),
+        [ErrorCodes.PayrollRulesForbidden] = ("ليس لديك صلاحية إدارة قواعد الرواتب.", "You do not have permission to manage payroll rules."),
+        [ErrorCodes.PayrollRulesNotConfirmed] = ("يجب تأكيد قواعد الرواتب قبل قفل المسير.", "Payroll rules must be confirmed before locking a run."),
+        [ErrorCodes.PayrollRunValidationFailed] = ("بيانات مسير الرواتب غير صالحة.", "Payroll run data is invalid."),
+        [ErrorCodes.PayrollRunNotFound] = ("مسير الرواتب غير موجود.", "Payroll run was not found."),
+        [ErrorCodes.PayrollRunConflict] = ("تم تعديل مسير الرواتب من مستخدم آخر. أعد التحميل.", "Payroll run was modified by another user. Reload and try again."),
+        [ErrorCodes.PayrollRunImmutable] = ("مسير الرواتب مقفل ولا يمكن تعديله.", "Payroll run is locked and cannot be changed."),
+        [ErrorCodes.PayrollRunInvalidTransition] = ("انتقال حالة مسير الرواتب غير مسموح.", "This payroll run status transition is not allowed."),
+        [ErrorCodes.PayrollRunSecondApproverRequired] = ("يعتمد المسير موافقة شخص آخر غير من أنشأه.", "A different user must approve this payroll run."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

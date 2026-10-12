@@ -156,7 +156,7 @@ const BAR_CLASSES = [
               <span class="text-sm">{{ 'employees.salary.insuredWageTile' | transloco }}</span>
             </div>
             <p class="mt-2 text-2xl font-bold tabular-nums text-fg">
-              @if (insuredWage() != null) {
+              @if (insuredWage() !== null) {
                 {{ formatMoney(insuredWage()!, current()!.currency) }}
               } @else {
                 —
@@ -341,7 +341,7 @@ const BAR_CLASSES = [
                         {{ formatMoney(row.grossAmount, row.currency) }}
                       </td>
                       <td class="px-3 py-3 tabular-nums">
-                        @if (row.changePct == null) {
+                        @if (row.changePct === null) {
                           <span class="text-fg-2">—</span>
                         } @else {
                           <span

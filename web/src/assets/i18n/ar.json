@@ -280,7 +280,9 @@
       "more": "المزيد",
       "attendanceRules": "القواعد",
       "attendanceBranches": "الفروع",
-      "attendanceHolidays": "العطل"
+      "attendanceHolidays": "العطل",
+      "payroll": "الرواتب",
+      "payrollRuns": "المسيرات"
     },
     "account": "حسابي",
     "switchLanguage": "تبديل اللغة",
@@ -444,7 +446,8 @@
         "billing": "الفوترة",
         "security": "الأمان"
       },
-      "invitations": "الدعوات"
+      "invitations": "الدعوات",
+      "payrollRules": "قواعد الرواتب"
     },
     "payComponents": {
       "title": "مكونات الراتب والبدلات",
@@ -841,6 +844,109 @@
     "invitations": {
       "title": "الدعوات",
       "subtitle": "الدعوات المعلّقة للانضمام إلى هذه الشركة."
+    },
+    "payrollRules": {
+      "title": "قواعد الرواتب",
+      "subtitle": "معدّلات الشركة للتأمين والصناديق والضريبة والإضافي وخيارات المسيرة. القيم الرسمية نقطة بداية — تحقق منها قبل قفل أي مسيرة.",
+      "disclaimer": "شركتك مسؤولة عن المعدّلات المستخدمة في الرواتب. القيم الرسمية تُقدَّم للتسهيل ويجب التحقق منها وفق الأنظمة الحالية.",
+      "confirmCta": "اعتماد القواعد للقفل",
+      "confirmTitle": "اعتماد قواعد الرواتب",
+      "confirmBody": "أكد أن قيم القواعد الحالية صحيحة قبل قفل مسيرة رواتب. يمكنك تعديل القواعد لاحقاً؛ يُلغى الاعتماد عند أي تعديل.",
+      "confirmedTitle": "تم اعتماد القواعد للقفل",
+      "confirmedBody": "اعتمدت في {{at}}. السبب: {{reason}}",
+      "updateAvailable": "يتوفر {{n}} تحديث رسمي. طبّق لكل قاعدة عند الجاهزية — لا تُستبدل القيم تلقائياً.",
+      "tabsAria": "أقسام قواعد الرواتب",
+      "tabGeneral": "عام: الدورة والخيارات",
+      "tabLegal": "القواعد القانونية والضريبية (مصر)",
+      "badgeDefault": "افتراضي رسمي",
+      "badgeCustomized": "مخصص",
+      "badgeUpdate": "تحديث متاح",
+      "officialDefault": "الافتراضي الرسمي",
+      "effectiveFrom": "ساري من",
+      "edit": "تعديل القاعدة",
+      "editTitle": "تعديل قاعدة رواتب",
+      "history": "السجل",
+      "historyTitle": "سجل القاعدة",
+      "historyEmptyTitle": "لا يوجد سجل بعد",
+      "historyEmptyBody": "ستظهر هنا تغييرات هذه القاعدة.",
+      "historyErrorTitle": "تعذر تحميل السجل",
+      "historyErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "reset": "استعادة الافتراضي",
+      "resetTitle": "استعادة الافتراضي الرسمي؟",
+      "resetBody": "ستُضاف قيمة جديدة بتاريخ سريان مع الافتراضي الرسمي. المسيرات المقفلة السابقة لا تتغير.",
+      "resetReason": "استعادة الافتراضي الرسمي",
+      "applyUpdate": "تطبيق التحديث الرسمي",
+      "applyUpdateReason": "تطبيق تحديث المنصة الرسمي",
+      "amount": "المبلغ",
+      "rate": "النسبة (%)",
+      "multiplier": "المعامل",
+      "value": "القيمة",
+      "reason": "السبب",
+      "currency": "ج.م",
+      "notSet": "غير محدد",
+      "bracketsTitle": "شرائح ضريبة الدخل",
+      "bracketsEmpty": "لا توجد شرائح بعد.",
+      "bracketsCount": "{{n}} شرائح",
+      "bracketFrom": "من",
+      "bracketTo": "إلى",
+      "bracketRate": "النسبة %",
+      "addBracket": "إضافة شريحة",
+      "boolTrue": "نعم",
+      "boolFalse": "لا",
+      "emptyTitle": "لا قواعد في هذا القسم",
+      "emptyBody": "تُنسخ القواعد عند إنشاء الشركة.",
+      "loadErrorTitle": "تعذر تحميل قواعد الرواتب",
+      "loadErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "toastSaved": "تم حفظ القاعدة.",
+      "toastReset": "تمت استعادة الافتراضي.",
+      "toastUpdated": "تم تطبيق التحديث الرسمي.",
+      "toastConfirmed": "تم اعتماد القواعد للقفل.",
+      "toastValidation": "تاريخ السريان والسبب مطلوبان.",
+      "toastFail": "تعذر إكمال الإجراء.",
+      "keys": {
+        "insurance": {
+          "wage_min": "الحد الأدنى لأجر التأمين",
+          "wage_max": "الحد الأقصى لأجر التأمين",
+          "employee_rate": "نسبة تأمين الموظف",
+          "employer_rate": "نسبة تأمين صاحب العمل"
+        },
+        "fund": {
+          "martyrs_rate": "صندوق الشهداء والضحايا",
+          "emergency_employer_rate": "صندوق الطوارئ (صاحب العمل)"
+        },
+        "tax": {
+          "personal_exemption_annual": "الإعفاء الضريبي السنوي",
+          "brackets": "شرائح ضريبة الدخل"
+        },
+        "overtime": {
+          "multiplier_day": "معامل إضافي نهاري",
+          "multiplier_night": "معامل إضافي ليلي",
+          "multiplier_holiday": "معامل إضافي عطلة"
+        },
+        "payroll": {
+          "period_start_day": "يوم بداية دورة الرواتب",
+          "working_days_basis": "أساس أيام العمل",
+          "second_approval_required": "يتطلب موافقة ثانية",
+          "rounding": "قاعدة التقريب",
+          "tax_method": "طريقة احتساب الضريبة"
+        }
+      },
+      "enums": {
+        "payroll": {
+          "working_days_basis": {
+            "calendar": "أيام تقويمية",
+            "fixed_30": "ثابت 30 يوماً",
+            "working_days": "أيام العمل"
+          },
+          "rounding": {
+            "half_away_from_zero": "نصف بعيداً عن الصفر (منزلتان)"
+          },
+          "tax_method": {
+            "annual_projection": "إسقاط سنوي",
+            "monthly_slab": "شريحة شهرية"
+          }
+        }
+      }
     }
   },
   "home": {
@@ -2083,5 +2189,104 @@
     "unassigned": "غير معيّن",
     "forbiddenTitle": "لا صلاحية للتقارير",
     "forbiddenBody": "اطلب من المسؤول منحك صلاحية التقارير إن لزم."
+  },
+  "payroll": {
+    "runs": {
+      "title": "مسيرات الرواتب",
+      "subtitle": "إنشاء واحتساب ومراجعة واعتماد وقفل مسيرة الرواتب الشهرية.",
+      "review": "مراجعة المسيرة",
+      "breadcrumbAria": "مسار التنقل",
+      "create": "مسيرة جديدة",
+      "createTitle": "إنشاء مسيرة رواتب",
+      "createSubtitle": "اختر فترة الصرف. تُجمع مدخلات الحضور والإجازات عند الاحتساب.",
+      "createHint": "يجب ألا تتداخل الفترة مع مسيرة مفتوحة لنفس الكيان.",
+      "createSubmit": "إنشاء المسيرة",
+      "periodStart": "بداية الفترة",
+      "periodEnd": "نهاية الفترة",
+      "search": "بحث بالدورة أو الحالة",
+      "statusFilter": "الحالة",
+      "statusAll": "كل الحالات",
+      "status": {
+        "Draft": "مسودة",
+        "Calculating": "جارٍ الاحتساب",
+        "InReview": "قيد المراجعة",
+        "Approved": "معتمدة",
+        "Locked": "مقفلة",
+        "Superseded": "استُبدلت"
+      },
+      "kpiTotalRuns": "المسيرات (هذه الصفحة)",
+      "kpiLastNet": "آخر صافي في الصفحة",
+      "kpiLocked": "مقفلة في الصفحة",
+      "kpiWarnings": "تنبيهات في الصفحة",
+      "kpiGross": "إجمالي الأجور",
+      "kpiNet": "صافي المستحق",
+      "kpiEmployer": "تكلفة صاحب العمل",
+      "kpiHeadcount": "الموظفون",
+      "kpiAlerts": "التنبيهات",
+      "colPeriod": "الدورة والفترة",
+      "colStatus": "الحالة",
+      "colHeadcount": "الموظفون",
+      "colGross": "الإجمالي",
+      "colNet": "الصافي",
+      "colEmployer": "تكلفة الشركة",
+      "colCreated": "تاريخ الإنشاء",
+      "colActions": "الإجراءات",
+      "colEmployee": "الموظف",
+      "colEntryStatus": "حالة التدقيق",
+      "details": "التفاصيل",
+      "showing": "عرض {{n}} من {{total}}",
+      "prev": "السابق",
+      "next": "التالي",
+      "emptyTitle": "لا توجد مسيرات بعد",
+      "emptyBody": "أنشئ مسيرة لفترة صرف لاحتساب الرواتب.",
+      "loadErrorTitle": "تعذر تحميل مسيرات الرواتب",
+      "loadErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "detailTitle": "مسيرة رواتب {{period}}",
+      "warningsBanner": "يوجد {{n}} تنبيه(ات) في هذه المسيرة. راجع القيود قبل الاعتماد.",
+      "reviewRules": "مراجعة قواعد الرواتب",
+      "entrySearch": "بحث بالاسم أو رقم الموظف",
+      "warningsOnly": "التنبيهات فقط ({{n}})",
+      "entriesEmptyTitle": "لا قيود بعد",
+      "entriesEmptyBody": "احسب المسيرة لبناء قيود الموظفين من الرواتب والحضور.",
+      "entriesErrorTitle": "تعذر تحميل القيود",
+      "entriesErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "entriesShowing": "عرض {{n}} من {{total}} موظفاً",
+      "entryOk": "سليم ومطابق",
+      "entryHeld": "موقوف الصرف",
+      "entryWarnings": "{{n}} تنبيه(ات)",
+      "viewEntry": "التفصيل",
+      "entryTitle": "بيان الراتب التفصيلي",
+      "entryNetDue": "صافي الراتب المستحق",
+      "entryInsuranceEmp": "تأمين الموظف",
+      "entryTax": "ضريبة الدخل",
+      "entryOtherDed": "خصومات أخرى",
+      "entryLines": "البنود",
+      "entryLinesEmpty": "لا بنود لهذا القيد.",
+      "entryErrorTitle": "تعذر تحميل القيد",
+      "entryErrorBody": "تحقق من الاتصال وحاول مرة أخرى.",
+      "actionCalculate": "احتساب",
+      "actionRecalculate": "إعادة الاحتساب",
+      "actionSubmit": "إرسال للمراجعة",
+      "actionApprove": "اعتماد",
+      "actionLock": "قفل المسيرة",
+      "actionReopen": "إعادة الفتح",
+      "actionHold": "تجميد الصرف",
+      "reopenTitle": "إعادة فتح مسيرة مقفلة",
+      "reopenBody": "إعادة الفتح تنشئ مسودة جديدة. المسيرة المقفلة تبقى كما هي للتدقيق.",
+      "holdTitle": "تجميد صرف هذا الموظف؟",
+      "holdBody": "يبقى القيد في المسيرة مع وسم تجميد الصرف.",
+      "reason": "السبب",
+      "toastCreated": "تم إنشاء مسيرة الرواتب.",
+      "toastCalculated": "اكتمل الاحتساب.",
+      "toastSubmitted": "أُرسلت المسيرة للمراجعة.",
+      "toastApproved": "تم اعتماد المسيرة.",
+      "toastLocked": "تم قفل المسيرة.",
+      "toastReopened": "أُعيد فتح المسيرة كمسودة جديدة.",
+      "toastHeld": "تم تجميد الصرف.",
+      "toastValidation": "تحقق من الحقول المطلوبة وحاول مرة أخرى.",
+      "toastFail": "تعذر إكمال الإجراء.",
+      "toastRulesNotConfirmed": "اعتمد قواعد الرواتب من الإعدادات قبل قفل المسيرة.",
+      "toastSecondApprover": "يجب أن يعتمد مستخدم آخر هذه المسيرة."
+    }
   }
 }

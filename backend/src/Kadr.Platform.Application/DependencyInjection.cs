@@ -1,5 +1,6 @@
 using FluentValidation;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Payroll.Calculation;
 using Kadr.Platform.Application.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssemblyContaining<RegisterTenantCommandValidator>();
         services.AddSingleton<IRegisterTenantFailureInjector, NoOpRegisterTenantFailureInjector>();
+        services.AddSingleton<IPayrollCalculationEngine, PayrollCalculationEngine>();
         return services;
     }
 }

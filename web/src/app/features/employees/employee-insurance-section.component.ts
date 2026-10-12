@@ -123,7 +123,7 @@ type SectionState = 'loading' | 'ready' | 'error';
               <span class="text-fg-2">{{ 'employees.insurance.startDate' | transloco }}</span>
               <span class="tabular-nums text-fg">{{ profile()!.insuranceStartDate }}</span>
             </div>
-            @if (profile()!.insurableWageOverride != null) {
+            @if (profile()!.insurableWageOverride !== null) {
               <div class="rounded-lg bg-subtle p-3">
                 <div class="flex items-center justify-between gap-2 text-sm">
                   <span class="font-medium text-fg">{{

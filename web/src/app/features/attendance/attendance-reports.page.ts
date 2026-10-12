@@ -120,7 +120,7 @@ type PageState = 'loading' | 'ready' | 'error';
         />
       } @else {
         <div class="overflow-x-auto rounded-lg border border-line bg-surface shadow-sm">
-          <table class="w-full min-w-[48rem] text-start text-xs">
+          <table class="w-full min-w-0 text-start text-xs">
             <thead class="border-b border-line bg-app text-fg-2">
               <tr>
                 <th class="sticky start-0 bg-app px-3 py-2 font-medium">

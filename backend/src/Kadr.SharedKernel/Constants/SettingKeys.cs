@@ -21,4 +21,5 @@ public static class SettingKeys
     public const string OvertimeMultiplierDay = "overtime.multiplier_day";
     public const string OvertimeMultiplierNight = "overtime.multiplier_night";
     public const string OvertimeMultiplierHoliday = "overtime.multiplier_holiday";
+    public const string PayrollRulesConfirmed = "payroll.rules_confirmed";
 }

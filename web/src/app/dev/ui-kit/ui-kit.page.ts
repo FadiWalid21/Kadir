@@ -492,8 +492,8 @@ export class UiKitPage {
     this.demoComboboxName.set(opt?.name ?? '');
   }
 
-  onDemoAssignmentTarget(_sel: AssignmentTargetSelection): void {
-    // Demo only — selection shown via picker chips.
+  onDemoAssignmentTarget(_selection: AssignmentTargetSelection): void {
+    void _selection;
   }
 
   onLanguage(lang: AppLanguage): void {

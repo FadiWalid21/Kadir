@@ -2849,6 +2849,434 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.ToTable("pay_components", (string)null);
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayrollEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal>("EmployeeInsurance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("employee_insurance");
+
+                    b.Property<decimal>("EmployerCostTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("employer_cost_total");
+
+                    b.Property<decimal>("EmployerInsurance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("employer_insurance");
+
+                    b.Property<decimal>("Gross")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("gross");
+
+                    b.Property<string>("HoldReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("hold_reason");
+
+                    b.Property<decimal>("IncomeTax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("income_tax");
+
+                    b.Property<string>("InputsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("inputs_json");
+
+                    b.Property<decimal>("InsurableWage")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("insurable_wage");
+
+                    b.Property<bool>("IsHeld")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_held");
+
+                    b.Property<decimal>("Net")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("net");
+
+                    b.Property<decimal>("OtherDeductions")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("other_deductions");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<string>("SalarySnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("salary_snapshot_json");
+
+                    b.Property<decimal>("TaxableIncome")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("taxable_income");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("WarningCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("warning_count");
+
+                    b.Property<string>("WarningsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("warnings_json");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_entries");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_payroll_entries_tenant_id_employee_id");
+
+                    b.HasIndex("TenantId", "RunId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payroll_entries_tenant_id_run_id_employee_id");
+
+                    b.HasIndex("TenantId", "RunId", "IsHeld")
+                        .HasDatabaseName("ix_payroll_entries_tenant_id_run_id_is_held");
+
+                    b.HasIndex("TenantId", "RunId", "WarningCount")
+                        .HasDatabaseName("ix_payroll_entries_tenant_id_run_id_warning_count");
+
+                    b.ToTable("payroll_entries", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayrollEntryLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CalcExplanationJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("calc_explanation_json");
+
+                    b.Property<string>("ComponentKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("component_key");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entry_id");
+
+                    b.Property<string>("LabelAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_ar");
+
+                    b.Property<string>("LabelEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label_en");
+
+                    b.Property<string>("LineType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("line_type");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_entry_lines");
+
+                    b.HasIndex("EntryId")
+                        .HasDatabaseName("ix_payroll_entry_lines_entry_id");
+
+                    b.HasIndex("TenantId", "EntryId", "LineType")
+                        .HasDatabaseName("ix_payroll_entry_lines_tenant_id_entry_id_line_type");
+
+                    b.HasIndex("TenantId", "EntryId", "SortOrder")
+                        .HasDatabaseName("ix_payroll_entry_lines_tenant_id_entry_id_sort_order");
+
+                    b.ToTable("payroll_entry_lines", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayrollRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("Headcount")
+                        .HasColumnType("integer")
+                        .HasColumnName("headcount");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("legal_entity_id");
+
+                    b.Property<DateTimeOffset?>("LockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_at");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date")
+                        .HasColumnName("period_end");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date")
+                        .HasColumnName("period_start");
+
+                    b.Property<Guid?>("ReopenedFromRunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reopened_from_run_id");
+
+                    b.Property<string>("RulesSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("rules_snapshot_json");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("TotalEmployerCost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_employer_cost");
+
+                    b.Property<decimal?>("TotalGross")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_gross");
+
+                    b.Property<decimal?>("TotalNet")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_net");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("WarningCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("warning_count");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payroll_runs");
+
+                    b.HasIndex("TenantId", "ReopenedFromRunId")
+                        .HasDatabaseName("ix_payroll_runs_tenant_id_reopened_from_run_id");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("ix_payroll_runs_tenant_id_status");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "PeriodEnd")
+                        .HasDatabaseName("ix_payroll_runs_tenant_id_legal_entity_id_period_end");
+
+                    b.HasIndex("TenantId", "PeriodStart", "PeriodEnd")
+                        .HasDatabaseName("ix_payroll_runs_tenant_id_period_start_period_end");
+
+                    b.ToTable("payroll_runs", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.StatutoryRuleSet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("rule_key");
+
+                    b.Property<string>("SourceNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("source_note");
+
+                    b.Property<string>("ValueJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("value_json");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("value_type");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_statutory_rule_sets");
+
+                    b.HasIndex("Country", "RuleKey", "EffectiveFrom", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_statutory_rule_sets_country_rule_key_effective_from_version");
+
+                    b.ToTable("statutory_rule_sets", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.TenantRuleValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<bool>("IsCustomized")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_customized");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified");
+
+                    b.Property<Guid>("LegalEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("legal_entity_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("rule_key");
+
+                    b.Property<Guid?>("SourceRuleSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_rule_set_id");
+
+                    b.Property<int?>("SourceVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("source_version");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("ValueJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("value_json");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("value_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tenant_rule_values");
+
+                    b.HasIndex("TenantId", "RuleKey", "EffectiveFrom")
+                        .HasDatabaseName("ix_tenant_rule_values_tenant_id_rule_key_effective_from");
+
+                    b.HasIndex("TenantId", "LegalEntityId", "RuleKey", "EffectiveFrom")
+                        .HasDatabaseName("ix_tenant_rule_values_tenant_id_legal_entity_id_rule_key_effec");
+
+                    b.ToTable("tenant_rule_values", (string)null);
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Plans.Plan", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3947,6 +4375,16 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_employee_salary_components_employee_salaries_employee_salar");
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayrollEntryLine", b =>
+                {
+                    b.HasOne("Kadr.Platform.Domain.Payroll.PayrollEntry", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_payroll_entry_lines_payroll_entries_entry_id");
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Workflows.ApprovalWorkflowStep", b =>
                 {
                     b.HasOne("Kadr.Platform.Domain.Workflows.ApprovalWorkflow", null)
@@ -3965,6 +4403,11 @@ namespace Kadr.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalary", b =>
                 {
                     b.Navigation("Components");
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayrollEntry", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

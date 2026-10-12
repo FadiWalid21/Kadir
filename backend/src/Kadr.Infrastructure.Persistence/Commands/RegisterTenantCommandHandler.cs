@@ -20,6 +20,7 @@ using Kadr.SharedKernel.Application;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Ids;
 using Kadr.SharedKernel.Results;
+using Kadr.Infrastructure.Persistence.Payroll;
 using Kadr.Infrastructure.Persistence.Users;
 using Kadr.SharedKernel.Tenancy;
 using Kadr.SharedKernel.Time;
@@ -234,6 +235,13 @@ public sealed class RegisterTenantCommandHandler(
             db.Branches.Add(Branch.CreateDefault(tenantId, legalEntity.Id, branchName));
 
             SeedDefaultSettings(tenantId, country, command);
+
+            await TenantRuleCopyService
+                .CopyPlatformDefaultsAsync(db, tenantId, legalEntity.Id, createdBy: null, cancellationToken)
+                .ConfigureAwait(false);
+            await OvertimeRuleMigration
+                .CopySettingsIntoRulesAsync(db, tenantId, legalEntity.Id, createdBy: null, cancellationToken)
+                .ConfigureAwait(false);
 
             if (googlePayload is null)
             {

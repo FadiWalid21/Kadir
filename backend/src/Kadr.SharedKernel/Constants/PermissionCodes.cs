@@ -42,6 +42,12 @@ public static class PermissionCodes
     public const string ReportsExport = "reports.export";
     public const string SalaryRead = "salary.read";
     public const string SalaryManage = "salary.manage";
+    public const string PayrollRulesRead = "payroll.rules.read";
+    public const string PayrollRulesManage = "payroll.rules.manage";
+    public const string PayrollRun = "payroll.run";
+    public const string PayrollApprove = "payroll.approve";
+    public const string PayrollLock = "payroll.lock";
+    public const string PayrollReopen = "payroll.reopen";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -85,5 +91,11 @@ public static class PermissionCodes
         ReportsExport,
         SalaryRead,
         SalaryManage,
+        PayrollRulesRead,
+        PayrollRulesManage,
+        PayrollRun,
+        PayrollApprove,
+        PayrollLock,
+        PayrollReopen,
     ];
 }

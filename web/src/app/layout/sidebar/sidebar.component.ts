@@ -369,6 +369,21 @@ export class SidebarComponent {
         badgeAriaKey: 'shell.nav.approvalsPending',
       },
       {
+        kind: 'group',
+        id: 'payroll',
+        labelKey: 'shell.nav.payroll',
+        icon: 'file',
+        anyChildPermission: true,
+        children: [
+          {
+            labelKey: 'shell.nav.payrollRuns',
+            route: '/payroll/runs',
+            permission: PermissionCodes.PayrollRun,
+            matchPrefix: '/payroll/runs',
+          },
+        ],
+      },
+      {
         kind: 'leaf',
         labelKey: 'shell.nav.reports',
         icon: 'chart',

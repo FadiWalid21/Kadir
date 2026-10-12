@@ -135,4 +135,14 @@ public static class ErrorCodes
     public const string InsuranceNotFound = "insurance.not_found";
     public const string InsuranceEmployeeNotFound = "insurance.employee_not_found";
     public const string SalaryImportInvalid = "salary.import_invalid";
+    public const string PayrollRulesValidationFailed = "payroll.rules.validation_failed";
+    public const string PayrollRulesNotFound = "payroll.rules.not_found";
+    public const string PayrollRulesForbidden = "payroll.rules.forbidden";
+    public const string PayrollRulesNotConfirmed = "payroll.rules.not_confirmed";
+    public const string PayrollRunValidationFailed = "payroll.run.validation_failed";
+    public const string PayrollRunNotFound = "payroll.run.not_found";
+    public const string PayrollRunConflict = "payroll.run.conflict";
+    public const string PayrollRunImmutable = "payroll.run.immutable";
+    public const string PayrollRunInvalidTransition = "payroll.run.invalid_transition";
+    public const string PayrollRunSecondApproverRequired = "payroll.run.second_approver_required";
 }

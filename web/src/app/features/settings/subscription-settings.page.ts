@@ -200,7 +200,7 @@ const FEATURE_ORDER = [
           }
 
           <div class="mt-4 overflow-x-auto">
-            <table class="w-full min-w-[36rem] border-collapse text-start text-sm">
+            <table class="w-full min-w-0 border-collapse text-start text-sm">
               <thead>
                 <tr class="border-b border-line text-fg-2">
                   <th class="px-2 py-2 font-medium">{{ 'settings.subscription.colFeature' | transloco }}</th>

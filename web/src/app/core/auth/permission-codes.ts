@@ -40,6 +40,12 @@ export const PermissionCodes = {
   ReportsExport: 'reports.export',
   SalaryRead: 'salary.read',
   SalaryManage: 'salary.manage',
+  PayrollRulesRead: 'payroll.rules.read',
+  PayrollRulesManage: 'payroll.rules.manage',
+  PayrollRun: 'payroll.run',
+  PayrollApprove: 'payroll.approve',
+  PayrollLock: 'payroll.lock',
+  PayrollReopen: 'payroll.reopen',
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];

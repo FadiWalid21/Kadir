@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<PlanSeeder>();
         services.AddScoped<IndustryTemplateSeeder>();
         services.AddScoped<PlatformAdminSeeder>();
+        services.AddScoped<StatutoryRuleSetSeeder>();
         services.AddScoped<IPlatformAuthService, PlatformAuthService>();
         services.AddScoped<IPlatformTenantQueries, PlatformTenants.PlatformTenantQueries>();
         services.AddScoped<IPlatformTenantCommands, PlatformTenants.PlatformTenantCommands>();
@@ -67,9 +68,8 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeInsuranceService, Payroll.EmployeeInsuranceService>();
         services.AddScoped<ISalaryImportService, Payroll.SalaryImportService>();
         services.AddScoped<IOvertimeMultipliersService, Payroll.OvertimeMultipliersService>();
-
-
-
+        services.AddScoped<IPayrollRulesService, Payroll.PayrollRulesService>();
+        services.AddScoped<IPayrollRunService, Payroll.PayrollRunService>();
 
         services.AddScoped<IPlatformLookupService, Lookups.PlatformLookupService>();
         services.AddScoped<IEmployeeImportService, Employees.EmployeeImportService>();
