@@ -138,6 +138,12 @@ export class SettingsLayout {
             route: '/settings/pay-components',
             visible: can(PermissionCodes.SalaryRead),
           },
+          {
+            id: 'payrollRules',
+            labelKey: 'settings.nav.payrollRules',
+            route: '/settings/payroll-rules',
+            visible: can(PermissionCodes.PayrollRulesRead),
+          },
         ],
       },
       {

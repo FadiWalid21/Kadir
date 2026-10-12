@@ -47,6 +47,9 @@ public static class SystemRolePermissions
             PermissionCodes.NotificationsManagePrefs,
             PermissionCodes.ReportsRead,
             PermissionCodes.ReportsExport,
+            PermissionCodes.PayrollRulesRead,
+            PermissionCodes.PayrollRun,
+            PermissionCodes.PayrollApprove,
         ],
         _ => throw new ArgumentOutOfRangeException(nameof(roleName), roleName, "Unknown system role."),
     };

@@ -280,7 +280,9 @@
       "more": "More",
       "attendanceRules": "Rules",
       "attendanceBranches": "Branches",
-      "attendanceHolidays": "Holidays"
+      "attendanceHolidays": "Holidays",
+      "payroll": "Payroll",
+      "payrollRuns": "Runs"
     },
     "account": "My account",
     "switchLanguage": "Switch language",
@@ -444,7 +446,8 @@
         "billing": "Billing",
         "security": "Security"
       },
-      "invitations": "Invitations"
+      "invitations": "Invitations",
+      "payrollRules": "Payroll rules"
     },
     "payComponents": {
       "title": "Salary and allowance components",
@@ -841,6 +844,109 @@
     "invitations": {
       "title": "Invitations",
       "subtitle": "Pending invites to join this company."
+    },
+    "payrollRules": {
+      "title": "Payroll rules",
+      "subtitle": "Company-controlled rates for insurance, funds, tax, overtime, and payroll options. Official defaults are a starting point — verify before locking a run.",
+      "disclaimer": "Your company is responsible for the rates used in payroll. Official defaults are provided for convenience and must be verified against current regulations.",
+      "confirmCta": "Confirm rules for lock",
+      "confirmTitle": "Confirm payroll rules",
+      "confirmBody": "Confirm that the current rule values are correct before locking a payroll run. You can change rules later; confirmation is cleared when a rule is edited.",
+      "confirmedTitle": "Rules confirmed for lock",
+      "confirmedBody": "Confirmed {{at}}. Reason: {{reason}}",
+      "updateAvailable": "{{n}} official update(s) available. Apply per rule when ready — values are never overwritten automatically.",
+      "tabsAria": "Payroll rule sections",
+      "tabGeneral": "General: period and options",
+      "tabLegal": "Legal and tax (Egypt)",
+      "badgeDefault": "Official default",
+      "badgeCustomized": "Customized",
+      "badgeUpdate": "Update available",
+      "officialDefault": "Official default",
+      "effectiveFrom": "Effective from",
+      "edit": "Edit rule",
+      "editTitle": "Edit payroll rule",
+      "history": "History",
+      "historyTitle": "Rule history",
+      "historyEmptyTitle": "No history yet",
+      "historyEmptyBody": "Changes to this rule will appear here.",
+      "historyErrorTitle": "Could not load history",
+      "historyErrorBody": "Check your connection and try again.",
+      "reset": "Restore default",
+      "resetTitle": "Restore official default?",
+      "resetBody": "A new effective-dated row will be added with the official default value. Past locked runs are not changed.",
+      "resetReason": "Restored official default",
+      "applyUpdate": "Apply official update",
+      "applyUpdateReason": "Applied official platform update",
+      "amount": "Amount",
+      "rate": "Rate (%)",
+      "multiplier": "Multiplier",
+      "value": "Value",
+      "reason": "Reason",
+      "currency": "EGP",
+      "notSet": "Not set",
+      "bracketsTitle": "Tax brackets",
+      "bracketsEmpty": "No brackets configured yet.",
+      "bracketsCount": "{{n}} brackets",
+      "bracketFrom": "From",
+      "bracketTo": "To",
+      "bracketRate": "Rate %",
+      "addBracket": "Add bracket",
+      "boolTrue": "Yes",
+      "boolFalse": "No",
+      "emptyTitle": "No rules in this section",
+      "emptyBody": "Rules are seeded when the company is created.",
+      "loadErrorTitle": "Could not load payroll rules",
+      "loadErrorBody": "Check your connection and try again.",
+      "toastSaved": "Rule saved.",
+      "toastReset": "Default restored.",
+      "toastUpdated": "Official update applied.",
+      "toastConfirmed": "Rules confirmed for lock.",
+      "toastValidation": "Effective date and reason are required.",
+      "toastFail": "Could not complete the action.",
+      "keys": {
+        "insurance": {
+          "wage_min": "Minimum insurable wage",
+          "wage_max": "Maximum insurable wage",
+          "employee_rate": "Employee social insurance rate",
+          "employer_rate": "Employer social insurance rate"
+        },
+        "fund": {
+          "martyrs_rate": "Martyrs and victims fund",
+          "emergency_employer_rate": "Emergency fund (employer)"
+        },
+        "tax": {
+          "personal_exemption_annual": "Annual personal tax exemption",
+          "brackets": "Income tax brackets"
+        },
+        "overtime": {
+          "multiplier_day": "Day overtime multiplier",
+          "multiplier_night": "Night overtime multiplier",
+          "multiplier_holiday": "Holiday overtime multiplier"
+        },
+        "payroll": {
+          "period_start_day": "Payroll period start day",
+          "working_days_basis": "Working days basis",
+          "second_approval_required": "Second approval required",
+          "rounding": "Rounding rule",
+          "tax_method": "Tax withholding method"
+        }
+      },
+      "enums": {
+        "payroll": {
+          "working_days_basis": {
+            "calendar": "Calendar days",
+            "fixed_30": "Fixed 30 days",
+            "working_days": "Working days"
+          },
+          "rounding": {
+            "half_away_from_zero": "Half away from zero (2 decimals)"
+          },
+          "tax_method": {
+            "annual_projection": "Annual projection",
+            "monthly_slab": "Monthly slab"
+          }
+        }
+      }
     }
   },
   "home": {
@@ -2083,5 +2189,104 @@
     "unassigned": "Unassigned",
     "forbiddenTitle": "No access to reports",
     "forbiddenBody": "Ask an administrator if you need reports access."
+  },
+  "payroll": {
+    "runs": {
+      "title": "Payroll runs",
+      "subtitle": "Create, calculate, review, approve, and lock monthly payroll.",
+      "review": "Run review",
+      "breadcrumbAria": "Breadcrumb",
+      "create": "New run",
+      "createTitle": "Create payroll run",
+      "createSubtitle": "Choose the pay period. Attendance and leave inputs are collected when you calculate.",
+      "createHint": "Period must not overlap another open run for the same entity.",
+      "createSubmit": "Create run",
+      "periodStart": "Period start",
+      "periodEnd": "Period end",
+      "search": "Search by period or status",
+      "statusFilter": "Status",
+      "statusAll": "All statuses",
+      "status": {
+        "Draft": "Draft",
+        "Calculating": "Calculating",
+        "InReview": "In review",
+        "Approved": "Approved",
+        "Locked": "Locked",
+        "Superseded": "Superseded"
+      },
+      "kpiTotalRuns": "Runs (this page)",
+      "kpiLastNet": "Latest net on page",
+      "kpiLocked": "Locked on page",
+      "kpiWarnings": "Warnings on page",
+      "kpiGross": "Total gross",
+      "kpiNet": "Net payable",
+      "kpiEmployer": "Employer cost",
+      "kpiHeadcount": "Employees",
+      "kpiAlerts": "Alerts",
+      "colPeriod": "Cycle and period",
+      "colStatus": "Status",
+      "colHeadcount": "Employees",
+      "colGross": "Gross",
+      "colNet": "Net",
+      "colEmployer": "Employer cost",
+      "colCreated": "Created",
+      "colActions": "Actions",
+      "colEmployee": "Employee",
+      "colEntryStatus": "Audit status",
+      "details": "Details",
+      "showing": "Showing {{n}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "emptyTitle": "No payroll runs yet",
+      "emptyBody": "Create a run for a pay period to calculate salaries.",
+      "loadErrorTitle": "Could not load payroll runs",
+      "loadErrorBody": "Check your connection and try again.",
+      "detailTitle": "{{period}} payroll run",
+      "warningsBanner": "{{n}} warning(s) on this run. Review entries before approval.",
+      "reviewRules": "Review payroll rules",
+      "entrySearch": "Search by name or employee number",
+      "warningsOnly": "Warnings only ({{n}})",
+      "entriesEmptyTitle": "No entries yet",
+      "entriesEmptyBody": "Calculate the run to build employee entries from salaries and attendance.",
+      "entriesErrorTitle": "Could not load entries",
+      "entriesErrorBody": "Check your connection and try again.",
+      "entriesShowing": "Showing {{n}} of {{total}} employees",
+      "entryOk": "Matched",
+      "entryHeld": "Payment held",
+      "entryWarnings": "{{n}} warning(s)",
+      "viewEntry": "Breakdown",
+      "entryTitle": "Salary breakdown",
+      "entryNetDue": "Net salary due",
+      "entryInsuranceEmp": "Employee insurance",
+      "entryTax": "Income tax",
+      "entryOtherDed": "Other deductions",
+      "entryLines": "Lines",
+      "entryLinesEmpty": "No lines on this entry.",
+      "entryErrorTitle": "Could not load entry",
+      "entryErrorBody": "Check your connection and try again.",
+      "actionCalculate": "Calculate",
+      "actionRecalculate": "Recalculate",
+      "actionSubmit": "Submit for review",
+      "actionApprove": "Approve",
+      "actionLock": "Lock run",
+      "actionReopen": "Reopen",
+      "actionHold": "Hold payment",
+      "reopenTitle": "Reopen locked run",
+      "reopenBody": "Reopening creates a new draft version. The locked run stays immutable for audit.",
+      "holdTitle": "Hold this employee’s payment?",
+      "holdBody": "The entry stays in the run but payment is marked as held.",
+      "reason": "Reason",
+      "toastCreated": "Payroll run created.",
+      "toastCalculated": "Calculation finished.",
+      "toastSubmitted": "Run submitted for review.",
+      "toastApproved": "Run approved.",
+      "toastLocked": "Run locked.",
+      "toastReopened": "Run reopened as a new draft.",
+      "toastHeld": "Payment held.",
+      "toastValidation": "Check the required fields and try again.",
+      "toastFail": "Could not complete the action.",
+      "toastRulesNotConfirmed": "Confirm payroll rules in Settings before locking a run.",
+      "toastSecondApprover": "A different user must approve this run."
+    }
   }
 }

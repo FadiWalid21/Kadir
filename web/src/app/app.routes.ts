@@ -369,6 +369,18 @@ export const routes: Routes = [
           import('./features/reports/headcount-report.page').then((m) => m.HeadcountReportPage),
       },
       {
+        path: 'payroll/runs',
+        canActivate: [permissionGuard(PermissionCodes.PayrollRun)],
+        loadComponent: () =>
+          import('./features/payroll/payroll-runs.page').then((m) => m.PayrollRunsPage),
+      },
+      {
+        path: 'payroll/runs/:id',
+        canActivate: [permissionGuard(PermissionCodes.PayrollRun)],
+        loadComponent: () =>
+          import('./features/payroll/payroll-run-detail.page').then((m) => m.PayrollRunDetailPage),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings.layout').then((m) => m.SettingsLayout),
@@ -405,6 +417,14 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./features/settings/pay-components-settings.page').then(
                 (m) => m.PayComponentsSettingsPage,
+              ),
+          },
+          {
+            path: 'payroll-rules',
+            canActivate: [permissionGuard(PermissionCodes.PayrollRulesRead)],
+            loadComponent: () =>
+              import('./features/settings/payroll-rules-settings.page').then(
+                (m) => m.PayrollRulesSettingsPage,
               ),
           },
           {

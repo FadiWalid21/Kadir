@@ -194,7 +194,7 @@ export class BranchLocationDrawerComponent {
       const accent =
         getComputedStyle(document.documentElement).getPropertyValue('--brand-base').trim() ||
         getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() ||
-        '#555';
+        'currentColor';
       if (!this.map) {
         this.map = L.map(host).setView([this.latitude, this.longitude], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

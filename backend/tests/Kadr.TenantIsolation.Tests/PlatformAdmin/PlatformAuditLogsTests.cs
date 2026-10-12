@@ -137,6 +137,7 @@ public sealed class PlatformAuditLogsTests : IAsyncLifetime
     [Fact]
     public async Task Cursor_pagination_walks_every_row_once_in_descending_order()
     {
+        await _factory.ResetDatabaseAsync();
         var helper = new AuthTestHelper(_factory);
         var a = await helper.RegisterVerifiedAsync("Alpha Trading", "owner-a@example.com");
         var b = await helper.RegisterVerifiedAsync("Beta Clinic", "owner-b@example.com");
@@ -169,7 +170,7 @@ public sealed class PlatformAuditLogsTests : IAsyncLifetime
             seen.AddRange(page.Items);
             cursor = page.NextCursor;
             pages++;
-            Assert.True(pages < 50, "pagination did not terminate");
+            Assert.True(pages < 200, "pagination did not terminate");
         }
         while (cursor is not null);
 

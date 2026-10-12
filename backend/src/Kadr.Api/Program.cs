@@ -352,6 +352,7 @@ try
         await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<SystemRolePermissionSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<StatutoryRuleSetSeeder>().SeedAsync();
     }
 
     app.MapHealthChecks("/health");
@@ -368,6 +369,8 @@ try
     app.MapTenantEndpoints();
     app.MapBranchSettingsEndpoints();
     app.MapPayComponentsEndpoints();
+    app.MapPayrollRulesEndpoints();
+    app.MapPayrollRunsEndpoints();
     app.MapEmployeeSalariesEndpoints();
     app.MapEmployeeInsuranceEndpoints();
     app.MapSalaryImportEndpoints();

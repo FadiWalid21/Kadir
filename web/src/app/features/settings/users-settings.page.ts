@@ -60,7 +60,7 @@ import { UsersStore } from './users.store';
               (valueChange)="onSearch($event)"
             />
           </div>
-          <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[20rem] lg:grid-cols-2">
+          <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-80 lg:grid-cols-2">
             <kadr-select
               [label]="'settings.users.filterRole' | transloco"
               [options]="roleOptions()"

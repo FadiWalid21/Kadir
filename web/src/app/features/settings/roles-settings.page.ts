@@ -158,7 +158,7 @@ import { RolesStore } from './roles.store';
             </div>
           </aside>
 
-          <section class="flex min-h-[24rem] flex-col rounded-lg border border-line bg-surface">
+          <section class="flex min-h-96 flex-col rounded-lg border border-line bg-surface">
             @if (creating()) {
               <div class="border-b border-line p-4 text-start">
                 <h2 class="text-lg font-bold text-fg">{{ 'settings.roles.newRole' | transloco }}</h2>

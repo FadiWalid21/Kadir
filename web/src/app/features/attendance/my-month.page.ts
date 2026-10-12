@@ -215,11 +215,11 @@ type ViewMode = 'list' | 'calendar';
                       <span class="text-xs font-medium tabular-nums text-fg">{{
                         day.date.slice(-2)
                       }}</span>
-                      <span class="truncate text-[0.65rem] leading-tight text-fg-2">{{
+                      <span class="truncate text-xs leading-tight text-fg-2">{{
                         statusShort(day)
                       }}</span>
                       @if (day.workedMinutes > 0) {
-                        <span class="text-[0.65rem] tabular-nums text-fg-muted">{{
+                        <span class="text-xs tabular-nums text-fg-muted">{{
                           hoursLabel(day.workedMinutes)
                         }}</span>
                       }

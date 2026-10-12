@@ -58,6 +58,11 @@ public class KadrDbContext : DbContext
     public DbSet<EmployeeSalary> EmployeeSalaries => Set<EmployeeSalary>();
     public DbSet<EmployeeSalaryComponent> EmployeeSalaryComponents => Set<EmployeeSalaryComponent>();
     public DbSet<EmployeeInsuranceProfile> EmployeeInsuranceProfiles => Set<EmployeeInsuranceProfile>();
+    public DbSet<StatutoryRuleSet> StatutoryRuleSets => Set<StatutoryRuleSet>();
+    public DbSet<TenantRuleValue> TenantRuleValues => Set<TenantRuleValue>();
+    public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+    public DbSet<PayrollEntry> PayrollEntries => Set<PayrollEntry>();
+    public DbSet<PayrollEntryLine> PayrollEntryLines => Set<PayrollEntryLine>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Department> Departments => Set<Department>();

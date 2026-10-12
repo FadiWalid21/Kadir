@@ -70,7 +70,7 @@ export class ReportsApi {
   }
 
   exportHeadcount(format: 'xlsx' | 'pdf', query: HeadcountQuery = {}): Promise<Blob> {
-    let params = this.toParams(query).set('format', format);
+    const params = this.toParams(query).set('format', format);
     return firstValueFrom(
       this.http.get(`${this.base}/headcount/export`, {
         params,

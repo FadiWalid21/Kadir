@@ -98,6 +98,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<StatutoryRuleSetSeeder>().SeedAsync();
     }
 
     public const string PlatformAdminEmail = "operator@kadr.test";

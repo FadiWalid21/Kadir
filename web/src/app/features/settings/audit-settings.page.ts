@@ -245,7 +245,7 @@ type DatePreset = 'today' | '7d' | '30d' | 'custom';
         } @else {
           <!-- Desktop table -->
           <div class="hidden overflow-x-auto rounded-lg border border-line bg-surface shadow-sm lg:block">
-            <table class="w-full min-w-[64rem] border-collapse text-sm">
+            <table class="w-full min-w-0 border-collapse text-sm">
               <thead class="border-b border-line bg-subtle text-start text-xs font-medium text-fg-2">
                 <tr>
                   <th class="px-3 py-2.5 font-medium">{{ 'settings.audit.col.date' | transloco }}</th>

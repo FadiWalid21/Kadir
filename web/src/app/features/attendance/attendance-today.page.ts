@@ -148,7 +148,7 @@ type PageState = 'loading' | 'ready' | 'error';
         />
       } @else {
         <div class="hidden overflow-x-auto rounded-lg border border-line bg-surface shadow-sm md:block">
-          <table class="w-full min-w-[48rem] text-start text-sm">
+          <table class="w-full min-w-0 text-start text-sm">
             <thead class="border-b border-line bg-app text-fg-2">
               <tr>
                 <th class="px-4 py-3 font-medium">{{ 'attendance.today.colEmployee' | transloco }}</th>
