@@ -27,6 +27,7 @@ import { InputComponent } from '../../shared/ui/input/input.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { EmployeeInsuranceSectionComponent } from './employee-insurance-section.component';
 
 type PanelState = 'loading' | 'ready' | 'error';
 
@@ -47,6 +48,7 @@ interface DraftLine {
     EmptyStateComponent,
     NetworkErrorComponent,
     DrawerComponent,
+    EmployeeInsuranceSectionComponent,
   ],
   template: `
     <div class="flex flex-col gap-4">
@@ -135,6 +137,8 @@ interface DraftLine {
             </ul>
           }
         </section>
+
+        <kadr-employee-insurance-section [employeeId]="employeeId()" />
       }
     </div>
 

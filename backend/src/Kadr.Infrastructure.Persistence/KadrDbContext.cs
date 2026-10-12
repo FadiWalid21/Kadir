@@ -57,6 +57,7 @@ public class KadrDbContext : DbContext
     public DbSet<PayComponent> PayComponents => Set<PayComponent>();
     public DbSet<EmployeeSalary> EmployeeSalaries => Set<EmployeeSalary>();
     public DbSet<EmployeeSalaryComponent> EmployeeSalaryComponents => Set<EmployeeSalaryComponent>();
+    public DbSet<EmployeeInsuranceProfile> EmployeeInsuranceProfiles => Set<EmployeeInsuranceProfile>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Department> Departments => Set<Department>();

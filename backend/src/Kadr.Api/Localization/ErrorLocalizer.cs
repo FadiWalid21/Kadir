@@ -128,6 +128,9 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.SalaryEmployeeNotFound] = ("الموظف غير موجود.", "Employee was not found."),
         [ErrorCodes.SalaryEffectiveOverlap] = ("تاريخ السريان يتداخل مع راتب سابق. استخدم تاريخاً لاحقاً.", "Effective date overlaps a previous salary. Use a later date."),
         [ErrorCodes.SalaryInvalidComponent] = ("مكون راتب غير صالح أو معطّل أو أساسي.", "Pay component is invalid, inactive, or basic."),
+        [ErrorCodes.InsuranceValidationFailed] = ("بيانات التأمين غير صالحة.", "Insurance data is invalid."),
+        [ErrorCodes.InsuranceNotFound] = ("ملف التأمين غير موجود.", "Insurance profile was not found."),
+        [ErrorCodes.InsuranceEmployeeNotFound] = ("الموظف غير موجود.", "Employee was not found."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)
