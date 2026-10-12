@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LookupsApi } from '../../../core/api/lookups.api';
-import { ButtonComponent } from '../button/button.component';
 import {
   ComboboxComponent,
   ComboboxOption,
@@ -34,7 +33,6 @@ export interface AssignmentTargetSelection {
     TranslocoPipe,
     SelectComponent,
     ComboboxComponent,
-    ButtonComponent,
     IconComponent,
   ],
   template: `
