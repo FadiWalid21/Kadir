@@ -122,9 +122,12 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.ReportsExportTooLarge] = ("التصدير يتجاوز حد الصفوف. ضيّق عوامل التصفية.", "Export exceeds the row limit. Narrow the filters."),
         [ErrorCodes.ReportsValidationFailed] = ("بيانات التقرير غير صالحة.", "Report request is invalid."),
         [ErrorCodes.ReportsNotFound] = ("التقرير غير موجود.", "Report was not found."),
-        [ErrorCodes.SalaryValidationFailed] = ("بيانات مكون الراتب غير صالحة.", "Pay component data is invalid."),
-        [ErrorCodes.SalaryNotFound] = ("مكون الراتب غير موجود.", "Pay component was not found."),
+        [ErrorCodes.SalaryValidationFailed] = ("بيانات الراتب غير صالحة.", "Salary data is invalid."),
+        [ErrorCodes.SalaryNotFound] = ("سجل الراتب غير موجود.", "Salary record was not found."),
         [ErrorCodes.SalaryDuplicateKey] = ("يوجد مكون راتب بنفس المفتاح.", "A pay component with the same key already exists."),
+        [ErrorCodes.SalaryEmployeeNotFound] = ("الموظف غير موجود.", "Employee was not found."),
+        [ErrorCodes.SalaryEffectiveOverlap] = ("تاريخ السريان يتداخل مع راتب سابق. استخدم تاريخاً لاحقاً.", "Effective date overlaps a previous salary. Use a later date."),
+        [ErrorCodes.SalaryInvalidComponent] = ("مكون راتب غير صالح أو معطّل أو أساسي.", "Pay component is invalid, inactive, or basic."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)
