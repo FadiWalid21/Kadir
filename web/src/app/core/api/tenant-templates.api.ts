@@ -71,8 +71,16 @@ export class TenantTemplatesApi {
     );
   }
 
+  createItem(section: TemplateSection, body: unknown): Promise<TemplateItem> {
+    return firstValueFrom(this.http.post<TemplateItem>(`${this.base}/${section}`, body));
+  }
+
   updateItem(section: TemplateSection, id: string, body: unknown): Promise<TemplateItem> {
     return firstValueFrom(this.http.put<TemplateItem>(`${this.base}/${section}/${id}`, body));
+  }
+
+  deleteItem(section: TemplateSection, id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${this.base}/${section}/${id}`));
   }
 
   resetItem(section: TemplateSection, id: string): Promise<TemplateItem> {

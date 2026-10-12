@@ -4,6 +4,7 @@ using Kadr.Identity.Application.Auth;
 using Kadr.Infrastructure.Persistence;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Auth;
+using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Application.Subscriptions;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Tenancy;
@@ -40,7 +41,113 @@ public static class MeEndpoints
             .RequireRateLimiting("me-security")
             .WithName("SetPassword");
 
+        app.MapGet("/api/v1/me/push-subscriptions/vapid-public-key", GetVapidPublicKeyAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting("me-push")
+            .WithName("MePushVapidPublicKey");
+
+        app.MapGet("/api/v1/me/push-subscriptions", ListPushSubscriptionsAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting("me-push")
+            .WithName("MePushList");
+
+        app.MapPost("/api/v1/me/push-subscriptions", UpsertPushSubscriptionAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting("me-push")
+            .WithName("MePushUpsert");
+
+        app.MapDelete("/api/v1/me/push-subscriptions/{id:guid}", DeletePushSubscriptionAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting("me-push")
+            .WithName("MePushDelete");
+
+        app.MapPost("/api/v1/me/push-subscriptions/test", SendPushTestAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting("me-push-test")
+            .WithName("MePushTest");
+
         return app;
+    }
+
+    private static IResult GetVapidPublicKeyAsync(
+        HttpContext httpContext,
+        IPushSubscriptionService pushSubscriptions,
+        IErrorLocalizer localizer)
+    {
+        var result = pushSubscriptions.GetVapidPublicKey();
+        return result.IsSuccess
+            ? Results.Ok(result.Value)
+            : ToPushProblem(httpContext, result.ErrorCode!, localizer);
+    }
+
+    private static async Task<IResult> ListPushSubscriptionsAsync(
+        HttpContext httpContext,
+        IPushSubscriptionService pushSubscriptions,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await pushSubscriptions.ListAsync(cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess
+            ? Results.Ok(result.Value)
+            : ToPushProblem(httpContext, result.ErrorCode!, localizer);
+    }
+
+    private static async Task<IResult> UpsertPushSubscriptionAsync(
+        [FromBody] UpsertPushSubscriptionRequest request,
+        HttpContext httpContext,
+        IPushSubscriptionService pushSubscriptions,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var userAgent = httpContext.Request.Headers.UserAgent.ToString();
+        if (userAgent.Length > 512)
+        {
+            userAgent = userAgent[..512];
+        }
+
+        var result = await pushSubscriptions
+            .UpsertAsync(request, string.IsNullOrWhiteSpace(userAgent) ? null : userAgent, cancellationToken)
+            .ConfigureAwait(false);
+        return result.IsSuccess
+            ? Results.Ok(result.Value)
+            : ToPushProblem(httpContext, result.ErrorCode!, localizer);
+    }
+
+    private static async Task<IResult> DeletePushSubscriptionAsync(
+        Guid id,
+        HttpContext httpContext,
+        IPushSubscriptionService pushSubscriptions,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await pushSubscriptions.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess
+            ? Results.NoContent()
+            : ToPushProblem(httpContext, result.ErrorCode!, localizer);
+    }
+
+    private static async Task<IResult> SendPushTestAsync(
+        HttpContext httpContext,
+        IPushSubscriptionService pushSubscriptions,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await pushSubscriptions.SendTestAsync(cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess
+            ? Results.NoContent()
+            : ToPushProblem(httpContext, result.ErrorCode!, localizer);
+    }
+
+    private static IResult ToPushProblem(HttpContext httpContext, string code, IErrorLocalizer localizer)
+    {
+        var status = code switch
+        {
+            ErrorCodes.NotificationsPushNotConfigured => StatusCodes.Status503ServiceUnavailable,
+            ErrorCodes.NotificationsPushSubscriptionNotFound => StatusCodes.Status404NotFound,
+            ErrorCodes.NotificationsPushLimitExceeded => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest,
+        };
+        return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));
     }
 
     private static async Task<IResult> GetSignInMethodsAsync(
@@ -155,6 +262,13 @@ public static class MeEndpoints
         var perms = await permissions.GetPermissionsAsync(tenantId, userId, cancellationToken).ConfigureAwait(false);
         var logoUrl = tenant.LogoFileId is null ? null : $"/api/v1/files/{tenant.LogoFileId:D}";
 
+        var photoFileId = await db.Employees.AsNoTracking()
+            .Where(e => e.UserId == userId)
+            .Select(e => e.PhotoFileId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var photoUrl = photoFileId is null ? null : $"/api/v1/files/{photoFileId.Value:D}";
+
         var now = DateTimeOffset.UtcNow;
         var inviteTeamDone = await db.Users.AsNoTracking()
                 .AnyAsync(u => u.Id != userId, cancellationToken)
@@ -177,6 +291,7 @@ public static class MeEndpoints
             user.FullName,
             user.Email,
             user.PreferredLanguage,
+            photoUrl,
             roles,
             perms,
             new MeTenant(tenant.Id, tenant.Name, tenant.Slug, logoUrl),
@@ -190,6 +305,7 @@ public sealed record MeResponse(
     string FullName,
     string Email,
     string Language,
+    string? PhotoUrl,
     IReadOnlyList<string> Roles,
     IReadOnlyList<string> Permissions,
     MeTenant Tenant,

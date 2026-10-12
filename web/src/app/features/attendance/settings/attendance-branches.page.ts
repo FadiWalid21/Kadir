@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,8 +13,6 @@ import { ButtonComponent } from '../../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton.component';
-import { AttendanceSubnavComponent } from '../attendance-subnav.component';
-import { AttendanceSettingsSubnavComponent } from './attendance-settings-subnav.component';
 import { BranchLocationDrawerComponent } from './branch-location-drawer.component';
 
 type PageState = 'loading' | 'ready' | 'error';
@@ -22,9 +21,8 @@ type PageState = 'loading' | 'ready' | 'error';
   selector: 'kadr-attendance-branches-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DecimalPipe,
     TranslocoPipe,
-    AttendanceSubnavComponent,
-    AttendanceSettingsSubnavComponent,
     ButtonComponent,
     EmptyStateComponent,
     NetworkErrorComponent,
@@ -32,8 +30,6 @@ type PageState = 'loading' | 'ready' | 'error';
     BranchLocationDrawerComponent,
   ],
   template: `
-    <kadr-attendance-subnav active="settings" />
-    <kadr-attendance-settings-subnav active="branches" />
 
     <header class="mb-6 text-start">
       <h1 class="text-2xl font-bold text-fg">{{ 'attendance.settings.branchesTitle' | transloco }}</h1>
@@ -41,7 +37,10 @@ type PageState = 'loading' | 'ready' | 'error';
     </header>
 
     @if (state() === 'loading') {
-      <kadr-skeleton height="12rem" />
+      <div class="flex flex-col gap-2">
+        <kadr-skeleton height="4.5rem" />
+        <kadr-skeleton height="4.5rem" />
+      </div>
     } @else if (state() === 'error') {
       <kadr-network-error
         [title]="'attendance.settings.loadErrorTitle' | transloco"
@@ -54,17 +53,27 @@ type PageState = 'loading' | 'ready' | 'error';
         [description]="'attendance.settings.branchesEmptyBody' | transloco"
       />
     } @else {
-      <ul class="flex flex-col gap-2">
+      <ul class="grid gap-3 md:grid-cols-2">
         @for (b of branches(); track b.branchId) {
           <li
-            class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-start shadow-sm"
+            class="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-start shadow-sm sm:flex-row sm:items-center sm:justify-between"
           >
-            <div>
+            <div class="min-w-0">
               <p class="text-sm font-medium text-fg">{{ b.name }}</p>
-              <p class="text-xs text-fg-muted">
+              <p class="mt-1 text-xs text-fg-muted">
                 @if (b.isConfigured) {
-                  {{ 'attendance.settings.configured' | transloco }} ·
-                  {{ b.geofenceRadiusMeters }}m · {{ b.outOfRangePolicy }}
+                  <span class="text-success">{{ 'attendance.settings.configured' | transloco }}</span>
+                  · {{ b.geofenceRadiusMeters }}m ·
+                  {{
+                    b.outOfRangePolicy === 'AllowWithReason'
+                      ? ('attendance.settings.policyAllow' | transloco)
+                      : ('attendance.settings.policyBlock' | transloco)
+                  }}
+                  @if (b.latitude !== null && b.longitude !== null) {
+                    <span class="mt-1 block tabular-nums" dir="ltr">
+                      {{ b.latitude | number: '1.4-4' }}, {{ b.longitude | number: '1.4-4' }}
+                    </span>
+                  }
                 } @else {
                   {{ 'attendance.settings.notConfigured' | transloco }}
                 }

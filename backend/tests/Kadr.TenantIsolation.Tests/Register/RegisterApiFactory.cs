@@ -4,6 +4,7 @@ using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Time;
 using Kadr.Testing.Support.Email;
+using Kadr.Testing.Support.Push;
 using Kadr.Testing.Support.Time;
 using Kadr.TenantIsolation.Tests.Auth;
 using Microsoft.AspNetCore.Hosting;
@@ -27,6 +28,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         .Build();
 
     public CapturingEmailSender Emails { get; } = new();
+    public CapturingPushNotificationSender Push { get; } = new();
     public FakeClock Clock { get; } = new();
 
     public async Task InitializeAsync() => await _container.StartAsync();
@@ -52,6 +54,8 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("RateLimiting:ForgotPermitLimit", "1000");
         builder.UseSetting("RateLimiting:ResetPermitLimit", "1000");
         builder.UseSetting("RateLimiting:MeSecurityPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:MePushPermitLimit", "1000");
+        builder.UseSetting("RateLimiting:MePushTestPermitLimit", "1000");
         builder.UseSetting("RateLimiting:AttendancePunchPermitLimit", "1000");
         builder.UseSetting("PasswordReset:EmailPermitLimit", "1000");
         builder.UseSetting("Google:ClientId", TestGoogleClientId);
@@ -61,11 +65,17 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("PlatformAdmin:Email", "operator@kadr.test");
         builder.UseSetting("PlatformAdmin:Password", "PlatformOwner!!99");
         builder.UseSetting("PlatformAdmin:FullName", "Test Operator");
+        builder.UseSetting("WebPush:Enabled", "true");
+        builder.UseSetting("WebPush:VapidPublicKey", "BTestPublicKeyForUnitTestsOnlyNotReal");
+        builder.UseSetting("WebPush:VapidPrivateKey", "TestPrivateKeyForUnitTestsOnlyNotReal");
+        builder.UseSetting("WebPush:Subject", "mailto:security@kadr.test");
         builder.UseEnvironment("Testing");
         builder.ConfigureServices(services =>
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+            services.RemoveAll<IPushNotificationSender>();
+            services.AddSingleton<IPushNotificationSender>(Push);
             // Replaceable per test class via WithWebHostBuilder; the default accepts the unsigned test credentials.
             services.RemoveAll<IGoogleIdTokenValidator>();
             services.AddSingleton<IGoogleIdTokenValidator, FakeGoogleIdTokenValidator>();
@@ -77,6 +87,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
     public async Task ResetDatabaseAsync()
     {
         Emails.Clear();
+        Push.Clear();
         Clock.UtcNow = DateTimeOffset.UtcNow;
 
         using var scope = Services.CreateScope();

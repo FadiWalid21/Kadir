@@ -29,6 +29,17 @@ public static class PermissionCodes
     public const string AttendanceManage = "attendance.manage";
     public const string AttendanceEdit = "attendance.edit";
     public const string AttendanceReports = "attendance.reports";
+    public const string LeaveReadOwn = "leave.read.own";
+    public const string LeaveRequest = "leave.request";
+    public const string LeaveReadTeam = "leave.read.team";
+    public const string LeaveReadAll = "leave.read.all";
+    public const string LeaveManage = "leave.manage";
+    public const string LeaveApprove = "leave.approve";
+    public const string WorkflowsManage = "workflows.manage";
+    public const string NotificationsRead = "notifications.read";
+    public const string NotificationsManagePrefs = "notifications.manage_prefs";
+    public const string ReportsRead = "reports.read";
+    public const string ReportsExport = "reports.export";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -59,5 +70,16 @@ public static class PermissionCodes
         AttendanceManage,
         AttendanceEdit,
         AttendanceReports,
+        LeaveReadOwn,
+        LeaveRequest,
+        LeaveReadTeam,
+        LeaveReadAll,
+        LeaveManage,
+        LeaveApprove,
+        WorkflowsManage,
+        NotificationsRead,
+        NotificationsManagePrefs,
+        ReportsRead,
+        ReportsExport,
     ];
 }

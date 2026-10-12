@@ -172,12 +172,11 @@ public sealed class Employee : AggregateRoot, ITenantOwned, IAuditable
 
     private void RefreshSearchName()
     {
-        SearchName = string.Join(
+        SearchName = Kadr.SharedKernel.Text.ArabicText.NormalizeForSearch(
+            string.Join(
                 ' ',
                 new[] { FullNameAr, FullNameEn, EmployeeNumber, Phone, NationalId, Email }
-                    .Where(s => !string.IsNullOrWhiteSpace(s)))
-            .Trim()
-            .ToLowerInvariant();
+                    .Where(s => !string.IsNullOrWhiteSpace(s))));
     }
 
     private void Touch() => UpdatedAt = DateTimeOffset.UtcNow;

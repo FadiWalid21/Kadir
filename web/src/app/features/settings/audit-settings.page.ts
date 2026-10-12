@@ -31,7 +31,6 @@ import {
   parseDevice,
   parseJsonRecord,
 } from './audit-format';
-import { SettingsSubnavComponent } from './settings-subnav.component';
 
 type PageState = 'loading' | 'ready' | 'error' | 'forbidden';
 type DatePreset = 'today' | '7d' | '30d' | 'custom';
@@ -43,7 +42,6 @@ type DatePreset = 'today' | '7d' | '30d' | 'custom';
     FormsModule,
     RouterLink,
     TranslocoPipe,
-    SettingsSubnavComponent,
     ButtonComponent,
     BadgeComponent,
     SkeletonComponent,
@@ -64,7 +62,6 @@ type DatePreset = 'today' | '7d' | '30d' | 'custom';
       </kadr-empty-state>
     } @else if (state() === 'loading' && items().length === 0) {
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
-        <kadr-settings-subnav active="audit" />
         <kadr-skeleton height="2.5rem" width="50%" />
         <kadr-skeleton height="6rem" />
         <div class="flex flex-col gap-2" role="status" [attr.aria-label]="'ui.loading' | transloco">
@@ -84,7 +81,6 @@ type DatePreset = 'today' | '7d' | '30d' | 'custom';
       </kadr-empty-state>
     } @else {
       <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <kadr-settings-subnav active="audit" />
 
         <header class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="text-start">

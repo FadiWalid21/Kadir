@@ -50,40 +50,52 @@ type CardUi =
   ],
   template: `
     @if (ui() === 'skeleton') {
-      <div class="flex flex-col gap-3" role="status" [attr.aria-label]="'ui.loading' | transloco">
-        <kadr-skeleton height="1.5rem" width="40%" />
-        <kadr-skeleton height="3rem" />
-        <kadr-skeleton height="2.75rem" width="50%" />
+      <div
+        class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4"
+        role="status"
+        [attr.aria-label]="'ui.loading' | transloco"
+      >
+        <kadr-skeleton height="1.25rem" width="45%" />
+        <kadr-skeleton height="3.5rem" />
+        <kadr-skeleton height="2.75rem" />
       </div>
     } @else if (ui() === 'offline') {
-      <p class="text-sm text-fg-2">{{ 'attendance.card.offline' | transloco }}</p>
+      <p class="rounded-lg border border-line bg-warning-soft p-4 text-sm text-fg">
+        {{ 'attendance.card.offline' | transloco }}
+      </p>
     } @else if (ui() === 'noEmployee') {
-      <p class="text-sm text-fg-2">{{ 'attendance.card.noEmployee' | transloco }}</p>
+      <p class="rounded-lg border border-line bg-app p-4 text-sm text-fg-2">
+        {{ 'attendance.card.noEmployee' | transloco }}
+      </p>
     } @else if (ui() === 'error') {
-      <div class="flex flex-col gap-3 text-start">
+      <div class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4 text-start">
         <p class="text-sm text-fg-2">{{ 'attendance.card.loadError' | transloco }}</p>
         <kadr-button variant="secondary" type="button" (click)="reload()">
           {{ 'pwa.offline.retry' | transloco }}
         </kadr-button>
       </div>
     } @else if (ui() === 'holiday' || ui() === 'weekend' || ui() === 'noShift') {
-      <div class="flex flex-col gap-2 text-start">
+      <div class="flex flex-col gap-2 rounded-lg border border-line bg-app p-4 text-start">
         <p class="text-sm font-medium text-fg">{{ dayKindLabel() }}</p>
         <p class="text-sm text-fg-2">{{ 'attendance.card.nonWorkdayHint' | transloco }}</p>
       </div>
     } @else if (ui() === 'branchMissing') {
-      <p class="text-sm text-fg-2">{{ 'attendance.card.branchMissing' | transloco }}</p>
+      <p class="rounded-lg border border-line bg-app p-4 text-sm text-fg-2">
+        {{ 'attendance.card.branchMissing' | transloco }}
+      </p>
     } @else if (ui() === 'permission') {
-      <div class="flex flex-col gap-3 text-start">
+      <div class="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-start shadow-sm">
         <p class="text-sm text-fg-2">{{ 'attendance.card.permissionExplain' | transloco }}</p>
         <kadr-button variant="primary" type="button" (click)="onPunch()">
           {{ punchLabel() }}
         </kadr-button>
       </div>
     } @else if (ui() === 'denied') {
-      <p class="text-sm text-fg-2">{{ 'attendance.card.permissionDenied' | transloco }}</p>
+      <p class="rounded-lg border border-line bg-danger-soft p-4 text-sm text-fg">
+        {{ 'attendance.card.permissionDenied' | transloco }}
+      </p>
     } @else if (ui() === 'complete') {
-      <div class="flex flex-col gap-2 text-start">
+      <div class="flex flex-col gap-2 rounded-lg border border-line bg-success-soft p-4 text-start">
         <div class="flex items-center gap-2">
           <kadr-icon name="check" size="sm" class="text-success" />
           <p class="text-sm font-medium text-fg">{{ 'attendance.card.dayComplete' | transloco }}</p>
@@ -91,25 +103,64 @@ type CardUi =
         <p class="text-sm text-fg-2">{{ workedSummary() }}</p>
       </div>
     } @else if (ui() === 'clockedIn' || ui() === 'locating' || ui() === 'ready' || ui() === 'outside' || ui() === 'earlyOut') {
-      <div class="flex flex-col gap-3 text-start">
+      <div class="flex flex-col gap-4 rounded-lg border border-line bg-surface p-4 text-start shadow-sm sm:p-5">
+        @if (ui() === 'clockedIn' || ui() === 'outside') {
+          <div
+            class="flex items-center gap-2 rounded-md px-3 py-2 text-sm"
+            [class.bg-success-soft]="ui() !== 'outside'"
+            [class.text-success]="ui() !== 'outside'"
+            [class.bg-warning-soft]="ui() === 'outside'"
+            [class.text-warning]="ui() === 'outside'"
+            role="status"
+          >
+            <kadr-icon name="info" size="sm" />
+            <span>{{
+              (ui() === 'outside' ? 'attendance.card.outOfRangeHint' : 'attendance.card.inRange')
+                | transloco
+            }}</span>
+          </div>
+        }
+
+        @if (today()?.branch?.name) {
+          <p class="text-xs text-fg-muted">
+            {{ 'attendance.card.branchLabel' | transloco }}:
+            <span class="font-medium text-fg">{{ today()!.branch.name }}</span>
+          </p>
+        }
+
         @if (shiftLine()) {
           <p class="text-sm text-fg-2">{{ shiftLine() }}</p>
         }
+
         @if (ui() === 'clockedIn') {
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="text-2xl font-bold tabular-nums text-fg">{{ elapsedLabel() }}</p>
+          <div class="flex flex-col items-center gap-2 py-2">
+            <p class="text-3xl font-bold tabular-nums tracking-wide text-fg sm:text-4xl">
+              {{ elapsedLabel() }}
+            </p>
+            @if (today()?.openPunch; as punch) {
+              <p class="text-xs text-fg-muted">
+                {{ 'attendance.card.checkInAt' | transloco }}:
+                <span class="tabular-nums text-fg-2">{{ formatTime(punch.punchedAt) }}</span>
+              </p>
+            }
             @if ((today()?.lateMinutes ?? 0) > 0) {
-              <kadr-badge tone="warning" [label]="'attendance.card.lateChip' | transloco: { minutes: today()!.lateMinutes }" />
+              <kadr-badge
+                tone="warning"
+                [label]="'attendance.card.lateChip' | transloco: { minutes: today()!.lateMinutes }"
+              />
             }
           </div>
         }
-        @if (previewDistanceM() != null) {
+
+        @if (previewDistanceM() !== null) {
           <p class="text-xs text-fg-muted">
             {{ 'attendance.card.previewDistance' | transloco: { meters: previewDistanceM() } }}
           </p>
         }
+
         <kadr-button
-          variant="primary"
+          class="w-full"
+          [variant]="ui() === 'clockedIn' ? 'secondary' : 'primary'"
           type="button"
           [disabled]="ui() === 'locating' || offline.offline()"
           (click)="ui() === 'clockedIn' ? openEarlyOut() : onPunch()"
@@ -342,7 +393,7 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
   }
 
   private applyToday(data: AttendanceToday): void {
-    if (!data.branch.isConfigured) {
+    if (!data.canPunch && data.dayKind === 'Workday' && !data.branch.isConfigured) {
       this.ui.set('branchMissing');
       return;
     }
@@ -413,7 +464,7 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private formatTime(iso: string): string {
+  protected formatTime(iso: string): string {
     try {
       return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
     } catch {

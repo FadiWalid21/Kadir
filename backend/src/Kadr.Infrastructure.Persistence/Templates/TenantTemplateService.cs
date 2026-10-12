@@ -6,6 +6,7 @@ using Kadr.Platform.Domain.Templates;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Results;
 using Kadr.SharedKernel.Tenancy;
+using Kadr.SharedKernel.Text;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kadr.Infrastructure.Persistence.Templates;
@@ -137,6 +138,147 @@ public sealed class TenantTemplateService(
         };
     }
 
+    public async Task<Result<TemplateItemDto>> CreateShiftAsync(
+        UpdateShiftTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryParseTime(request.StartTime, out var start) || !TryParseTime(request.EndTime, out var end)
+            || request.GraceMinutes < 0
+            || string.IsNullOrWhiteSpace(request.NameAr)
+            || string.IsNullOrWhiteSpace(request.NameEn))
+        {
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateValidationFailed,
+                ErrorCodes.TemplateValidationFailed);
+        }
+
+        if (await HasDuplicateShiftNamesAsync(request.NameAr, request.NameEn, null, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
+        var tenantId = RequireTenantId();
+        var entity = Shift.CreateCustom(tenantId, request.NameAr, request.NameEn, start, end, request.GraceMinutes);
+        db.Shifts.Add(entity);
+        StageAudit("template.create", SectionShifts, entity.Id, null, JsonSerializer.Serialize(MapShift(entity)));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(MapShift(entity));
+    }
+
+    public async Task<Result<TemplateItemDto>> CreateLeaveTypeAsync(
+        UpdateLeaveTypeTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.NameAr) || string.IsNullOrWhiteSpace(request.NameEn)
+            || request.DaysPerYear is < 0)
+        {
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateValidationFailed,
+                ErrorCodes.TemplateValidationFailed);
+        }
+
+        if (await HasDuplicateLeaveTypeNamesAsync(request.NameAr, request.NameEn, null, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
+        var tenantId = RequireTenantId();
+        var entity = LeaveType.CreateCustom(
+            tenantId,
+            request.NameAr,
+            request.NameEn,
+            request.Paid,
+            request.DaysPerYear,
+            request.RequiresApproval,
+            request.RequiresAttachment);
+        db.LeaveTypes.Add(entity);
+        StageAudit("template.create", SectionLeaveTypes, entity.Id, null, JsonSerializer.Serialize(MapLeave(entity)));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(MapLeave(entity));
+    }
+
+    public async Task<Result<TemplateItemDto>> CreateDocumentTypeAsync(
+        UpdateDocumentTypeTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.NameAr) || string.IsNullOrWhiteSpace(request.NameEn))
+        {
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateValidationFailed,
+                ErrorCodes.TemplateValidationFailed);
+        }
+
+        if (await HasDuplicateDocumentTypeNamesAsync(request.NameAr, request.NameEn, null, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
+        var tenantId = RequireTenantId();
+        var entity = DocumentType.CreateCustom(
+            tenantId,
+            request.NameAr,
+            request.NameEn,
+            request.HasExpiry,
+            JsonSerializer.Serialize(request.AlertDays ?? []));
+        db.DocumentTypes.Add(entity);
+        StageAudit("template.create", SectionDocumentTypes, entity.Id, null, JsonSerializer.Serialize(MapDoc(entity)));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(MapDoc(entity));
+    }
+
+    public async Task<Result<TemplateItemDto>> CreateJobTitleAsync(
+        UpdateNamedTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.NameAr) || string.IsNullOrWhiteSpace(request.NameEn))
+        {
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateValidationFailed,
+                ErrorCodes.TemplateValidationFailed);
+        }
+
+        if (await HasDuplicateJobTitleNamesAsync(request.NameAr, request.NameEn, null, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
+        var tenantId = RequireTenantId();
+        var entity = JobTitle.CreateCustom(tenantId, request.NameAr, request.NameEn);
+        db.JobTitles.Add(entity);
+        StageAudit("template.create", SectionJobTitles, entity.Id, null, JsonSerializer.Serialize(MapJob(entity)));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(MapJob(entity));
+    }
+
+    public async Task<Result<TemplateItemDto>> CreateDepartmentAsync(
+        UpdateNamedTemplateRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.NameAr) || string.IsNullOrWhiteSpace(request.NameEn))
+        {
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateValidationFailed,
+                ErrorCodes.TemplateValidationFailed);
+        }
+
+        if (await HasDuplicateDepartmentNamesAsync(request.NameAr, request.NameEn, null, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
+        var tenantId = RequireTenantId();
+        var entity = Department.CreateCustom(tenantId, request.NameAr, request.NameEn);
+        db.Departments.Add(entity);
+        StageAudit("template.create", SectionDepartments, entity.Id, null, JsonSerializer.Serialize(MapDept(entity)));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(MapDept(entity));
+    }
+
     public async Task<Result<TemplateItemDto>> UpdateShiftAsync(
         Guid id,
         UpdateShiftTemplateRequest request,
@@ -157,6 +299,12 @@ public sealed class TenantTemplateService(
         if (entity is null)
         {
             return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        if (await HasDuplicateShiftNamesAsync(request.NameAr, request.NameEn, id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
         }
 
         var oldJson = JsonSerializer.Serialize(MapShift(entity));
@@ -184,6 +332,12 @@ public sealed class TenantTemplateService(
         if (entity is null)
         {
             return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        if (await HasDuplicateLeaveTypeNamesAsync(request.NameAr, request.NameEn, id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
         }
 
         var oldJson = JsonSerializer.Serialize(MapLeave(entity));
@@ -219,6 +373,12 @@ public sealed class TenantTemplateService(
             return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
         }
 
+        if (await HasDuplicateDocumentTypeNamesAsync(request.NameAr, request.NameEn, id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
         var oldJson = JsonSerializer.Serialize(MapDoc(entity));
         entity.Update(
             request.NameAr,
@@ -249,6 +409,12 @@ public sealed class TenantTemplateService(
             return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
         }
 
+        if (await HasDuplicateJobTitleNamesAsync(request.NameAr, request.NameEn, id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
+        }
+
         var oldJson = JsonSerializer.Serialize(MapJob(entity));
         entity.Update(request.NameAr, request.NameEn);
         StageAudit("template.update", SectionJobTitles, entity.Id, oldJson, JsonSerializer.Serialize(MapJob(entity)));
@@ -273,6 +439,12 @@ public sealed class TenantTemplateService(
         if (entity is null)
         {
             return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        if (await HasDuplicateDepartmentNamesAsync(request.NameAr, request.NameEn, id, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateDuplicateName, ErrorCodes.TemplateDuplicateName);
         }
 
         var oldJson = JsonSerializer.Serialize(MapDept(entity));
@@ -410,6 +582,26 @@ public sealed class TenantTemplateService(
         return Result.Success(dto!);
     }
 
+    public async Task<Result> DeleteAsync(
+        string section,
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsValidSection(section))
+        {
+            return Result.Failure(ErrorCodes.TemplateSectionInvalid, ErrorCodes.TemplateSectionInvalid);
+        }
+
+        return section switch
+        {
+            SectionShifts => await DeleteShiftAsync(id, cancellationToken).ConfigureAwait(false),
+            SectionLeaveTypes => await DeleteLeaveTypeAsync(id, cancellationToken).ConfigureAwait(false),
+            SectionDocumentTypes => await DeleteDocumentTypeAsync(id, cancellationToken).ConfigureAwait(false),
+            SectionJobTitles => await DeleteJobTitleAsync(id, cancellationToken).ConfigureAwait(false),
+            _ => await DeleteDepartmentAsync(id, cancellationToken).ConfigureAwait(false),
+        };
+    }
+
     public async Task<Result<AddMissingResultDto>> AddMissingAsync(CancellationToken cancellationToken = default)
     {
         var tenant = await GetTenantAsync(cancellationToken).ConfigureAwait(false);
@@ -450,7 +642,9 @@ public sealed class TenantTemplateService(
 
         if (string.IsNullOrWhiteSpace(entity.SourceKey))
         {
-            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateSourceMissing, ErrorCodes.TemplateSourceMissing);
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateResetNotAvailable,
+                ErrorCodes.TemplateResetNotAvailable);
         }
 
         var seedItem = await FindSeedShiftAsync(entity.SourceKey, entity.SourceVersion, cancellationToken)
@@ -483,7 +677,9 @@ public sealed class TenantTemplateService(
 
         if (string.IsNullOrWhiteSpace(entity.SourceKey))
         {
-            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateSourceMissing, ErrorCodes.TemplateSourceMissing);
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateResetNotAvailable,
+                ErrorCodes.TemplateResetNotAvailable);
         }
 
         var seedItem = await FindSeedLeaveAsync(entity.SourceKey, entity.SourceVersion, cancellationToken)
@@ -519,7 +715,9 @@ public sealed class TenantTemplateService(
 
         if (string.IsNullOrWhiteSpace(entity.SourceKey))
         {
-            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateSourceMissing, ErrorCodes.TemplateSourceMissing);
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateResetNotAvailable,
+                ErrorCodes.TemplateResetNotAvailable);
         }
 
         var seedItem = await FindSeedDocAsync(entity.SourceKey, entity.SourceVersion, cancellationToken)
@@ -551,7 +749,9 @@ public sealed class TenantTemplateService(
 
         if (string.IsNullOrWhiteSpace(entity.SourceKey))
         {
-            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateSourceMissing, ErrorCodes.TemplateSourceMissing);
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateResetNotAvailable,
+                ErrorCodes.TemplateResetNotAvailable);
         }
 
         var seedItem = await FindSeedNamedAsync(entity.SourceKey, entity.SourceVersion, "jobTitles", cancellationToken)
@@ -578,7 +778,9 @@ public sealed class TenantTemplateService(
 
         if (string.IsNullOrWhiteSpace(entity.SourceKey))
         {
-            return Result.Failure<TemplateItemDto>(ErrorCodes.TemplateSourceMissing, ErrorCodes.TemplateSourceMissing);
+            return Result.Failure<TemplateItemDto>(
+                ErrorCodes.TemplateResetNotAvailable,
+                ErrorCodes.TemplateResetNotAvailable);
         }
 
         var seedItem = await FindSeedNamedAsync(entity.SourceKey, entity.SourceVersion, "departments", cancellationToken)
@@ -593,6 +795,249 @@ public sealed class TenantTemplateService(
         StageAudit("template.reset", SectionDepartments, entity.Id, oldJson, JsonSerializer.Serialize(MapDept(entity)));
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success(MapDept(entity));
+    }
+
+    private async Task<Result> DeleteShiftAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await db.Shifts.SingleOrDefaultAsync(x => x.Id == id, cancellationToken).ConfigureAwait(false);
+        if (entity is null)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        var inUse =
+            await db.ShiftAssignments.AsNoTracking().AnyAsync(x => x.ShiftId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.AttendancePunches.AsNoTracking().AnyAsync(x => x.ShiftId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.AttendanceDaySummaries.AsNoTracking().AnyAsync(x => x.ShiftId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await IsDefaultShiftSettingAsync(id, cancellationToken).ConfigureAwait(false);
+        if (inUse)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemInUse, ErrorCodes.TemplateItemInUse);
+        }
+
+        var oldJson = JsonSerializer.Serialize(MapShift(entity));
+        db.Shifts.Remove(entity);
+        StageAudit("template.delete", SectionShifts, id, oldJson, null);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    private async Task<Result> DeleteLeaveTypeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await db.LeaveTypes.SingleOrDefaultAsync(x => x.Id == id, cancellationToken).ConfigureAwait(false);
+        if (entity is null)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        var inUse =
+            await db.LeaveRequests.AsNoTracking().AnyAsync(x => x.LeaveTypeId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.LeaveBalances.AsNoTracking().AnyAsync(x => x.LeaveTypeId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.LeaveBalanceAdjustments.AsNoTracking().AnyAsync(x => x.LeaveTypeId == id, cancellationToken)
+                .ConfigureAwait(false);
+        if (inUse)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemInUse, ErrorCodes.TemplateItemInUse);
+        }
+
+        var oldJson = JsonSerializer.Serialize(MapLeave(entity));
+        db.LeaveTypes.Remove(entity);
+        StageAudit("template.delete", SectionLeaveTypes, id, oldJson, null);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    private async Task<Result> DeleteDocumentTypeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await db.DocumentTypes.SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (entity is null)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        var inUse = await db.EmployeeDocuments.AsNoTracking()
+            .AnyAsync(x => x.DocumentTypeId == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (inUse)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemInUse, ErrorCodes.TemplateItemInUse);
+        }
+
+        var oldJson = JsonSerializer.Serialize(MapDoc(entity));
+        db.DocumentTypes.Remove(entity);
+        StageAudit("template.delete", SectionDocumentTypes, id, oldJson, null);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    private async Task<Result> DeleteJobTitleAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await db.JobTitles.SingleOrDefaultAsync(x => x.Id == id, cancellationToken).ConfigureAwait(false);
+        if (entity is null)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        var inUse = await db.Employees.AsNoTracking()
+            .AnyAsync(x => x.JobTitleId == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (inUse)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemInUse, ErrorCodes.TemplateItemInUse);
+        }
+
+        var oldJson = JsonSerializer.Serialize(MapJob(entity));
+        db.JobTitles.Remove(entity);
+        StageAudit("template.delete", SectionJobTitles, id, oldJson, null);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    private async Task<Result> DeleteDepartmentAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var entity = await db.Departments.SingleOrDefaultAsync(x => x.Id == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (entity is null)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemNotFound, ErrorCodes.TemplateItemNotFound);
+        }
+
+        var inUse =
+            await db.Employees.AsNoTracking().AnyAsync(x => x.DepartmentId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.WorkLocationAssignments.AsNoTracking()
+                .AnyAsync(x => x.DepartmentId == id, cancellationToken)
+                .ConfigureAwait(false)
+            || await db.Departments.AsNoTracking().AnyAsync(x => x.ParentId == id, cancellationToken)
+                .ConfigureAwait(false);
+        if (inUse)
+        {
+            return Result.Failure(ErrorCodes.TemplateItemInUse, ErrorCodes.TemplateItemInUse);
+        }
+
+        var oldJson = JsonSerializer.Serialize(MapDept(entity));
+        db.Departments.Remove(entity);
+        StageAudit("template.delete", SectionDepartments, id, oldJson, null);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    private async Task<bool> IsDefaultShiftSettingAsync(Guid shiftId, CancellationToken cancellationToken)
+    {
+        var raw = await db.TenantSettings.AsNoTracking()
+            .Where(x => x.Key == SettingKeys.AttendanceDefaultShiftId)
+            .Select(x => x.ValueJson)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return false;
+        }
+
+        try
+        {
+            var configured = JsonSerializer.Deserialize<Guid>(raw, JsonOptions);
+            return configured == shiftId;
+        }
+        catch
+        {
+            return Guid.TryParse(raw.Trim().Trim('"'), out var parsed) && parsed == shiftId;
+        }
+    }
+
+    private Guid RequireTenantId()
+    {
+        if (tenantContext.TenantId is null)
+        {
+            throw new InvalidOperationException("Tenant context is required.");
+        }
+
+        return tenantContext.TenantId.Value;
+    }
+
+    private async Task<bool> HasDuplicateShiftNamesAsync(
+        string nameAr,
+        string nameEn,
+        Guid? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.Shifts.AsNoTracking()
+            .Select(x => new { x.Id, x.NameAr, x.NameEn })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return NamesConflict(rows.Select(x => (x.Id, x.NameAr, x.NameEn)), nameAr, nameEn, excludeId);
+    }
+
+    private async Task<bool> HasDuplicateLeaveTypeNamesAsync(
+        string nameAr,
+        string nameEn,
+        Guid? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.LeaveTypes.AsNoTracking()
+            .Select(x => new { x.Id, x.NameAr, x.NameEn })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return NamesConflict(rows.Select(x => (x.Id, x.NameAr, x.NameEn)), nameAr, nameEn, excludeId);
+    }
+
+    private async Task<bool> HasDuplicateDocumentTypeNamesAsync(
+        string nameAr,
+        string nameEn,
+        Guid? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.DocumentTypes.AsNoTracking()
+            .Select(x => new { x.Id, x.NameAr, x.NameEn })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return NamesConflict(rows.Select(x => (x.Id, x.NameAr, x.NameEn)), nameAr, nameEn, excludeId);
+    }
+
+    private async Task<bool> HasDuplicateJobTitleNamesAsync(
+        string nameAr,
+        string nameEn,
+        Guid? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.JobTitles.AsNoTracking()
+            .Select(x => new { x.Id, x.NameAr, x.NameEn })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return NamesConflict(rows.Select(x => (x.Id, x.NameAr, x.NameEn)), nameAr, nameEn, excludeId);
+    }
+
+    private async Task<bool> HasDuplicateDepartmentNamesAsync(
+        string nameAr,
+        string nameEn,
+        Guid? excludeId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await db.Departments.AsNoTracking()
+            .Select(x => new { x.Id, x.NameAr, x.NameEn })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return NamesConflict(rows.Select(x => (x.Id, x.NameAr, x.NameEn)), nameAr, nameEn, excludeId);
+    }
+
+    private static bool NamesConflict(
+        IEnumerable<(Guid Id, string NameAr, string NameEn)> rows,
+        string nameAr,
+        string nameEn,
+        Guid? excludeId)
+    {
+        var nameArNorm = ArabicText.NormalizeForSearch(nameAr);
+        var nameEnNorm = ArabicText.NormalizeForSearch(nameEn);
+        return rows.Any(x =>
+            (excludeId is null || x.Id != excludeId)
+            && (ArabicText.NormalizeForSearch(x.NameAr) == nameArNorm
+                || ArabicText.NormalizeForSearch(x.NameEn) == nameEnNorm));
     }
 
     private void StageAudit(

@@ -65,13 +65,38 @@ body {
   height: var(--row-height);
 }
 
+.h-install-banner {
+  min-height: var(--install-banner-height);
+}
+
+.kadr-install-banner-collapse {
+  display: grid;
+  transition-property: grid-template-rows;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.kadr-install-banner-collapse.is-open {
+  grid-template-rows: 1fr;
+}
+
+.kadr-install-banner-collapse.is-closed {
+  grid-template-rows: 0fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kadr-install-banner-collapse {
+    transition-duration: 0.01ms;
+  }
+}
+
 .rtl-flip {
   transform: scaleX(1);
 }
 
 /* PWA / standalone safe areas (UX-08) */
 .kadr-safe-top {
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--safe-area-top);
 }
 
 .kadr-safe-bottom {

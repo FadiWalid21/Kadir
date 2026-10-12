@@ -14,6 +14,7 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'chevrons'
+  | 'more-horizontal'
   | 'user'
   | 'check'
   | 'shield'
@@ -126,6 +127,11 @@ export type IconName =
         }
         @case ('chevrons') {
           <path d="m15 18-6-6 6-6" />
+        }
+        @case ('more-horizontal') {
+          <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+          <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
         }
         @case ('user') {
           <circle cx="12" cy="8" r="4" />

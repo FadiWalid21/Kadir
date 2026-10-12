@@ -21,7 +21,6 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { TableComponent, TableColumn } from '../../shared/ui/table/table.component';
 import { TabsComponent, TabItem } from '../../shared/ui/tabs/tabs.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
-import { SettingsSubnavComponent } from './settings-subnav.component';
 import { TemplatesStore } from './templates.store';
 
 @Component({
@@ -31,7 +30,6 @@ import { TemplatesStore } from './templates.store';
   imports: [
     FormsModule,
     TranslocoPipe,
-    SettingsSubnavComponent,
     TabsComponent,
     TableComponent,
     DrawerComponent,
@@ -43,7 +41,6 @@ import { TemplatesStore } from './templates.store';
   ],
   template: `
     <div class="mx-auto flex w-full max-w-5xl flex-col gap-5">
-      <kadr-settings-subnav active="templates" [showTemplates]="canManagePerm()" />
 
       <header class="flex flex-col gap-2 text-start">
         <h1 class="text-2xl font-bold leading-tight text-fg">
@@ -104,7 +101,7 @@ import { TemplatesStore } from './templates.store';
           (activeChange)="onTabChange($event)"
         />
 
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div class="min-w-0 flex-1">
             <kadr-input
               [label]="'settings.templates.search' | transloco"
@@ -112,6 +109,11 @@ import { TemplatesStore } from './templates.store';
               (valueChange)="onSearch($event)"
             />
           </div>
+          @if (canManage()) {
+            <kadr-button variant="primary" type="button" (click)="openCreate()">
+              {{ 'settings.templates.add' | transloco }}
+            </kadr-button>
+          }
         </div>
 
         @if (store.listState() === 'loading') {
@@ -125,7 +127,13 @@ import { TemplatesStore } from './templates.store';
           <kadr-empty-state
             [title]="'settings.templates.emptyTitle' | transloco"
             [description]="'settings.templates.emptyBody' | transloco"
-          />
+          >
+            @if (canManage()) {
+              <kadr-button variant="primary" type="button" (click)="openCreate()">
+                {{ 'settings.templates.add' | transloco }}
+              </kadr-button>
+            }
+          </kadr-empty-state>
         } @else {
           <kadr-table [columns]="columns()">
             @for (item of store.items(); track item.id) {
@@ -140,7 +148,9 @@ import { TemplatesStore } from './templates.store';
                   </button>
                 </td>
                 <td class="px-3 py-2.5">
-                  @if (item.isCustomized) {
+                  @if (!item.sourceKey) {
+                    <kadr-badge tone="accent" [label]="'settings.templates.custom' | transloco" />
+                  } @else if (item.isCustomized) {
                     <kadr-badge tone="accent" [label]="'settings.templates.customized' | transloco" />
                   } @else {
                     <span class="text-xs text-fg-muted">{{ 'settings.templates.default' | transloco }}</span>
@@ -163,7 +173,7 @@ import { TemplatesStore } from './templates.store';
                     <kadr-button variant="ghost" size="sm" type="button" (click)="openItem(item)">
                       {{ 'settings.templates.edit' | transloco }}
                     </kadr-button>
-                    @if (item.isCustomized && canManage()) {
+                    @if (item.sourceKey && item.isCustomized && canManage()) {
                       <kadr-button
                         variant="danger-soft"
                         size="sm"
@@ -172,6 +182,17 @@ import { TemplatesStore } from './templates.store';
                         (click)="onReset(item)"
                       >
                         {{ 'settings.templates.reset' | transloco }}
+                      </kadr-button>
+                    }
+                    @if (canManage()) {
+                      <kadr-button
+                        variant="danger-soft"
+                        size="sm"
+                        type="button"
+                        [disabled]="store.busy()"
+                        (click)="onDelete(item)"
+                      >
+                        {{ 'settings.templates.delete' | transloco }}
                       </kadr-button>
                     }
                   </div>
@@ -185,7 +206,7 @@ import { TemplatesStore } from './templates.store';
 
     <kadr-drawer
       [open]="!!store.drawerItem()"
-      [title]="'settings.templates.editTitle' | transloco"
+      [title]="(store.isCreateMode() ? 'settings.templates.addTitle' : 'settings.templates.editTitle') | transloco"
       [closeLabel]="'ui.cancel' | transloco"
       [hasFooter]="false"
       (closed)="store.closeDrawer()"
@@ -236,6 +257,11 @@ import { TemplatesStore } from './templates.store';
               <input type="checkbox" class="size-4" [checked]="editHasExpiry()" (change)="editHasExpiry.set($any($event.target).checked)" />
               {{ 'settings.templates.hasExpiry' | transloco }}
             </label>
+            <kadr-input
+              [label]="'settings.templates.alertDays' | transloco"
+              [value]="editAlertDays()"
+              (valueChange)="editAlertDays.set($event)"
+            />
           }
           <div class="mt-2 flex flex-wrap justify-end gap-2">
             <kadr-button variant="secondary" type="button" (click)="store.closeDrawer()">
@@ -274,6 +300,7 @@ export class TemplatesSettingsPage implements OnInit {
   protected readonly editPaid = signal(true);
   protected readonly editDays = signal('');
   protected readonly editHasExpiry = signal(false);
+  protected readonly editAlertDays = signal('');
 
   protected readonly tabItems = computed<TabItem[]>(() => [
     { id: 'shifts', label: this.transloco.translate('settings.templates.tabs.shifts') },
@@ -302,6 +329,19 @@ export class TemplatesSettingsPage implements OnInit {
     void this.reload();
   }
 
+  openCreate(): void {
+    this.editNameAr.set('');
+    this.editNameEn.set('');
+    this.editStart.set('09:00');
+    this.editEnd.set('17:00');
+    this.editGrace.set('15');
+    this.editPaid.set(true);
+    this.editDays.set('');
+    this.editHasExpiry.set(false);
+    this.editAlertDays.set('');
+    this.store.openCreateDrawer();
+  }
+
   openItem(item: TemplateItem): void {
     this.editNameAr.set(item.nameAr);
     this.editNameEn.set(item.nameEn);
@@ -312,6 +352,10 @@ export class TemplatesSettingsPage implements OnInit {
     const days = item.fields['daysPerYear'];
     this.editDays.set(days === null || days === undefined ? '' : String(days));
     this.editHasExpiry.set(Boolean(item.fields['hasExpiry'] ?? false));
+    const alerts = item.fields['alertDays'];
+    this.editAlertDays.set(
+      Array.isArray(alerts) ? alerts.map(String).join(', ') : '',
+    );
     this.store.openDrawer(item);
   }
 
@@ -365,6 +409,34 @@ export class TemplatesSettingsPage implements OnInit {
     );
   }
 
+  async onDelete(item: TemplateItem): Promise<void> {
+    if (!confirm(this.transloco.translate('settings.templates.deleteConfirm'))) {
+      return;
+    }
+    const ok = await this.store.deleteItem(item);
+    if (ok) {
+      this.toast.show(this.transloco.translate('settings.templates.toastDeleted'), 'success');
+      return;
+    }
+    const err = this.store.lastError();
+    if (err?.kind === 'in_use') {
+      const disable = confirm(this.transloco.translate('settings.templates.deleteInUseOffer'));
+      if (disable && item.isActive) {
+        const disabled = await this.store.toggleActive(item, false);
+        this.toast.show(
+          this.transloco.translate(
+            disabled ? 'settings.templates.toastDisabled' : 'settings.templates.toastFail',
+          ),
+          disabled ? 'success' : 'danger',
+        );
+      } else {
+        this.toast.show(this.transloco.translate('settings.templates.toastInUse'), 'danger');
+      }
+      return;
+    }
+    this.toast.show(this.transloco.translate('settings.templates.toastFail'), 'danger');
+  }
+
   async onSave(): Promise<void> {
     const section = this.store.section();
     let body: unknown;
@@ -387,21 +459,36 @@ export class TemplatesSettingsPage implements OnInit {
         requiresAttachment: false,
       };
     } else if (section === 'document-types') {
-      const item = this.store.drawerItem();
       body = {
         nameAr: this.editNameAr(),
         nameEn: this.editNameEn(),
         hasExpiry: this.editHasExpiry(),
-        alertDays: (item?.fields['alertDays'] as number[] | undefined) ?? [],
+        alertDays: this.parseAlertDays(this.editAlertDays()),
       };
     } else {
       body = { nameAr: this.editNameAr(), nameEn: this.editNameEn() };
     }
 
     const ok = await this.store.saveDrawer(body);
-    this.toast.show(
-      this.transloco.translate(ok ? 'settings.templates.toastSaved' : 'settings.templates.toastFail'),
-      ok ? 'success' : 'danger',
-    );
+    if (ok) {
+      this.toast.show(this.transloco.translate('settings.templates.toastSaved'), 'success');
+      return;
+    }
+    const err = this.store.lastError();
+    const key =
+      err?.kind === 'duplicate'
+        ? 'settings.templates.toastDuplicate'
+        : 'settings.templates.toastFail';
+    this.toast.show(this.transloco.translate(key), 'danger');
+  }
+
+  private parseAlertDays(raw: string): number[] {
+    if (!raw.trim()) {
+      return [];
+    }
+    return raw
+      .split(/[,;\s]+/)
+      .map((p) => Number(p.trim()))
+      .filter((n) => Number.isFinite(n) && n >= 0);
   }
 }

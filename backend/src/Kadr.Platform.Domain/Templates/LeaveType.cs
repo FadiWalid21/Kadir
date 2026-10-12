@@ -66,6 +66,40 @@ public sealed class LeaveType : AggregateRoot, ITenantOwned, IAuditable, ITempla
         };
     }
 
+    public static LeaveType CreateCustom(
+        Guid tenantId,
+        string nameAr,
+        string nameEn,
+        bool paid,
+        int? daysPerYear,
+        bool requiresApproval,
+        bool requiresAttachment,
+        string? extrasJson = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
+
+        return new LeaveType
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            NameAr = nameAr.Trim(),
+            NameEn = nameEn.Trim(),
+            SearchName = BuildSearchName(nameAr, nameEn),
+            Paid = paid,
+            DaysPerYear = daysPerYear,
+            RequiresApproval = requiresApproval,
+            RequiresAttachment = requiresAttachment,
+            ExtrasJson = string.IsNullOrWhiteSpace(extrasJson) ? null : extrasJson,
+            SourceKey = null,
+            SourceTemplateId = null,
+            SourceVersion = 0,
+            IsCustomized = true,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     public void Update(
         string nameAr,
         string nameEn,
@@ -119,5 +153,5 @@ public sealed class LeaveType : AggregateRoot, ITenantOwned, IAuditable, ITempla
     }
 
     private static string BuildSearchName(string nameAr, string nameEn) =>
-        $"{nameAr.Trim()} {nameEn.Trim()}".Trim().ToLowerInvariant();
+        Kadr.SharedKernel.Text.ArabicText.NormalizeForSearch($"{nameAr} {nameEn}");
 }

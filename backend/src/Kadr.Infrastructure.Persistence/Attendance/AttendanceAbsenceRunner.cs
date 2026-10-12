@@ -108,34 +108,32 @@ public sealed class AttendanceAbsenceRunner(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var shifts = await db.Shifts.AsNoTracking()
+            .Where(s => s.IsActive)
+            .ToDictionaryAsync(s => s.Id, cancellationToken)
+            .ConfigureAwait(false);
+
         var marked = 0;
-        foreach (var employeeId in employees)
+        for (var d = lookbackStart; d <= today; d = d.AddDays(1))
         {
-            for (var d = lookbackStart; d <= today; d = d.AddDays(1))
+            if (IsWeekend(d, weekend) || holidays.Any(h => h.Covers(d)))
             {
-                if (IsWeekend(d, weekend) || holidays.Any(h => h.Covers(d)))
+                continue;
+            }
+
+            var effectiveByEmp = await ShiftRuleResolver
+                .ResolveManyAsync(db, employees, d, defaultShiftId, cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var employeeId in employees)
+            {
+                if (!effectiveByEmp.TryGetValue(employeeId, out var effective) || effective.IsDayOff)
                 {
                     continue;
                 }
 
-                var assignment = await db.ShiftAssignments.AsNoTracking()
-                    .SingleOrDefaultAsync(a => a.EmployeeId == employeeId && a.WorkDate == d, cancellationToken)
-                    .ConfigureAwait(false);
-                if (assignment is { IsDayOff: true })
-                {
-                    continue;
-                }
-
-                var shiftId = assignment?.ShiftId ?? defaultShiftId;
-                if (shiftId is null)
-                {
-                    continue;
-                }
-
-                var shift = await db.Shifts.AsNoTracking()
-                    .SingleOrDefaultAsync(s => s.Id == shiftId, cancellationToken)
-                    .ConfigureAwait(false);
-                if (shift is null)
+                var shiftId = effective.ShiftId;
+                if (shiftId is null || !shifts.TryGetValue(shiftId.Value, out var shift))
                 {
                     continue;
                 }

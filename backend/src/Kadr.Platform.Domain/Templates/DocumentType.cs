@@ -57,6 +57,34 @@ public sealed class DocumentType : AggregateRoot, ITenantOwned, IAuditable, ITem
         };
     }
 
+    public static DocumentType CreateCustom(
+        Guid tenantId,
+        string nameAr,
+        string nameEn,
+        bool hasExpiry,
+        string alertDaysJson)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
+
+        return new DocumentType
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            NameAr = nameAr.Trim(),
+            NameEn = nameEn.Trim(),
+            SearchName = BuildSearchName(nameAr, nameEn),
+            HasExpiry = hasExpiry,
+            AlertDaysJson = string.IsNullOrWhiteSpace(alertDaysJson) ? "[]" : alertDaysJson,
+            SourceKey = null,
+            SourceTemplateId = null,
+            SourceVersion = 0,
+            IsCustomized = true,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     public void Update(string nameAr, string nameEn, bool hasExpiry, string alertDaysJson)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
@@ -94,5 +122,5 @@ public sealed class DocumentType : AggregateRoot, ITenantOwned, IAuditable, ITem
     }
 
     private static string BuildSearchName(string nameAr, string nameEn) =>
-        $"{nameAr.Trim()} {nameEn.Trim()}".Trim().ToLowerInvariant();
+        Kadr.SharedKernel.Text.ArabicText.NormalizeForSearch($"{nameAr} {nameEn}");
 }

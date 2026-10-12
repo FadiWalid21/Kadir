@@ -39,6 +39,10 @@ public static class FeatureKeys
         Attendance,
         Leave,
         Ess,
+        // Minimal single-step approval for leave/permission/correction in MVP trials.
+        Workflows,
+        // MVP basic reports (RPT-01 / Feature 19).
+        Reports,
     ];
 
     public static readonly IReadOnlyList<string> Growth =

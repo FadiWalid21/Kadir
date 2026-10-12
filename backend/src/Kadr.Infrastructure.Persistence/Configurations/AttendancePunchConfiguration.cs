@@ -16,6 +16,7 @@ public sealed class AttendancePunchConfiguration : IEntityTypeConfiguration<Atte
         builder.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ClientRequestId }).IsUnique();
         builder.HasIndex(x => new { x.TenantId, x.EmployeeId, x.WorkDate });
         builder.HasIndex(x => new { x.TenantId, x.WorkDate });
+        builder.HasIndex(x => new { x.TenantId, x.WorkLocationId });
         builder.Ignore(x => x.DomainEvents);
     }
 }

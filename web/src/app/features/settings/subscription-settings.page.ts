@@ -19,7 +19,6 @@ import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
-import { SettingsSubnavComponent } from './settings-subnav.component';
 
 type PageState = 'loading' | 'ready' | 'error';
 type PricingView = 'flat' | 'perEmployee';
@@ -45,7 +44,6 @@ const FEATURE_ORDER = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TranslocoPipe,
-    SettingsSubnavComponent,
     ButtonComponent,
     BadgeComponent,
     SkeletonComponent,
@@ -69,7 +67,6 @@ const FEATURE_ORDER = [
       </kadr-empty-state>
     } @else if (sub()) {
       <div class="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <kadr-settings-subnav active="subscription" />
         <header class="flex flex-col gap-2 text-start">
           <h1 class="text-2xl font-bold leading-tight text-fg">
             {{ 'settings.subscription.title' | transloco }}

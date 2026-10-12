@@ -97,8 +97,8 @@ public sealed class OrgService(
 
         var branches = await db.Branches.AsNoTracking()
             .Where(b => b.IsActive)
-            .OrderBy(b => b.Name)
-            .Select(b => new OrgLookupItemDto(b.Id, b.Name, b.Name))
+            .OrderBy(b => b.NameAr)
+            .Select(b => new OrgLookupItemDto(b.Id, b.NameAr, b.NameEn))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 

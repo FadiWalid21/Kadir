@@ -51,4 +51,96 @@ public interface IAttendanceService
     Task<Result<WeekendSettingsDto>> UpdateWeekendAsync(
         UpdateWeekendRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceBoardDto>> GetBoardTodayAsync(
+        DateOnly? date,
+        Guid? branchId,
+        Guid? departmentId,
+        string? status,
+        string? q,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<ShiftScheduleWeekDto>> GetScheduleWeekAsync(
+        DateOnly weekStart,
+        Guid? branchId,
+        Guid? departmentId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<ShiftScheduleWeekDto>> UpsertShiftAssignmentsAsync(
+        BulkUpsertShiftAssignmentsRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceMatrixDto>> GetAttendanceMatrixAsync(
+        int year,
+        int month,
+        Guid? branchId,
+        Guid? departmentId,
+        string? q,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceCorrectionRequestDto>> CreateCorrectionAsync(
+        CreateAttendanceCorrectionRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedAttendanceCorrectionsDto>> ListMyCorrectionsAsync(
+        string? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedAttendanceCorrectionsDto>> ListCorrectionsInboxAsync(
+        string? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceCorrectionRequestDto>> ApproveCorrectionAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceCorrectionRequestDto>> RejectCorrectionAsync(
+        Guid id,
+        RejectAttendanceCorrectionRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<PagedWorkLocationsDto>> ListWorkLocationsAsync(
+        string? type,
+        bool? active,
+        string? q,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<WorkLocationDto>> GetWorkLocationAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<Result<WorkLocationDto>> CreateWorkLocationAsync(
+        UpsertWorkLocationRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<WorkLocationDto>> UpdateWorkLocationAsync(
+        Guid id,
+        UpsertWorkLocationRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IReadOnlyList<WorkLocationAssignmentDto>>> GetWorkLocationAssignmentsAsync(
+        Guid workLocationId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<IReadOnlyList<WorkLocationAssignmentDto>>> ReplaceWorkLocationAssignmentsAsync(
+        Guid workLocationId,
+        ReplaceWorkLocationAssignmentsRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<EmployeeAttendancePolicyDto>> GetEmployeeAttendancePolicyAsync(
+        Guid employeeId,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<EmployeeAttendancePolicyDto>> UpdateEmployeeAttendancePolicyAsync(
+        Guid employeeId,
+        UpdateEmployeeAttendancePolicyRequest request,
+        CancellationToken cancellationToken = default);
 }
