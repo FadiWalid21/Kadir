@@ -315,6 +315,8 @@ try
 
     var app = builder.Build();
 
+    Kadr.Platform.Infrastructure.DependencyInjection.LogEmailSenderSelection(app.Services, app.Configuration);
+
     var authHost = app.Configuration.GetSection(AuthHostOptions.SectionName).Get<AuthHostOptions>()
         ?? new AuthHostOptions();
     RefreshCookie.Configure(authHost.CrossSiteCookies);
