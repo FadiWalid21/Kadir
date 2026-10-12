@@ -32,15 +32,15 @@ Set these in the MonsterASP control panel (environment variables / app settings)
 | `Brevo__SenderName` | `Kadr` (optional; default Kadr) |
 | `ASPNETCORE_ENVIRONMENT` | `Production` |
 
-When `Brevo__ApiKey` and `Brevo__SenderEmail` are both set, the API sends real email via Brevo. If either is missing, it falls back to logging only (platform health email = degraded). Local user-secrets may still use the legacy flat name `BREVO_API_KEY`; the host also accepts `Brevo:ApiKey`.
+When `Brevo__ApiKey` and `Brevo__SenderEmail` are both set, the API sends real email via Brevo. If either is missing, it falls back to logging only (platform health email = degraded). Preferred names use `__` nesting. Legacy flat names also work: `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`.
 
 ### Invite email not arriving (checklist)
 
-1. On MonsterASP, set **all four**: `Brevo__ApiKey`, `Brevo__SenderEmail`, `Brevo__SenderName`, `App__PublicWebBaseUrl`.
-2. `Brevo__SenderEmail` must be a **verified** sender (or domain) in the Brevo dashboard — otherwise Brevo rejects the send.
-3. **Restart / redeploy** the API after changing settings (DI chooses Brevo only at startup).
-4. Platform admin → Health: email provider must be **`brevo`**, not `logging` / `messages_logged_not_delivered`.
-5. After Invite/Resend, the toast **Open invite link** still works as a fallback when mail is delayed or Brevo is misconfigured.
+1. On MonsterASP, set **all four**: `Brevo__ApiKey`, `Brevo__SenderEmail`, `Brevo__SenderName`, `App__PublicWebBaseUrl` (or the legacy flat names above).
+2. `Brevo__SenderEmail` must be a **verified** sender (or domain) in the Brevo dashboard — otherwise Brevo rejects the send (API logs include Brevo status + truncated error body; no secrets).
+3. **Restart / redeploy** the API after changing settings (DI chooses Brevo only at startup). Deploy must include the branch that has Brevo wiring (prefer `main` after merge).
+4. Platform admin → Health: email provider must be **`brevo`**, not `logging` / `messages_logged_not_delivered`. If health shows `logging`, the host is missing ApiKey or SenderEmail — fix env and restart; toast **Open invite link** still works.
+5. After Invite/Resend, the toast **Open invite link** is the fallback when mail is delayed or Brevo is misconfigured.
 6. Check Brevo → Transactional logs for the recipient; also check spam.
 
 **MonsterASP paste (names only — put real secrets in the panel, never in git):**

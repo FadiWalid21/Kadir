@@ -14,11 +14,12 @@ public sealed class BrevoEmailSender(
     ILogger<BrevoEmailSender> logger) : IEmailSender
 {
     public const string HttpClientName = nameof(BrevoEmailSender);
+    private const int MaxErrorBodyLogChars = 400;
 
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
         var opts = options.Value;
-        if (!opts.IsConfigured)
+        if (!opts.CanSend)
         {
             throw new InvalidOperationException("Brevo is not configured.");
         }
@@ -26,6 +27,7 @@ public sealed class BrevoEmailSender(
         var client = httpClientFactory.CreateClient(HttpClientName);
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
         request.Headers.TryAddWithoutValidation("api-key", opts.ApiKey);
+        request.Headers.TryAddWithoutValidation("accept", "application/json");
         request.Content = JsonContent.Create(
             new BrevoSendRequest(
                 new BrevoSender(opts.SenderName.Trim(), opts.SenderEmail.Trim()),
@@ -42,12 +44,37 @@ public sealed class BrevoEmailSender(
         }
 
         var status = (int)response.StatusCode;
+        var errorBody = await ReadErrorBodyAsync(response, cancellationToken).ConfigureAwait(false);
         logger.LogWarning(
-            "Brevo email failed for {To} subject {Subject} with status {StatusCode}",
+            "Brevo email failed for {To} subject {Subject} with status {StatusCode} body {ErrorBody}",
             message.To,
             message.Subject,
-            status);
+            status,
+            errorBody);
         response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<string> ReadErrorBodyAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var raw = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return "(empty)";
+            }
+
+            var trimmed = raw.Trim().ReplaceLineEndings(" ");
+            return trimmed.Length <= MaxErrorBodyLogChars
+                ? trimmed
+                : trimmed[..MaxErrorBodyLogChars] + "…";
+        }
+        catch
+        {
+            return "(unreadable)";
+        }
     }
 
     private sealed record BrevoSendRequest(

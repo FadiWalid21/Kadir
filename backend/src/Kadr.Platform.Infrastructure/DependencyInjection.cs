@@ -56,13 +56,13 @@ public static class DependencyInjection
             return;
         }
 
-        var hasApiKey = HasBrevoApiKey(configuration);
-        var hasSenderEmail = !string.IsNullOrWhiteSpace(configuration["Brevo:SenderEmail"]);
+        var hasApiKey = !string.IsNullOrWhiteSpace(ResolveBrevoApiKey(configuration));
+        var hasSenderEmail = !string.IsNullOrWhiteSpace(ResolveBrevoSenderEmail(configuration));
 
         if (hasApiKey && !hasSenderEmail)
         {
             logger.LogWarning(
-                "Brevo API key is set but Brevo:SenderEmail is missing; using {EmailSender} (messages are logged, not delivered). Set Brevo:SenderEmail to a verified sender and restart.",
+                "Brevo API key is set but Brevo:SenderEmail is missing; using {EmailSender} (messages are logged, not delivered). Set Brevo:SenderEmail (or BREVO_SENDER_EMAIL) to a verified sender and restart.",
                 typeName);
             return;
         }
@@ -75,7 +75,7 @@ public static class DependencyInjection
     private static void RegisterEmailSender(IServiceCollection services, IConfiguration configuration)
     {
         var apiKey = ResolveBrevoApiKey(configuration);
-        var senderEmail = configuration["Brevo:SenderEmail"];
+        var senderEmail = ResolveBrevoSenderEmail(configuration);
         if (!string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(senderEmail))
         {
             services.AddHttpClient(BrevoEmailSender.HttpClientName);
@@ -86,9 +86,6 @@ public static class DependencyInjection
         services.AddSingleton<IEmailSender, LoggingEmailSender>();
     }
 
-    private static bool HasBrevoApiKey(IConfiguration configuration) =>
-        !string.IsNullOrWhiteSpace(ResolveBrevoApiKey(configuration));
-
     private static string? ResolveBrevoApiKey(IConfiguration configuration)
     {
         var apiKey = configuration["Brevo:ApiKey"];
@@ -97,7 +94,18 @@ public static class DependencyInjection
             return apiKey;
         }
 
-        // Legacy local user-secret name (flat key). Prefer Brevo:ApiKey going forward.
+        // Legacy flat env / user-secret name. Prefer Brevo:ApiKey / Brevo__ApiKey.
         return configuration["BREVO_API_KEY"];
+    }
+
+    private static string? ResolveBrevoSenderEmail(IConfiguration configuration)
+    {
+        var sender = configuration["Brevo:SenderEmail"];
+        if (!string.IsNullOrWhiteSpace(sender))
+        {
+            return sender;
+        }
+
+        return configuration["BREVO_SENDER_EMAIL"];
     }
 }

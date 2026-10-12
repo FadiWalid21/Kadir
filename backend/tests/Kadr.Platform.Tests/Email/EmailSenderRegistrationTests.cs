@@ -84,4 +84,31 @@ public sealed class EmailSenderRegistrationTests
         using var sp = services.BuildServiceProvider();
         Assert.IsType<BrevoEmailSender>(sp.GetRequiredService<IEmailSender>());
     }
+
+    [Fact]
+    public void Accepts_legacy_flat_api_key_and_sender_email()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<ILoggerFactory>(NullLoggerFactory.Instance);
+        services.Configure<Kadr.Platform.Application.Email.BrevoOptions>(o =>
+        {
+            o.ApiKey = "legacy-key";
+            o.SenderEmail = "sender@example.com";
+            o.SenderName = "Kadr";
+        });
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BREVO_API_KEY"] = "legacy-key",
+                ["BREVO_SENDER_EMAIL"] = "sender@example.com",
+            })
+            .Build();
+
+        services.AddPlatformInfrastructure(configuration);
+
+        using var sp = services.BuildServiceProvider();
+        Assert.IsType<BrevoEmailSender>(sp.GetRequiredService<IEmailSender>());
+    }
 }

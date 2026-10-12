@@ -68,14 +68,8 @@ try
         .Validate(options => WebPushOptions.Validate(options) is null, "WebPush configuration is invalid.")
         .ValidateOnStart();
 
-    // Bridge legacy flat user-secret BREVO_API_KEY → Brevo:ApiKey before options bind.
-    var legacyBrevoKey = builder.Configuration["BREVO_API_KEY"];
-    if (!string.IsNullOrWhiteSpace(legacyBrevoKey)
-        && string.IsNullOrWhiteSpace(builder.Configuration["Brevo:ApiKey"]))
-    {
-        builder.Configuration.AddInMemoryCollection(
-            new Dictionary<string, string?> { ["Brevo:ApiKey"] = legacyBrevoKey });
-    }
+    // Bridge legacy flat env/user-secret names → Brevo:* before options bind and DI registration.
+    BridgeLegacyBrevoSettings(builder.Configuration);
 
     builder.Services.AddOptions<AppOptions>()
         .Bind(builder.Configuration.GetSection(AppOptions.SectionName));
@@ -437,6 +431,34 @@ static string[] ParseCorsOrigins(IConfiguration configuration)
         .Where(v => !string.IsNullOrWhiteSpace(v))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
+}
+
+static void BridgeLegacyBrevoSettings(ConfigurationManager configuration)
+{
+    var bridge = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+    void MapIfMissing(string nestedKey, string legacyKey)
+    {
+        if (!string.IsNullOrWhiteSpace(configuration[nestedKey]))
+        {
+            return;
+        }
+
+        var legacy = configuration[legacyKey];
+        if (!string.IsNullOrWhiteSpace(legacy))
+        {
+            bridge[nestedKey] = legacy;
+        }
+    }
+
+    MapIfMissing("Brevo:ApiKey", "BREVO_API_KEY");
+    MapIfMissing("Brevo:SenderEmail", "BREVO_SENDER_EMAIL");
+    MapIfMissing("Brevo:SenderName", "BREVO_SENDER_NAME");
+
+    if (bridge.Count > 0)
+    {
+        configuration.AddInMemoryCollection(bridge);
+    }
 }
 
 public partial class Program;
