@@ -87,4 +87,20 @@ public sealed class AttendanceDaySummary : AggregateRoot, ITenantOwned
         IsManualOverride = true;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    public void ApplyManualCorrection(
+        AttendanceDayStatus status,
+        DateTimeOffset? firstInAt,
+        DateTimeOffset? lastOutAt,
+        int workedMinutes,
+        int lateMinutes)
+    {
+        FirstInAt = firstInAt ?? FirstInAt;
+        LastOutAt = lastOutAt ?? LastOutAt;
+        WorkedMinutes = workedMinutes;
+        LateMinutes = lateMinutes;
+        Status = status;
+        IsManualOverride = true;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
 }

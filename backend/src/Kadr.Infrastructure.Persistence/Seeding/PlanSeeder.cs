@@ -24,8 +24,52 @@ public sealed class PlanSeeder(KadrDbContext db, ILogger<PlanSeeder> logger)
         UpsertFlat(byCode, PlanCodes.Business, "الأعمال", "Business", 300, BusinessMonthlyPrice, FeatureKeys.Business);
         UpsertPerEmployee(byCode, PlanCodes.Core, "الأساسي", "Core", CoreUnitPrice, 10, FeatureKeys.StarterAndCore);
 
+        // MVP basic reports (RPT-01): enable on existing Starter/Core without wiping admin catalog edits.
+        EnsureFeatureEnabled(byCode, PlanCodes.Starter, FeatureKeys.Reports);
+        EnsureFeatureEnabled(byCode, PlanCodes.Core, FeatureKeys.Reports);
+
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Upserted platform plans ({Count})", byCode.Count);
+    }
+
+    private static void EnsureFeatureEnabled(Dictionary<string, Plan> byCode, string planCode, string featureKey)
+    {
+        if (!byCode.TryGetValue(planCode, out var plan))
+        {
+            return;
+        }
+
+        Dictionary<string, bool> map;
+        try
+        {
+            map = JsonSerializer.Deserialize<Dictionary<string, bool>>(plan.FeaturesJson)
+                  ?? FeatureKeys.All.ToDictionary(k => k, _ => false, StringComparer.Ordinal);
+        }
+        catch (JsonException)
+        {
+            map = FeatureKeys.All.ToDictionary(k => k, _ => false, StringComparer.Ordinal);
+        }
+
+        if (map.TryGetValue(featureKey, out var enabled) && enabled)
+        {
+            return;
+        }
+
+        map[featureKey] = true;
+        foreach (var key in FeatureKeys.All)
+        {
+            map.TryAdd(key, false);
+        }
+
+        plan.ApplySeed(
+            plan.NameAr,
+            plan.NameEn,
+            plan.PricingModel,
+            plan.EmployeeCap,
+            plan.UnitPrice,
+            plan.MinBilledEmployees,
+            JsonSerializer.Serialize(map),
+            plan.IsActive);
     }
 
     private void UpsertFlat(

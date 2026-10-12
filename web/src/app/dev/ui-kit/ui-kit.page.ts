@@ -17,6 +17,11 @@ import { SeatLimitDialogComponent } from '../../shared/ui/seat-limit-dialog/seat
 import { InputComponent } from '../../shared/ui/input/input.component';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header.component';
 import { RadioCardComponent } from '../../shared/ui/radio-card/radio-card.component';
+import { ComboboxComponent } from '../../shared/ui/combobox/combobox.component';
+import {
+  AssignmentTargetPickerComponent,
+  AssignmentTargetSelection,
+} from '../../shared/ui/assignment-target-picker/assignment-target-picker.component';
 import { SelectComponent } from '../../shared/ui/select/select.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { StepperComponent } from '../../shared/ui/stepper/stepper.component';
@@ -24,14 +29,14 @@ import { TableComponent } from '../../shared/ui/table/table.component';
 import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
 import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
-import { InstallCardComponent } from '../../shared/ui/pwa/install-card.component';
+import { InstallBannerComponent } from '../../shared/ui/pwa/install-banner.component';
 import { IosInstallSheetComponent } from '../../shared/ui/pwa/ios-install-sheet.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
 import { OfflineBannerComponent } from '../../shared/ui/pwa/offline-banner.component';
 import { UpdateNoticeComponent } from '../../shared/ui/pwa/update-notice.component';
 import { OfflineService } from '../../core/pwa/offline.service';
 import { UpdateService } from '../../core/pwa/update.service';
-import { InstallService } from '../../core/pwa/install.service';
+import { InstallPromptService } from '../../core/pwa/install-prompt.service';
 import { DirtyFormRegistry } from '../../core/forms/dirty-form.registry';
 
 const SWATCHES = [
@@ -77,13 +82,15 @@ const SWATCHES = [
     DrawerComponent,
     TableComponent,
     SelectComponent,
+    ComboboxComponent,
+    AssignmentTargetPickerComponent,
     CheckboxComponent,
     RadioCardComponent,
     ConfirmDialogComponent,
     SeatLimitDialogComponent,
     OfflineBannerComponent,
     UpdateNoticeComponent,
-    InstallCardComponent,
+    InstallBannerComponent,
     NetworkErrorComponent,
     IosInstallSheetComponent,
   ],
@@ -328,8 +335,8 @@ const SWATCHES = [
             </div>
             <kadr-offline-banner />
             <kadr-update-notice />
-            <p class="text-xs text-fg-2">{{ 'uiKit.pwaInstallCard' | transloco }}</p>
-            <kadr-install-card />
+            <p class="text-xs text-fg-2">{{ 'uiKit.pwaInstallBanner' | transloco }}</p>
+            <kadr-install-banner />
             <p class="text-xs text-fg-2">{{ 'uiKit.pwaNetworkError' | transloco }}</p>
             <kadr-network-error (retry)="showToast()" />
             <kadr-ios-install-sheet />
@@ -359,6 +366,22 @@ const SWATCHES = [
               [value]="demoSelect()"
               (valueChange)="demoSelect.set($event)"
             />
+            <kadr-combobox
+              [label]="'uiKit.combobox' | transloco"
+              [placeholder]="'ui.combobox.searchPlaceholder' | transloco"
+              [searchFn]="demoComboboxSearch"
+              [value]="demoComboboxId()"
+              [displayName]="demoComboboxName()"
+              (selectionChange)="onDemoCombobox($event)"
+            />
+            <div class="md:col-span-2">
+              <p class="mb-2 text-sm font-medium text-fg">{{ 'uiKit.assignmentTarget' | transloco }}</p>
+              <kadr-assignment-target-picker
+                [allowedTypes]="['Employee', 'Department', 'Branch', 'JobTitle']"
+                [multiple]="true"
+                (selectionChange)="onDemoAssignmentTarget($event)"
+              />
+            </div>
             <kadr-checkbox
               [label]="'uiKit.checkbox' | transloco"
               [checked]="demoChecked()"
@@ -422,7 +445,7 @@ export class UiKitPage {
   private readonly toast = inject(ToastService);
   private readonly offline = inject(OfflineService);
   private readonly updates = inject(UpdateService);
-  private readonly install = inject(InstallService);
+  private readonly install = inject(InstallPromptService);
   private readonly dirtyForms = inject(DirtyFormRegistry);
   protected readonly swatches = SWATCHES;
   protected readonly stepperDemo = [
@@ -441,6 +464,18 @@ export class UiKitPage {
     { value: 'a', label: 'A' },
     { value: 'b', label: 'B' },
   ];
+  protected readonly demoComboboxId = signal('');
+  protected readonly demoComboboxName = signal('');
+  private readonly demoComboboxAll = [
+    { id: '1', name: 'أحمد علي' },
+    { id: '2', name: 'Sara Mohamed' },
+    { id: '3', name: 'فرع القاهرة' },
+  ];
+  protected readonly demoComboboxSearch = async (q: string) => {
+    const term = q.trim().toLowerCase();
+    await new Promise((r) => setTimeout(r, 120));
+    return this.demoComboboxAll.filter((x) => !term || x.name.toLowerCase().includes(term));
+  };
   protected readonly demoTabs = [
     { id: 'one', label: '1' },
     { id: 'two', label: '2' },
@@ -451,6 +486,15 @@ export class UiKitPage {
     { id: 'role', label: 'Role' },
     { id: 'status', label: 'Status' },
   ];
+
+  onDemoCombobox(opt: { id: string; name: string } | null): void {
+    this.demoComboboxId.set(opt?.id ?? '');
+    this.demoComboboxName.set(opt?.name ?? '');
+  }
+
+  onDemoAssignmentTarget(_sel: AssignmentTargetSelection): void {
+    // Demo only — selection shown via picker chips.
+  }
 
   onLanguage(lang: AppLanguage): void {
     this.theme.setLanguage(lang);
@@ -488,6 +532,6 @@ export class UiKitPage {
   }
 
   demoIosSheet(): void {
-    this.install.showIosSheet.set(true);
+    this.install.showHowTo.set(true);
   }
 }

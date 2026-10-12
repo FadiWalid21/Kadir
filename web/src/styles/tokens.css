@@ -78,9 +78,15 @@
   --fw-strong: 700;
   --leading-tight: 1.35;
 
+  /* ===== SHELL ===== */
+  --sidebar-width: 15rem;
+  --sidebar-width-collapsed: 4rem;
+
   /* ===== DENSITY ===== */
   --control-height: 2.5rem;
   --row-height: 3.25rem;
+  --install-banner-height: 2.75rem;
+  --safe-area-top: env(safe-area-inset-top, 0px);
 
   /* ===== MOTION ===== */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);

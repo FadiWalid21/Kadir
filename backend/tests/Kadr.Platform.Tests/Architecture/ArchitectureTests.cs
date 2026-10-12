@@ -85,6 +85,8 @@ public sealed class ArchitectureTests
         "PlatformAuditLogQueries.cs",
         "ActiveEmployeeCounter.cs",
         "SystemRolePermissionSeeder.cs",
+        "NotificationDeliveryRunner.cs",
+        "PlatformLookupService.cs",
     };
 
     [Fact]

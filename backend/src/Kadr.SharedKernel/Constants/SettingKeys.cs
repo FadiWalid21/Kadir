@@ -17,4 +17,5 @@ public static class SettingKeys
     public const string AttendanceOvertimeAfterEndMinutes = "attendance.overtime_after_end_minutes";
     public const string AttendanceOvertimeMinMinutes = "attendance.overtime_min_minutes";
     public const string AttendanceLocationAccuracyM = "attendance.location_accuracy_m";
+    public const string AttendanceCorrectionMonthlyCap = "attendance.correction_monthly_cap";
 }

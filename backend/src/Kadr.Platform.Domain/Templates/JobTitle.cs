@@ -51,6 +51,27 @@ public sealed class JobTitle : AggregateRoot, ITenantOwned, IAuditable, ITemplat
         };
     }
 
+    public static JobTitle CreateCustom(Guid tenantId, string nameAr, string nameEn)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
+
+        return new JobTitle
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            NameAr = nameAr.Trim(),
+            NameEn = nameEn.Trim(),
+            SearchName = BuildSearchName(nameAr, nameEn),
+            SourceKey = null,
+            SourceTemplateId = null,
+            SourceVersion = 0,
+            IsCustomized = true,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     public void Update(string nameAr, string nameEn)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
@@ -79,5 +100,5 @@ public sealed class JobTitle : AggregateRoot, ITenantOwned, IAuditable, ITemplat
     }
 
     private static string BuildSearchName(string nameAr, string nameEn) =>
-        $"{nameAr.Trim()} {nameEn.Trim()}".Trim().ToLowerInvariant();
+        Kadr.SharedKernel.Text.ArabicText.NormalizeForSearch($"{nameAr} {nameEn}");
 }

@@ -27,6 +27,17 @@ export const PermissionCodes = {
   AttendanceManage: 'attendance.manage',
   AttendanceEdit: 'attendance.edit',
   AttendanceReports: 'attendance.reports',
+  LeaveReadOwn: 'leave.read.own',
+  LeaveRequest: 'leave.request',
+  LeaveReadTeam: 'leave.read.team',
+  LeaveReadAll: 'leave.read.all',
+  LeaveManage: 'leave.manage',
+  LeaveApprove: 'leave.approve',
+  WorkflowsManage: 'workflows.manage',
+  NotificationsRead: 'notifications.read',
+  NotificationsManagePrefs: 'notifications.manage_prefs',
+  ReportsRead: 'reports.read',
+  ReportsExport: 'reports.export',
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];

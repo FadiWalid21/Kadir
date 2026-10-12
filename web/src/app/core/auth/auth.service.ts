@@ -1,9 +1,10 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, Injector, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthApi, problemDetailsFromError } from '../api/auth.api';
 import { GoogleCompanyOption, isTenantSelection } from '../api/auth.models';
 import { MeApi } from '../api/me.api';
 import { MeResponse } from '../api/me.models';
+import { PushNotificationService } from '../pwa/push-notification.service';
 import { SubscriptionStore } from '../subscription/subscription.store';
 import { PermissionCode } from './permission-codes';
 
@@ -28,6 +29,7 @@ export class AuthService {
   private readonly meApi = inject(MeApi);
   private readonly subscriptionStore = inject(SubscriptionStore);
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
 
   private readonly accessTokenSignal = signal<string | null>(null);
   private readonly meSignal = signal<MeResponse | null>(null);
@@ -96,6 +98,11 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    try {
+      await this.injector.get(PushNotificationService).prepareLogout();
+    } catch {
+      // Best-effort unsubscribe; session clear must continue.
+    }
     try {
       await this.authApi.logout();
     } catch {

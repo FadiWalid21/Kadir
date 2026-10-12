@@ -1,4 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { problemDetailsFromError } from '../../core/api/auth.api';
 import {
   TemplateItem,
   TemplateSection,
@@ -7,6 +8,11 @@ import {
 } from '../../core/api/tenant-templates.api';
 
 export type TemplatesLoadState = 'idle' | 'loading' | 'ready' | 'error';
+
+export type TemplateActionError =
+  | { kind: 'in_use' }
+  | { kind: 'duplicate' }
+  | { kind: 'generic' };
 
 @Injectable()
 export class TemplatesStore {
@@ -20,10 +26,13 @@ export class TemplatesStore {
   readonly overviewState = signal<TemplatesLoadState>('idle');
   readonly listState = signal<TemplatesLoadState>('idle');
   readonly drawerItem = signal<TemplateItem | null>(null);
+  readonly drawerMode = signal<'create' | 'edit'>('edit');
   readonly busy = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly lastError = signal<TemplateActionError | null>(null);
 
   readonly updateAvailable = computed(() => this.overview()?.updateAvailable === true);
+  readonly isCreateMode = computed(() => this.drawerMode() === 'create');
 
   async loadOverview(): Promise<void> {
     this.overviewState.set('loading');
@@ -54,12 +63,29 @@ export class TemplatesStore {
     }
   }
 
+  openCreateDrawer(): void {
+    this.drawerMode.set('create');
+    this.drawerItem.set({
+      id: '',
+      section: this.section(),
+      sourceKey: null,
+      sourceVersion: 0,
+      isCustomized: true,
+      isActive: true,
+      nameAr: '',
+      nameEn: '',
+      fields: {},
+    });
+  }
+
   openDrawer(item: TemplateItem): void {
+    this.drawerMode.set('edit');
     this.drawerItem.set(item);
   }
 
   closeDrawer(): void {
     this.drawerItem.set(null);
+    this.drawerMode.set('edit');
   }
 
   async saveDrawer(body: unknown): Promise<boolean> {
@@ -68,12 +94,36 @@ export class TemplatesStore {
       return false;
     }
     this.busy.set(true);
+    this.lastError.set(null);
     try {
-      const updated = await this.api.updateItem(this.section(), item.id, body);
-      this.items.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
-      this.drawerItem.set(null);
+      if (this.drawerMode() === 'create') {
+        const created = await this.api.createItem(this.section(), body);
+        this.items.update((list) => [created, ...list]);
+        this.totalCount.update((n) => n + 1);
+      } else {
+        const updated = await this.api.updateItem(this.section(), item.id, body);
+        this.items.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
+      }
+      this.closeDrawer();
       return true;
-    } catch {
+    } catch (err) {
+      this.lastError.set(mapError(err));
+      return false;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async deleteItem(item: TemplateItem): Promise<boolean> {
+    this.busy.set(true);
+    this.lastError.set(null);
+    try {
+      await this.api.deleteItem(this.section(), item.id);
+      this.items.update((list) => list.filter((x) => x.id !== item.id));
+      this.totalCount.update((n) => Math.max(0, n - 1));
+      return true;
+    } catch (err) {
+      this.lastError.set(mapError(err));
       return false;
     } finally {
       this.busy.set(false);
@@ -82,6 +132,7 @@ export class TemplatesStore {
 
   async resetItem(item: TemplateItem): Promise<boolean> {
     this.busy.set(true);
+    this.lastError.set(null);
     try {
       const updated = await this.api.resetItem(this.section(), item.id);
       this.items.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
@@ -89,7 +140,8 @@ export class TemplatesStore {
         this.drawerItem.set(updated);
       }
       return true;
-    } catch {
+    } catch (err) {
+      this.lastError.set(mapError(err));
       return false;
     } finally {
       this.busy.set(false);
@@ -98,11 +150,13 @@ export class TemplatesStore {
 
   async toggleActive(item: TemplateItem, isActive: boolean): Promise<boolean> {
     this.busy.set(true);
+    this.lastError.set(null);
     try {
       const updated = await this.api.setActive(this.section(), item.id, isActive);
       this.items.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
       return true;
-    } catch {
+    } catch (err) {
+      this.lastError.set(mapError(err));
       return false;
     } finally {
       this.busy.set(false);
@@ -122,4 +176,15 @@ export class TemplatesStore {
       this.busy.set(false);
     }
   }
+}
+
+function mapError(err: unknown): TemplateActionError {
+  const code = problemDetailsFromError(err)?.code;
+  if (code === 'template.item_in_use') {
+    return { kind: 'in_use' };
+  }
+  if (code === 'template.duplicate_name') {
+    return { kind: 'duplicate' };
+  }
+  return { kind: 'generic' };
 }

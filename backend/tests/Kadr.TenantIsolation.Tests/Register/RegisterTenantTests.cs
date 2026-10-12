@@ -84,7 +84,8 @@ public sealed class RegisterTenantTests(RegisterApiFactory factory)
         Assert.True(legal.IsDefault);
 
         var branch = await db.Branches.AsNoTracking().SingleAsync(b => b.TenantId == body.TenantId);
-        Assert.Equal("Acme HQ", branch.Name);
+        Assert.Equal("Acme HQ", branch.NameAr);
+        Assert.Equal("Acme HQ", branch.NameEn);
         Assert.Equal(legal.Id, branch.LegalEntityId);
         Assert.True(branch.IsDefault);
 

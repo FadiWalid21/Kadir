@@ -67,6 +67,40 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
         };
     }
 
+    public static Shift CreateCustom(
+        Guid tenantId,
+        string nameAr,
+        string nameEn,
+        TimeOnly startTime,
+        TimeOnly endTime,
+        int graceMinutes)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
+        ArgumentOutOfRangeException.ThrowIfNegative(graceMinutes);
+
+        return new Shift
+        {
+            Id = GuidV7.NewGuid(),
+            TenantId = tenantId,
+            NameAr = nameAr.Trim(),
+            NameEn = nameEn.Trim(),
+            SearchName = BuildSearchName(nameAr, nameEn),
+            StartTime = startTime,
+            EndTime = endTime,
+            GraceMinutes = graceMinutes,
+            BreakMinutes = 0,
+            CrossesMidnight = endTime <= startTime,
+            IsFlexible = false,
+            SourceKey = null,
+            SourceTemplateId = null,
+            SourceVersion = 0,
+            IsCustomized = true,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     public void Update(
         string nameAr,
         string nameEn,
@@ -132,5 +166,5 @@ public sealed class Shift : AggregateRoot, ITenantOwned, IAuditable, ITemplateSo
     }
 
     private static string BuildSearchName(string nameAr, string nameEn) =>
-        $"{nameAr.Trim()} {nameEn.Trim()}".Trim().ToLowerInvariant();
+        Kadr.SharedKernel.Text.ArabicText.NormalizeForSearch($"{nameAr} {nameEn}");
 }

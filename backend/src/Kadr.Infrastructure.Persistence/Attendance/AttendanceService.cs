@@ -15,11 +15,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kadr.Infrastructure.Persistence.Attendance;
 
-public sealed class AttendanceService(
+public sealed partial class AttendanceService(
     KadrDbContext db,
     ITenantContext tenantContext,
     ISubscriptionGuard subscriptionGuard,
-    IAuditLogWriter audit) : IAttendanceService
+    IAuditLogWriter audit,
+    IWorkflowEngine workflowEngine,
+    ILeaveService leaveService) : IAttendanceService
 {
     private const long MaxPositionAgeMs = 60_000;
     private static readonly string[] ValidWeekendDays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -75,7 +77,8 @@ public sealed class AttendanceService(
                 prior.DistanceM ?? 0,
                 prior.OutsideReason,
                 (await GetOrComputeStatusAsync(employeeId, prior.WorkDate, cancellationToken).ConfigureAwait(false))
-                    .ToString()));
+                    .ToString(),
+                prior.WorkLocationId));
         }
 
         var employee = await db.Employees
@@ -141,76 +144,6 @@ public sealed class AttendanceService(
                 ErrorCodes.AttendanceLocationInaccurate);
         }
 
-        var branch = await db.Branches
-            .SingleOrDefaultAsync(b => b.Id == employee.BranchId, cancellationToken)
-            .ConfigureAwait(false);
-        if (branch is null || !branch.HasLocationConfigured)
-        {
-            await RecordAttemptAsync(
-                    tenantId,
-                    employeeId,
-                    employee.BranchId,
-                    ErrorCodes.AttendanceBranchNotConfigured,
-                    request.AccuracyM,
-                    null,
-                    request.ClientRequestId,
-                    userId,
-                    cancellationToken)
-                .ConfigureAwait(false);
-            return Result.Failure<PunchResultDto>(
-                ErrorCodes.AttendanceBranchNotConfigured,
-                ErrorCodes.AttendanceBranchNotConfigured);
-        }
-
-        var distance = Haversine.DistanceMeters(
-            branch.Latitude!.Value,
-            branch.Longitude!.Value,
-            request.Latitude,
-            request.Longitude);
-        var isInside = distance <= branch.GeofenceRadiusMeters!.Value;
-        string? outsideReason = null;
-
-        if (!isInside)
-        {
-            if (branch.OutOfRangePolicy == OutOfRangePolicy.Block)
-            {
-                await RecordAttemptAsync(
-                        tenantId,
-                        employeeId,
-                        branch.Id,
-                        ErrorCodes.AttendanceOutsideRange,
-                        request.AccuracyM,
-                        distance,
-                        request.ClientRequestId,
-                        userId,
-                        cancellationToken)
-                    .ConfigureAwait(false);
-                return Result.Failure<PunchResultDto>(
-                    ErrorCodes.AttendanceOutsideRange,
-                    ErrorCodes.AttendanceOutsideRange);
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Reason))
-            {
-                await RecordAttemptAsync(
-                        tenantId,
-                        employeeId,
-                        branch.Id,
-                        ErrorCodes.AttendanceReasonRequired,
-                        request.AccuracyM,
-                        distance,
-                        request.ClientRequestId,
-                        userId,
-                        cancellationToken)
-                    .ConfigureAwait(false);
-                return Result.Failure<PunchResultDto>(
-                    ErrorCodes.AttendanceReasonRequired,
-                    ErrorCodes.AttendanceReasonRequired);
-            }
-
-            outsideReason = request.Reason.Trim();
-        }
-
         var tenant = await db.Tenants.AsNoTracking()
             .SingleAsync(t => t.Id == tenantId, cancellationToken)
             .ConfigureAwait(false);
@@ -222,13 +155,155 @@ public sealed class AttendanceService(
                 cancellationToken)
             .ConfigureAwait(false);
 
+        var branch = await db.Branches.AsNoTracking()
+            .SingleOrDefaultAsync(b => b.Id == employee.BranchId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Assigned work locations (direct + department + branch); legacy branch geofence is the fallback.
+        var assigned = await ResolveAssignedLocationsAsync(
+                employeeId,
+                employee.DepartmentId,
+                employee.BranchId,
+                context.WorkDate,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        PunchGeoTarget target;
+        double distance;
+        if (assigned.Count > 0)
+        {
+            (target, distance) = assigned
+                .Select(l => (Target: l, Distance: Haversine.DistanceMeters(
+                    l.Latitude,
+                    l.Longitude,
+                    request.Latitude,
+                    request.Longitude)))
+                .MinBy(x => x.Distance);
+        }
+        else
+        {
+            if (branch is null || !branch.HasLocationConfigured)
+            {
+                await RecordAttemptAsync(
+                        tenantId,
+                        employeeId,
+                        employee.BranchId,
+                        ErrorCodes.AttendanceBranchNotConfigured,
+                        request.AccuracyM,
+                        null,
+                        request.ClientRequestId,
+                        userId,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                return Result.Failure<PunchResultDto>(
+                    ErrorCodes.AttendanceBranchNotConfigured,
+                    ErrorCodes.AttendanceBranchNotConfigured);
+            }
+
+            target = new PunchGeoTarget(
+                null,
+                branch.Latitude!.Value,
+                branch.Longitude!.Value,
+                branch.GeofenceRadiusMeters!.Value);
+            distance = Haversine.DistanceMeters(
+                target.Latitude,
+                target.Longitude,
+                request.Latitude,
+                request.Longitude);
+        }
+
+        var isInside = distance <= target.RadiusMeters;
+        string? outsideReason = null;
+        Guid? photoFileId = null;
+
+        if (!isInside)
+        {
+            var anywhere = await db.EmployeeAttendancePolicies.AsNoTracking()
+                .SingleOrDefaultAsync(p => p.EmployeeId == employeeId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (anywhere is { MayClockInFromAnywhere: true })
+            {
+                var reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+                if (request.PhotoFileId is Guid photoId
+                    && await db.FileObjects.AsNoTracking()
+                        .AnyAsync(f => f.Id == photoId, cancellationToken)
+                        .ConfigureAwait(false))
+                {
+                    photoFileId = photoId;
+                }
+
+                if ((anywhere.AnywhereRequiresReason && reason is null)
+                    || (anywhere.AnywhereRequiresPhoto && photoFileId is null))
+                {
+                    await RecordAttemptAsync(
+                            tenantId,
+                            employeeId,
+                            employee.BranchId,
+                            ErrorCodes.AttendanceAnywhereEvidenceRequired,
+                            request.AccuracyM,
+                            distance,
+                            request.ClientRequestId,
+                            userId,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                    return Result.Failure<PunchResultDto>(
+                        ErrorCodes.AttendanceAnywhereEvidenceRequired,
+                        ErrorCodes.AttendanceAnywhereEvidenceRequired);
+                }
+
+                outsideReason = reason;
+            }
+            else
+            {
+                // No anywhere exception: the employee's branch policy decides (Block when unknown).
+                if (branch is null || branch.OutOfRangePolicy == OutOfRangePolicy.Block)
+                {
+                    await RecordAttemptAsync(
+                            tenantId,
+                            employeeId,
+                            employee.BranchId,
+                            ErrorCodes.AttendanceOutsideRange,
+                            request.AccuracyM,
+                            distance,
+                            request.ClientRequestId,
+                            userId,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                    return Result.Failure<PunchResultDto>(
+                        ErrorCodes.AttendanceOutsideRange,
+                        ErrorCodes.AttendanceOutsideRange);
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Reason))
+                {
+                    await RecordAttemptAsync(
+                            tenantId,
+                            employeeId,
+                            employee.BranchId,
+                            ErrorCodes.AttendanceReasonRequired,
+                            request.AccuracyM,
+                            distance,
+                            request.ClientRequestId,
+                            userId,
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                    return Result.Failure<PunchResultDto>(
+                        ErrorCodes.AttendanceReasonRequired,
+                        ErrorCodes.AttendanceReasonRequired);
+                }
+
+                outsideReason = request.Reason.Trim();
+            }
+        }
+
         var kind = await ResolveNextKindAsync(employeeId, context.WorkDate, cancellationToken)
             .ConfigureAwait(false);
 
         var punch = AttendancePunch.CreateAccepted(
             tenantId,
             employeeId,
-            branch.Id,
+            employee.BranchId,
             kind,
             punchedAt,
             context.WorkDate,
@@ -241,7 +316,9 @@ public sealed class AttendanceService(
             request.Latitude,
             request.Longitude,
             request.ClientRequestId,
-            userId);
+            userId,
+            target.WorkLocationId,
+            photoFileId);
 
         db.AttendancePunches.Add(punch);
 
@@ -267,7 +344,8 @@ public sealed class AttendanceService(
                     raced.DistanceM ?? 0,
                     raced.OutsideReason,
                     (await GetOrComputeStatusAsync(employeeId, raced.WorkDate, cancellationToken)
-                        .ConfigureAwait(false)).ToString()));
+                        .ConfigureAwait(false)).ToString(),
+                    raced.WorkLocationId));
             }
 
             throw;
@@ -294,6 +372,7 @@ public sealed class AttendanceService(
                     workDate = punch.WorkDate.ToString("O"),
                     isInside = punch.IsInside,
                     distanceM = punch.DistanceM,
+                    workLocationId = punch.WorkLocationId,
                 }),
                 cancellationToken)
             .ConfigureAwait(false);
@@ -306,7 +385,8 @@ public sealed class AttendanceService(
             punch.IsInside,
             punch.DistanceM ?? 0,
             punch.OutsideReason,
-            status.ToString()));
+            status.ToString(),
+            punch.WorkLocationId));
     }
 
     public async Task<Result<AttendanceTodayDto>> GetMyTodayAsync(CancellationToken cancellationToken = default)
@@ -385,8 +465,16 @@ public sealed class AttendanceService(
             : context.ShiftId is null ? "NoShift"
             : "Workday";
 
+        var assignedLocations = await ResolveAssignedLocationsAsync(
+                employee.Id,
+                employee.DepartmentId,
+                employee.BranchId,
+                context.WorkDate,
+                cancellationToken)
+            .ConfigureAwait(false);
+        var hasGeoTarget = assignedLocations.Count > 0 || branch.HasLocationConfigured;
         var canPunch = employee.Status is EmployeeStatus.Active or EmployeeStatus.Probation
-                       && branch.HasLocationConfigured
+                       && hasGeoTarget
                        && dayKind == "Workday";
 
         return Result.Success(new AttendanceTodayDto(
@@ -600,10 +688,10 @@ public sealed class AttendanceService(
         var rows = await db.Branches.AsNoTracking()
             .Where(b => b.IsActive)
             .OrderByDescending(b => b.IsDefault)
-            .ThenBy(b => b.Name)
+            .ThenBy(b => b.NameAr)
             .Select(b => new BranchLocationDto(
                 b.Id,
-                b.Name,
+                b.NameAr,
                 b.Latitude,
                 b.Longitude,
                 b.GeofenceRadiusMeters,
@@ -654,7 +742,7 @@ public sealed class AttendanceService(
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success(new BranchLocationDto(
             branch.Id,
-            branch.Name,
+            branch.NameAr,
             branch.Latitude,
             branch.Longitude,
             branch.GeofenceRadiusMeters,
@@ -920,25 +1008,16 @@ public sealed class AttendanceService(
         var localDate = TenantTimeZones.ToWorkDate(punchedAtUtc, timeZoneId);
         var candidateDates = new[] { localDate.AddDays(-1), localDate, localDate.AddDays(1) };
 
-        var assignments = await db.ShiftAssignments.AsNoTracking()
-            .Where(a => a.EmployeeId == employeeId && candidateDates.Contains(a.WorkDate))
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-
         var defaultShiftId = await ReadGuidSettingAsync(SettingKeys.AttendanceDefaultShiftId, cancellationToken)
             .ConfigureAwait(false);
-        Shift? defaultShift = null;
-        if (defaultShiftId is Guid dsid)
-        {
-            defaultShift = await db.Shifts.AsNoTracking()
-                .SingleOrDefaultAsync(s => s.Id == dsid && s.IsActive, cancellationToken)
-                .ConfigureAwait(false);
-        }
 
         foreach (var workDate in candidateDates)
         {
-            var assignment = assignments.FirstOrDefault(a => a.WorkDate == workDate);
-            if (assignment is { IsDayOff: true })
+            var effective = await ShiftRuleResolver
+                .ResolveAsync(db, employeeId, workDate, defaultShiftId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (effective.IsDayOff)
             {
                 if (workDate == localDate)
                 {
@@ -948,7 +1027,7 @@ public sealed class AttendanceService(
                 continue;
             }
 
-            Guid? shiftId = assignment?.ShiftId ?? (workDate == localDate ? defaultShiftId : null);
+            Guid? shiftId = effective.ShiftId;
             if (shiftId is null && workDate != localDate)
             {
                 continue;
@@ -958,13 +1037,8 @@ public sealed class AttendanceService(
             if (shiftId is Guid sid)
             {
                 shift = await db.Shifts.AsNoTracking()
-                    .SingleOrDefaultAsync(s => s.Id == sid, cancellationToken)
+                    .SingleOrDefaultAsync(s => s.Id == sid && s.IsActive, cancellationToken)
                     .ConfigureAwait(false);
-            }
-            else if (workDate == localDate)
-            {
-                shift = defaultShift;
-                shiftId = defaultShift?.Id;
             }
 
             if (shift is null)
@@ -991,7 +1065,10 @@ public sealed class AttendanceService(
             }
         }
 
-        return (localDate, defaultShift?.Id, false);
+        var fallback = await ShiftRuleResolver
+            .ResolveAsync(db, employeeId, localDate, defaultShiftId, cancellationToken)
+            .ConfigureAwait(false);
+        return (localDate, fallback.IsDayOff ? null : fallback.ShiftId, fallback.IsDayOff);
     }
 
     private async Task<PunchKind> ResolveNextKindAsync(
@@ -1154,16 +1231,13 @@ public sealed class AttendanceService(
             .ConfigureAwait(false);
         var isHoliday = holidays.Any(h => h.Covers(workDate));
 
-        var assignment = await db.ShiftAssignments.AsNoTracking()
-            .SingleOrDefaultAsync(a => a.EmployeeId == employeeId && a.WorkDate == workDate, cancellationToken)
+        var defaultShiftId = await ReadGuidSettingAsync(SettingKeys.AttendanceDefaultShiftId, cancellationToken)
+            .ConfigureAwait(false);
+        var effective = await ShiftRuleResolver
+            .ResolveAsync(db, employeeId, workDate, defaultShiftId, cancellationToken)
             .ConfigureAwait(false);
 
-        Guid? shiftId = assignment?.IsDayOff == true
-            ? null
-            : assignment?.ShiftId ?? await ReadGuidSettingAsync(SettingKeys.AttendanceDefaultShiftId, cancellationToken)
-                .ConfigureAwait(false);
-
-        return (isWeekend, isHoliday, assignment?.IsDayOff == true, shiftId);
+        return (isWeekend, isHoliday, effective.IsDayOff, effective.IsDayOff ? null : effective.ShiftId);
     }
 
     private async Task<AttendanceRulesDto> LoadRulesAsync(CancellationToken cancellationToken)
@@ -1340,7 +1414,7 @@ public sealed class AttendanceService(
     private static AttendanceBranchGeoDto MapBranchGeo(Branch branch) =>
         new(
             branch.Id,
-            branch.Name,
+            branch.NameAr,
             branch.Latitude,
             branch.Longitude,
             branch.GeofenceRadiusMeters,

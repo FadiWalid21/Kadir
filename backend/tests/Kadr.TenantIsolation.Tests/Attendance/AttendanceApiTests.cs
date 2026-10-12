@@ -185,6 +185,33 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
         Assert.Equal(ErrorCodes.AttendanceNoEmployee, await AuthTestHelper.ReadErrorCodeAsync(response));
     }
 
+    [Fact]
+    public async Task Board_today_is_tenant_isolated()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Board Co A", "board-a@example.com");
+        var b = await helper.RegisterVerifiedAsync("Board Co B", "board-b@example.com");
+        var sessionA = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var sessionB = await helper.LoginSessionAsync(b.Email, AuthTestHelper.Password, b.Slug);
+        var clientA = helper.Authed(sessionA.AccessToken);
+        var clientB = helper.Authed(sessionB.AccessToken);
+
+        await CreateLinkedEmployeeAsync(helper, clientA, a.TenantId, a.Email, "موظف أ", "Employee A");
+        await CreateLinkedEmployeeAsync(helper, clientB, b.TenantId, b.Email, "موظف ب", "Employee B");
+
+        var boardA = await clientA.GetFromJsonAsync<AttendanceBoardDto>(
+            "/api/v1/attendance/today?page=1&pageSize=20",
+            JsonOptions);
+        var boardB = await clientB.GetFromJsonAsync<AttendanceBoardDto>(
+            "/api/v1/attendance/today?page=1&pageSize=20",
+            JsonOptions);
+        Assert.NotNull(boardA);
+        Assert.NotNull(boardB);
+        Assert.All(boardA.Items, row => Assert.DoesNotContain("موظف ب", row.FullNameAr));
+        Assert.All(boardB.Items, row => Assert.DoesNotContain("موظف أ", row.FullNameAr));
+    }
+
     private static async Task<Guid> CreateLinkedEmployeeAsync(
         AuthTestHelper helper,
         HttpClient client,

@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { InstallService } from '../../../core/pwa/install.service';
+import { InstallPromptService } from '../../../core/pwa/install-prompt.service';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 
@@ -10,13 +10,17 @@ import { IconComponent } from '../icon/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslocoPipe, ButtonComponent, IconComponent],
   template: `
-    @if (install.showIosSheet()) {
-      <div class="fixed inset-0 z-50 flex items-end justify-center" role="presentation" data-testid="ios-install-sheet">
+    @if (install.showHowTo()) {
+      <div
+        class="fixed inset-0 z-50 flex items-end justify-center"
+        role="presentation"
+        data-testid="ios-install-sheet"
+      >
         <button
           type="button"
           class="absolute inset-0 bg-fg/40"
           [attr.aria-label]="'ui.close' | transloco"
-          (click)="install.closeIosSheet()"
+          (click)="install.closeHowTo()"
         ></button>
         <div
           class="kadr-drawer-sheet relative z-10 flex w-full max-w-lg flex-col gap-4 rounded-t-lg border border-line bg-surface p-4 shadow-lg"
@@ -45,14 +49,14 @@ import { IconComponent } from '../icon/icon.component';
             </li>
           </ol>
           <p class="text-start text-xs text-fg-muted">{{ 'pwa.ios.safariOnly' | transloco }}</p>
-          <kadr-button variant="primary" type="button" class="w-full" (click)="install.closeIosSheet()">
+          <kadr-button variant="primary" type="button" class="w-full" (click)="install.closeHowTo()">
             {{ 'pwa.ios.gotIt' | transloco }}
           </kadr-button>
           <button
             type="button"
             class="text-center text-sm text-fg-2 underline-offset-2 hover:underline focus-visible:outline-none"
             data-testid="ios-never"
-            (click)="install.neverShowIosSheet()"
+            (click)="install.dismissBanner()"
           >
             {{ 'pwa.ios.never' | transloco }}
           </button>
@@ -62,22 +66,22 @@ import { IconComponent } from '../icon/icon.component';
   `,
 })
 export class IosInstallSheetComponent {
-  protected readonly install = inject(InstallService);
+  protected readonly install = inject(InstallPromptService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly titleId = 'ios-install-title';
 
   constructor() {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && this.install.showIosSheet()) {
-        this.install.closeIosSheet();
+      if (event.key === 'Escape' && this.install.showHowTo()) {
+        this.install.closeHowTo();
       }
     };
     this.document.addEventListener('keydown', onKey);
     this.destroyRef.onDestroy(() => this.document.removeEventListener('keydown', onKey));
 
     effect(() => {
-      this.document.body.style.overflow = this.install.showIosSheet() ? 'hidden' : '';
+      this.document.body.style.overflow = this.install.showHowTo() ? 'hidden' : '';
     });
   }
 }

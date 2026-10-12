@@ -14,6 +14,7 @@ using Kadr.Infrastructure.Persistence;
 using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.Platform.Application;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Infrastructure;
 using Kadr.SharedKernel.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -60,6 +61,11 @@ try
     builder.Services.AddOptions<DatabaseHostOptions>()
         .Bind(builder.Configuration.GetSection(DatabaseHostOptions.SectionName));
 
+    builder.Services.AddOptions<WebPushOptions>()
+        .Bind(builder.Configuration.GetSection(WebPushOptions.SectionName))
+        .Validate(options => WebPushOptions.Validate(options) is null, "WebPush configuration is invalid.")
+        .ValidateOnStart();
+
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -84,7 +90,7 @@ try
     }
 
     builder.Services.AddPlatformApplication();
-    builder.Services.AddPlatformInfrastructure();
+    builder.Services.AddPlatformInfrastructure(builder.Configuration);
     builder.Services.AddIdentityApplication();
     builder.Services.AddIdentityInfrastructure();
     builder.Services.AddPersistence(connectionString);
@@ -134,6 +140,8 @@ try
     var forgotLimit = builder.Configuration.GetValue("RateLimiting:ForgotPermitLimit", 5);
     var resetLimit = builder.Configuration.GetValue("RateLimiting:ResetPermitLimit", 10);
     var meSecurityLimit = builder.Configuration.GetValue("RateLimiting:MeSecurityPermitLimit", 10);
+    var mePushLimit = builder.Configuration.GetValue("RateLimiting:MePushPermitLimit", 30);
+    var mePushTestLimit = builder.Configuration.GetValue("RateLimiting:MePushTestPermitLimit", 5);
     var attendancePunchLimit = builder.Configuration.GetValue("RateLimiting:AttendancePunchPermitLimit", 2);
 
     builder.Services.AddRateLimiter(options =>
@@ -257,6 +265,24 @@ try
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
+        options.AddPolicy("me-push", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                PartitionKey(httpContext, "me-push"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = mePushLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("me-push-test", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                PartitionKey(httpContext, "me-push-test"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = mePushTestLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
         options.AddPolicy("attendance-punch", httpContext =>
             RateLimitPartition.GetFixedWindowLimiter(
                 AttendancePunchPartitionKey(httpContext),
@@ -325,6 +351,7 @@ try
     app.MapGoogleAuthEndpoints();
     app.MapMeEndpoints();
     app.MapTenantEndpoints();
+    app.MapBranchSettingsEndpoints();
     app.MapTemplatesEndpoints();
     app.MapTenantTemplatesEndpoints();
     app.MapRolesEndpoints();
@@ -333,7 +360,12 @@ try
     app.MapSubscriptionEndpoints();
     app.MapAuditLogEndpoints();
     app.MapEmployeesEndpoints();
+    app.MapLookupEndpoints();
     app.MapAttendanceEndpoints();
+    app.MapLeaveEndpoints();
+    app.MapNotificationEndpoints();
+    app.MapHomeEndpoints();
+    app.MapReportsEndpoints();
 
     app.Run();
 }

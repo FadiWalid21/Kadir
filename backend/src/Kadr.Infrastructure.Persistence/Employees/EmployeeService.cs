@@ -113,7 +113,7 @@ public sealed class EmployeeService(
                     j != null ? j.NameEn : null,
                     d != null ? d.NameAr : null,
                     d != null ? d.NameEn : null,
-                    b.Name,
+                    b.NameAr,
                     m != null ? m.FullNameAr : null,
                     m != null ? m.Id : null,
                     e.HireDate))
@@ -869,7 +869,7 @@ public sealed class EmployeeService(
     {
         var branchName = await db.Branches.AsNoTracking()
             .Where(b => b.Id == e.BranchId)
-            .Select(b => b.Name)
+            .Select(b => b.NameAr)
             .SingleAsync(cancellationToken)
             .ConfigureAwait(false);
 

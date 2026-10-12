@@ -15,6 +15,26 @@ public interface ITenantTemplateService
         bool? active,
         CancellationToken cancellationToken = default);
 
+    Task<Result<TemplateItemDto>> CreateShiftAsync(
+        UpdateShiftTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<TemplateItemDto>> CreateLeaveTypeAsync(
+        UpdateLeaveTypeTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<TemplateItemDto>> CreateDocumentTypeAsync(
+        UpdateDocumentTypeTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<TemplateItemDto>> CreateJobTitleAsync(
+        UpdateNamedTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<TemplateItemDto>> CreateDepartmentAsync(
+        UpdateNamedTemplateRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<Result<TemplateItemDto>> UpdateShiftAsync(
         Guid id,
         UpdateShiftTemplateRequest request,
@@ -49,6 +69,11 @@ public interface ITenantTemplateService
         string section,
         Guid id,
         bool isActive,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> DeleteAsync(
+        string section,
+        Guid id,
         CancellationToken cancellationToken = default);
 
     Task<Result<AddMissingResultDto>> AddMissingAsync(CancellationToken cancellationToken = default);

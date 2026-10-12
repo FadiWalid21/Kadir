@@ -84,7 +84,7 @@ public sealed class EmployeeImportService(
             .ConfigureAwait(false);
         var branches = await db.Branches.AsNoTracking()
             .Where(b => b.IsActive)
-            .Select(b => new { b.Id, b.Name })
+            .Select(b => new { b.Id, b.NameAr, b.NameEn })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var managers = await db.Employees.AsNoTracking()
@@ -159,7 +159,9 @@ public sealed class EmployeeImportService(
             var branch = Cell("branch");
             if (!string.IsNullOrWhiteSpace(branch))
             {
-                var match = branches.FirstOrDefault(b => b.Name.Equals(branch, StringComparison.OrdinalIgnoreCase));
+                var match = branches.FirstOrDefault(b =>
+                    b.NameAr.Equals(branch, StringComparison.OrdinalIgnoreCase)
+                    || b.NameEn.Equals(branch, StringComparison.OrdinalIgnoreCase));
                 if (match is null)
                 {
                     errors.Add(new ImportPreviewErrorDto(rowNum, "branch", "not_found", "Branch not found"));

@@ -20,7 +20,6 @@ import { InputComponent } from '../../shared/ui/input/input.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { RolesStore } from './roles.store';
-import { SettingsSubnavComponent } from './settings-subnav.component';
 
 @Component({
   selector: 'kadr-roles-settings-page',
@@ -28,7 +27,6 @@ import { SettingsSubnavComponent } from './settings-subnav.component';
   providers: [RolesStore],
   imports: [
     TranslocoPipe,
-    SettingsSubnavComponent,
     ButtonComponent,
     InputComponent,
     CheckboxComponent,
@@ -40,7 +38,6 @@ import { SettingsSubnavComponent } from './settings-subnav.component';
   ],
   template: `
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
-      <kadr-settings-subnav active="roles" [showTemplates]="canTemplates()" />
 
       <header class="text-start">
         <h1 class="text-2xl font-bold leading-tight text-fg">{{ 'settings.roles.title' | transloco }}</h1>
@@ -313,9 +310,6 @@ export class RolesSettingsPage implements OnInit {
     this.auth.hasPermission(PermissionCodes.RolesManage),
   );
   protected readonly canManage = computed(() => this.canManagePerm() && !this.readOnly());
-  protected readonly canTemplates = computed(() =>
-    this.auth.hasPermission(PermissionCodes.TenantTemplatesManage),
-  );
 
   private readonly myPermissions = computed(
     () => new Set(this.auth.me()?.permissions ?? []),

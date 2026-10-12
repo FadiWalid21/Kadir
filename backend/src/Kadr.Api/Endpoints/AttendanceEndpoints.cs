@@ -89,6 +89,116 @@ public static class AttendanceEndpoints
             .RequireFeature(FeatureKeys.Attendance)
             .WithName("AttendanceUpdateWeekend");
 
+        app.MapGet("/api/v1/attendance/today", GetBoardTodayAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceReadTeam)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceBoardToday");
+
+        app.MapGet("/api/v1/attendance/schedules/week", GetScheduleWeekAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceScheduleWeek");
+
+        app.MapPut("/api/v1/attendance/schedules/assignments", UpsertShiftAssignmentsAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceUpsertAssignments");
+
+        app.MapGet("/api/v1/attendance/shift-rules", ListShiftRulesAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceListShiftRules");
+
+        app.MapPost("/api/v1/attendance/shift-rules", CreateShiftRulesAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceCreateShiftRules");
+
+        app.MapPost("/api/v1/attendance/shift-rules/preview", PreviewShiftRulesAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendancePreviewShiftRules");
+
+        app.MapPut("/api/v1/attendance/shift-rules/{id:guid}", UpdateShiftRuleAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceUpdateShiftRule");
+
+        app.MapPost("/api/v1/attendance/shift-rules/{id:guid}/end", EndShiftRuleAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceEndShiftRule");
+
+        app.MapGet("/api/v1/attendance/reports/matrix", GetAttendanceMatrixAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceReports)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceReportsMatrix");
+
+        app.MapPost("/api/v1/attendance/corrections", CreateCorrectionAsync)
+            .RequireAuthorization(PermissionCodes.AttendancePunch)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceCreateCorrection");
+
+        app.MapGet("/api/v1/attendance/corrections/mine", ListMyCorrectionsAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceReadOwn)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceListMyCorrections");
+
+        app.MapGet("/api/v1/attendance/corrections", ListCorrectionsInboxAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceReadTeam)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceListCorrectionsInbox");
+
+        app.MapPost("/api/v1/attendance/corrections/{id:guid}/approve", ApproveCorrectionAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceEdit)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceApproveCorrection");
+
+        app.MapPost("/api/v1/attendance/corrections/{id:guid}/reject", RejectCorrectionAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceEdit)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceRejectCorrection");
+
+        app.MapGet("/api/v1/attendance/work-locations", ListWorkLocationsAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceListWorkLocations");
+
+        app.MapGet("/api/v1/attendance/work-locations/{id:guid}", GetWorkLocationAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceGetWorkLocation");
+
+        app.MapPost("/api/v1/attendance/work-locations", CreateWorkLocationAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceCreateWorkLocation");
+
+        app.MapPut("/api/v1/attendance/work-locations/{id:guid}", UpdateWorkLocationAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceUpdateWorkLocation");
+
+        app.MapGet("/api/v1/attendance/work-locations/{id:guid}/assignments", GetWorkLocationAssignmentsAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceGetWorkLocationAssignments");
+
+        app.MapPut("/api/v1/attendance/work-locations/{id:guid}/assignments", ReplaceWorkLocationAssignmentsAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceReplaceWorkLocationAssignments");
+
+        app.MapGet("/api/v1/attendance/employees/{id:guid}/attendance-policy", GetEmployeeAttendancePolicyAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceGetEmployeePolicy");
+
+        app.MapPut("/api/v1/attendance/employees/{id:guid}/attendance-policy", UpdateEmployeeAttendancePolicyAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceManage)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceUpdateEmployeePolicy");
+
         return app;
     }
 
@@ -117,6 +227,204 @@ public static class AttendanceEndpoints
         ToResult(
             httpContext,
             await attendance.GetMyMonthAsync(year, month, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetBoardTodayAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] DateOnly? date = null,
+        [FromQuery] Guid? branchId = null,
+        [FromQuery] Guid? departmentId = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? q = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20) =>
+        ToResult(
+            httpContext,
+            await attendance.GetBoardTodayAsync(
+                    date,
+                    branchId,
+                    departmentId,
+                    status,
+                    q,
+                    page,
+                    pageSize,
+                    cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetScheduleWeekAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] DateOnly weekStart,
+        [FromQuery] Guid? branchId = null,
+        [FromQuery] Guid? departmentId = null) =>
+        ToResult(
+            httpContext,
+            await attendance.GetScheduleWeekAsync(weekStart, branchId, departmentId, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> UpsertShiftAssignmentsAsync(
+        [FromBody] BulkUpsertShiftAssignmentsRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.UpsertShiftAssignmentsAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> ListShiftRulesAsync(
+        HttpContext httpContext,
+        IShiftAssignmentRuleService rules,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? targetType = null) =>
+        ToResult(
+            httpContext,
+            await rules.ListAsync(page, pageSize, targetType, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> CreateShiftRulesAsync(
+        [FromBody] CreateShiftAssignmentRulesRequest request,
+        HttpContext httpContext,
+        IShiftAssignmentRuleService rules,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await rules.CreateAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> PreviewShiftRulesAsync(
+        [FromBody] PreviewShiftAssignmentRulesRequest request,
+        HttpContext httpContext,
+        IShiftAssignmentRuleService rules,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await rules.PreviewAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> UpdateShiftRuleAsync(
+        Guid id,
+        [FromBody] UpdateShiftAssignmentRuleRequest request,
+        HttpContext httpContext,
+        IShiftAssignmentRuleService rules,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await rules.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> EndShiftRuleAsync(
+        Guid id,
+        [FromBody] EndShiftAssignmentRuleRequest request,
+        HttpContext httpContext,
+        IShiftAssignmentRuleService rules,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await rules.EndAsync(id, request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetAttendanceMatrixAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] int year,
+        [FromQuery] int month,
+        [FromQuery] Guid? branchId = null,
+        [FromQuery] Guid? departmentId = null,
+        [FromQuery] string? q = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20) =>
+        ToResult(
+            httpContext,
+            await attendance.GetAttendanceMatrixAsync(
+                    year,
+                    month,
+                    branchId,
+                    departmentId,
+                    q,
+                    page,
+                    pageSize,
+                    cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> CreateCorrectionAsync(
+        [FromBody] CreateAttendanceCorrectionRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.CreateCorrectionAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> ListMyCorrectionsAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20) =>
+        ToResult(
+            httpContext,
+            await attendance.ListMyCorrectionsAsync(status, page, pageSize, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> ListCorrectionsInboxAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20) =>
+        ToResult(
+            httpContext,
+            await attendance.ListCorrectionsInboxAsync(status, page, pageSize, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> ApproveCorrectionAsync(
+        Guid id,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.ApproveCorrectionAsync(id, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> RejectCorrectionAsync(
+        Guid id,
+        [FromBody] RejectAttendanceCorrectionRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.RejectCorrectionAsync(id, request, cancellationToken).ConfigureAwait(false),
             localizer);
 
     private static async Task<IResult> GetRulesAsync(
@@ -248,6 +556,104 @@ public static class AttendanceEndpoints
             await attendance.UpdateWeekendAsync(request, cancellationToken).ConfigureAwait(false),
             localizer);
 
+    private static async Task<IResult> ListWorkLocationsAsync(
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken,
+        [FromQuery] string? type = null,
+        [FromQuery] bool? active = null,
+        [FromQuery] string? q = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20) =>
+        ToResult(
+            httpContext,
+            await attendance.ListWorkLocationsAsync(type, active, q, page, pageSize, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetWorkLocationAsync(
+        Guid id,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.GetWorkLocationAsync(id, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> CreateWorkLocationAsync(
+        [FromBody] UpsertWorkLocationRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.CreateWorkLocationAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> UpdateWorkLocationAsync(
+        Guid id,
+        [FromBody] UpsertWorkLocationRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.UpdateWorkLocationAsync(id, request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetWorkLocationAssignmentsAsync(
+        Guid id,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.GetWorkLocationAssignmentsAsync(id, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> ReplaceWorkLocationAssignmentsAsync(
+        Guid id,
+        [FromBody] ReplaceWorkLocationAssignmentsRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.ReplaceWorkLocationAssignmentsAsync(id, request, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> GetEmployeeAttendancePolicyAsync(
+        Guid id,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.GetEmployeeAttendancePolicyAsync(id, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> UpdateEmployeeAttendancePolicyAsync(
+        Guid id,
+        [FromBody] UpdateEmployeeAttendancePolicyRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.UpdateEmployeeAttendancePolicyAsync(id, request, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+
     private static IResult ToResult<T>(HttpContext httpContext, Result<T> result, IErrorLocalizer localizer)
     {
         if (result.IsSuccess)
@@ -262,10 +668,12 @@ public static class AttendanceEndpoints
     {
         var status = code switch
         {
-            ErrorCodes.AttendanceNotFound => StatusCodes.Status404NotFound,
+            ErrorCodes.AttendanceNotFound
+                or ErrorCodes.AttendanceLocationNotFound
+                or ErrorCodes.AttendanceShiftRuleNotFound => StatusCodes.Status404NotFound,
             ErrorCodes.PlanFeatureNotAvailable or ErrorCodes.AttendanceForbidden or ErrorCodes.SubscriptionExpired =>
                 StatusCodes.Status403Forbidden,
-            ErrorCodes.AttendanceDuplicatePunch => StatusCodes.Status409Conflict,
+            ErrorCodes.AttendanceDuplicatePunch or ErrorCodes.AttendanceShiftRuleOverlap => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest,
         };
         return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));

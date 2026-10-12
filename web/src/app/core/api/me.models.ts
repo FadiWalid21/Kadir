@@ -16,6 +16,7 @@ export interface MeResponse {
   fullName: string;
   email: string;
   language: string;
+  photoUrl?: string | null;
   roles: string[];
   permissions: string[];
   tenant: MeTenantDto;

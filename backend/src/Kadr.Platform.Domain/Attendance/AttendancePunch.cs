@@ -23,6 +23,8 @@ public sealed class AttendancePunch : AggregateRoot, ITenantOwned
     public string? OutsideReason { get; private set; }
     public double? Latitude { get; private set; }
     public double? Longitude { get; private set; }
+    public Guid? WorkLocationId { get; private set; }
+    public Guid? PhotoFileId { get; private set; }
     public Guid ClientRequestId { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -43,7 +45,9 @@ public sealed class AttendancePunch : AggregateRoot, ITenantOwned
         double latitude,
         double longitude,
         Guid clientRequestId,
-        Guid? createdBy)
+        Guid? createdBy,
+        Guid? workLocationId = null,
+        Guid? photoFileId = null)
     {
         if (clientRequestId == Guid.Empty)
         {
@@ -67,6 +71,8 @@ public sealed class AttendancePunch : AggregateRoot, ITenantOwned
             OutsideReason = string.IsNullOrWhiteSpace(outsideReason) ? null : outsideReason.Trim(),
             Latitude = latitude,
             Longitude = longitude,
+            WorkLocationId = workLocationId,
+            PhotoFileId = photoFileId,
             ClientRequestId = clientRequestId,
             CreatedBy = createdBy,
             CreatedAt = DateTimeOffset.UtcNow,

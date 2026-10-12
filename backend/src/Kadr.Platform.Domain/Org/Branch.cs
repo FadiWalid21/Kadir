@@ -1,5 +1,6 @@
 using Kadr.SharedKernel.Domain;
 using Kadr.SharedKernel.Ids;
+using Kadr.SharedKernel.Text;
 
 namespace Kadr.Platform.Domain.Org;
 
@@ -11,7 +12,10 @@ public sealed class Branch : AggregateRoot, ITenantOwned, IAuditable
 
     public Guid TenantId { get; private set; }
     public Guid LegalEntityId { get; private set; }
-    public string Name { get; private set; } = string.Empty;
+    public string NameAr { get; private set; } = string.Empty;
+    public string NameEn { get; private set; } = string.Empty;
+    public string SearchName { get; private set; } = string.Empty;
+    public string? Address { get; private set; }
     public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; } = true;
     public double? Latitude { get; private set; }
@@ -26,17 +30,52 @@ public sealed class Branch : AggregateRoot, ITenantOwned, IAuditable
     public static Branch CreateDefault(Guid tenantId, Guid legalEntityId, string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var trimmed = name.Trim();
+        return Create(tenantId, legalEntityId, trimmed, trimmed, address: null, isDefault: true);
+    }
+
+    public static Branch Create(
+        Guid tenantId,
+        Guid legalEntityId,
+        string nameAr,
+        string nameEn,
+        string? address,
+        bool isDefault = false)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
 
         return new Branch
         {
             Id = GuidV7.NewGuid(),
             TenantId = tenantId,
             LegalEntityId = legalEntityId,
-            Name = name.Trim(),
-            IsDefault = true,
+            NameAr = nameAr.Trim(),
+            NameEn = nameEn.Trim(),
+            SearchName = BuildSearchName(nameAr, nameEn),
+            Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim(),
+            IsDefault = isDefault,
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+    }
+
+    public void Update(Guid legalEntityId, string nameAr, string nameEn, string? address)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameAr);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nameEn);
+        LegalEntityId = legalEntityId;
+        NameAr = nameAr.Trim();
+        NameEn = nameEn.Trim();
+        SearchName = BuildSearchName(nameAr, nameEn);
+        Address = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     public bool HasLocationConfigured =>
@@ -72,4 +111,7 @@ public sealed class Branch : AggregateRoot, ITenantOwned, IAuditable
         OutOfRangePolicy = OutOfRangePolicy.Block;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
+
+    private static string BuildSearchName(string nameAr, string nameEn) =>
+        ArabicText.NormalizeForSearch($"{nameAr} {nameEn}");
 }

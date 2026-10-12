@@ -28,15 +28,27 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             <p class="truncate text-xs text-fg-muted">{{ 'auth.shell.brandLine' | transloco }}</p>
           </div>
         </div>
-        <button
-          type="button"
-          class="inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm text-fg-2 hover:bg-hover focus-visible:outline-none"
-          [attr.aria-label]="'uiKit.language' | transloco"
-          (click)="toggleLanguage()"
-        >
-          <kadr-icon name="globe" size="sm" />
-          {{ theme.language() === 'ar' ? ('uiKit.langEn' | transloco) : ('uiKit.langAr' | transloco) }}
-        </button>
+        <div class="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            class="inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm text-fg-2 hover:bg-hover focus-visible:outline-none"
+            [attr.aria-label]="'uiKit.language' | transloco"
+            [attr.title]="'uiKit.language' | transloco"
+            (click)="toggleLanguage()"
+          >
+            <kadr-icon name="globe" size="sm" />
+            {{ theme.language() === 'ar' ? ('uiKit.langEn' | transloco) : ('uiKit.langAr' | transloco) }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex size-11 items-center justify-center rounded-md text-fg-2 hover:bg-hover focus-visible:outline-none"
+            [attr.aria-label]="'shell.toggleTheme' | transloco"
+            [attr.title]="'shell.toggleTheme' | transloco"
+            (click)="toggleTheme()"
+          >
+            <kadr-icon [name]="theme.resolvedTheme() === 'dark' ? 'sun' : 'moon'" size="sm" />
+          </button>
+        </div>
       </header>
 
       <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-8 md:px-6">
@@ -161,5 +173,10 @@ export class AuthShellLayout {
     const next = this.theme.language() === 'ar' ? 'en' : 'ar';
     this.theme.setLanguage(next);
     this.transloco.setActiveLang(next);
+  }
+
+  toggleTheme(): void {
+    const next = this.theme.resolvedTheme() === 'dark' ? 'light' : 'dark';
+    this.theme.setTheme(next);
   }
 }

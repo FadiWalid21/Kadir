@@ -20,17 +20,33 @@ public static class SystemRolePermissions
             PermissionCodes.AttendancePunch,
             PermissionCodes.AttendanceReadOwn,
             PermissionCodes.AttendanceReadTeam,
+            PermissionCodes.AttendanceEdit,
+            PermissionCodes.LeaveReadOwn,
+            PermissionCodes.LeaveRequest,
+            PermissionCodes.LeaveReadTeam,
+            PermissionCodes.LeaveApprove,
+            PermissionCodes.NotificationsRead,
+            PermissionCodes.NotificationsManagePrefs,
+            PermissionCodes.ReportsRead,
         ],
         SystemRoleNames.Employee =>
         [
             PermissionCodes.EmployeesRead,
             PermissionCodes.AttendancePunch,
             PermissionCodes.AttendanceReadOwn,
+            PermissionCodes.LeaveReadOwn,
+            PermissionCodes.LeaveRequest,
+            PermissionCodes.NotificationsRead,
+            PermissionCodes.NotificationsManagePrefs,
         ],
         SystemRoleNames.Accountant =>
         [
             PermissionCodes.SubscriptionRead,
             PermissionCodes.AuditRead,
+            PermissionCodes.NotificationsRead,
+            PermissionCodes.NotificationsManagePrefs,
+            PermissionCodes.ReportsRead,
+            PermissionCodes.ReportsExport,
         ],
         _ => throw new ArgumentOutOfRangeException(nameof(roleName), roleName, "Unknown system role."),
     };

@@ -7,11 +7,17 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { LookupsApi } from '../../core/api/lookups.api';
 import { PlatformApi } from '../../core/api/platform.api';
 import { PlatformAuditLogItem } from '../../core/api/platform.models';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
+import {
+  ComboboxComponent,
+  ComboboxOption,
+  ComboboxSearchFn,
+} from '../../shared/ui/combobox/combobox.component';
 import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
@@ -36,6 +42,7 @@ type Period = 'today' | '7d' | '30d' | 'custom';
     BadgeComponent,
     IconComponent,
     DrawerComponent,
+    ComboboxComponent,
   ],
   template: `
     <div class="flex flex-col gap-6">
@@ -112,14 +119,16 @@ type Period = 'today' | '7d' | '30d' | 'custom';
           </div>
         }
         <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
-          <label class="grid min-w-0 flex-1 gap-1 text-xs text-fg-2">
-            <span>{{ 'platform.audit.filterTenant' | transloco }}</span>
-            <input
-              class="h-control rounded-md border border-line-strong bg-surface px-3 text-sm text-fg"
-              [ngModel]="tenantId()"
-              (ngModelChange)="tenantId.set($event)"
+          <div class="min-w-0 flex-1">
+            <kadr-combobox
+              [label]="'platform.audit.filterTenant' | transloco"
+              [placeholder]="'ui.combobox.searchPlaceholder' | transloco"
+              [searchFn]="tenantSearchFn"
+              [value]="tenantId()"
+              [displayName]="tenantLabel()"
+              (selectionChange)="onTenantSelected($event)"
             />
-          </label>
+          </div>
           <label class="grid min-w-0 flex-1 gap-1 text-xs text-fg-2">
             <span>{{ 'platform.audit.filterAction' | transloco }}</span>
             <input
@@ -312,6 +321,7 @@ type Period = 'today' | '7d' | '30d' | 'custom';
 })
 export class PlatformAuditPage implements OnInit {
   private readonly api = inject(PlatformApi);
+  private readonly lookupsApi = inject(LookupsApi);
   private readonly i18n = inject(TranslocoService);
 
   protected readonly state = signal<PageState>('loading');
@@ -321,11 +331,22 @@ export class PlatformAuditPage implements OnInit {
   protected readonly period = signal<Period>('7d');
   protected readonly action = signal('');
   protected readonly tenantId = signal('');
+  protected readonly tenantLabel = signal('');
   protected readonly fromDate = signal('');
   protected readonly toDate = signal('');
   protected readonly loadingMore = signal(false);
   protected readonly selected = signal<PlatformAuditLogItem | null>(null);
   protected readonly periods: Period[] = ['today', '7d', '30d', 'custom'];
+
+  protected readonly tenantSearchFn: ComboboxSearchFn = async (q) => {
+    const page = await this.lookupsApi.searchTenants(q);
+    return page.items.map((i) => ({ id: i.id, name: i.name }));
+  };
+
+  protected onTenantSelected(opt: ComboboxOption | null): void {
+    this.tenantId.set(opt?.id ?? '');
+    this.tenantLabel.set(opt?.name ?? '');
+  }
 
   ngOnInit(): void {
     void this.reload();
@@ -350,6 +371,7 @@ export class PlatformAuditPage implements OnInit {
   clearFilters(): void {
     this.action.set('');
     this.tenantId.set('');
+    this.tenantLabel.set('');
     this.period.set('7d');
     this.fromDate.set('');
     this.toDate.set('');

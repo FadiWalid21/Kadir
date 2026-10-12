@@ -113,6 +113,20 @@ export const routes: Routes = [
         loadComponent: () => import('./features/account/account.page').then((m) => m.AccountPage),
       },
       {
+        path: 'account/notifications',
+        canActivate: [authGuard, permissionGuard(PermissionCodes.NotificationsManagePrefs)],
+        loadComponent: () =>
+          import('./features/notifications/notification-preferences.page').then(
+            (m) => m.NotificationPreferencesPage,
+          ),
+      },
+      {
+        path: 'notifications',
+        canActivate: [authGuard, permissionGuard(PermissionCodes.NotificationsRead)],
+        loadComponent: () =>
+          import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+      },
+      {
         path: 'employees',
         canActivate: [
           permissionGuard(PermissionCodes.EmployeesRead),
@@ -178,6 +192,79 @@ export const routes: Routes = [
           import('./features/employees/org-tree.page').then((m) => m.OrgTreePage),
       },
       {
+        path: 'attendance/today',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceReadTeam),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/attendance-today.page').then((m) => m.AttendanceTodayPage),
+      },
+      {
+        path: 'attendance/schedules/rules',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/shift-rules.page').then((m) => m.ShiftRulesPage),
+      },
+      {
+        path: 'attendance/schedules',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/attendance-schedules.page').then(
+            (m) => m.AttendanceSchedulesPage,
+          ),
+      },
+      {
+        path: 'attendance/reports',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceReports),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/attendance-reports.page').then(
+            (m) => m.AttendanceReportsPage,
+          ),
+      },
+      {
+        path: 'attendance/locations',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/work-locations-list.page').then(
+            (m) => m.WorkLocationsListPage,
+          ),
+      },
+      {
+        path: 'attendance/locations/:id/assign',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceManage),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/work-location-assign.page').then(
+            (m) => m.WorkLocationAssignPage,
+          ),
+      },
+      {
+        path: 'attendance/corrections',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceReadTeam),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/corrections-inbox.page').then(
+            (m) => m.CorrectionsInboxPage,
+          ),
+      },
+      {
         path: 'attendance/me',
         canActivate: [
           permissionGuard(PermissionCodes.AttendanceReadOwn),
@@ -185,6 +272,15 @@ export const routes: Routes = [
         ],
         loadComponent: () =>
           import('./features/attendance/my-month.page').then((m) => m.MyMonthPage),
+      },
+      {
+        path: 'attendance/requests',
+        canActivate: [
+          permissionGuard(PermissionCodes.AttendanceReadOwn),
+          featureGuard(FeatureKeys.Attendance),
+        ],
+        loadComponent: () =>
+          import('./features/attendance/my-requests.page').then((m) => m.MyRequestsPage),
       },
       {
         path: 'attendance/settings/rules',
@@ -220,42 +316,134 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'settings/company',
-        canActivate: [permissionGuard(PermissionCodes.TenantSettingsRead)],
-        loadComponent: () =>
-          import('./features/settings/company-settings.page').then((m) => m.CompanySettingsPage),
+        path: 'leave/me',
+        canActivate: [
+          permissionGuard(PermissionCodes.LeaveReadOwn),
+          featureGuard(FeatureKeys.Leave),
+        ],
+        loadComponent: () => import('./features/leave/leave-me.page').then((m) => m.LeaveMePage),
       },
       {
-        path: 'settings/templates',
-        canActivate: [permissionGuard(PermissionCodes.TenantTemplatesManage)],
+        path: 'leave/balances',
+        canActivate: [
+          permissionGuard(PermissionCodes.LeaveReadAll),
+          featureGuard(FeatureKeys.Leave),
+        ],
         loadComponent: () =>
-          import('./features/settings/templates-settings.page').then((m) => m.TemplatesSettingsPage),
+          import('./features/leave/leave-balances.page').then((m) => m.LeaveBalancesPage),
       },
       {
-        path: 'settings/users',
-        canActivate: [permissionGuard(PermissionCodes.UsersRead)],
+        path: 'leave/approvals',
+        canActivate: [
+          permissionGuard(PermissionCodes.LeaveReadTeam),
+          featureGuard(FeatureKeys.Leave),
+        ],
         loadComponent: () =>
-          import('./features/settings/users-settings.page').then((m) => m.UsersSettingsPage),
+          import('./features/leave/leave-approvals.page').then((m) => m.LeaveApprovalsPage),
       },
       {
-        path: 'settings/roles',
-        canActivate: [permissionGuard(PermissionCodes.RolesRead)],
+        path: 'reports',
+        canActivate: [
+          permissionGuard(PermissionCodes.ReportsRead),
+          featureGuard(FeatureKeys.Reports),
+        ],
         loadComponent: () =>
-          import('./features/settings/roles-settings.page').then((m) => m.RolesSettingsPage),
+          import('./features/reports/reports-hub.page').then((m) => m.ReportsHubPage),
       },
       {
-        path: 'settings/subscription',
-        canActivate: [permissionGuard(PermissionCodes.SubscriptionRead)],
+        path: 'reports/headcount',
+        canActivate: [
+          permissionGuard(PermissionCodes.ReportsRead),
+          featureGuard(FeatureKeys.Reports),
+        ],
         loadComponent: () =>
-          import('./features/settings/subscription-settings.page').then(
-            (m) => m.SubscriptionSettingsPage,
-          ),
+          import('./features/reports/headcount-report.page').then((m) => m.HeadcountReportPage),
       },
       {
-        path: 'settings/audit',
-        canActivate: [permissionGuard(PermissionCodes.AuditRead)],
+        path: 'settings',
         loadComponent: () =>
-          import('./features/settings/audit-settings.page').then((m) => m.AuditSettingsPage),
+          import('./features/settings/settings.layout').then((m) => m.SettingsLayout),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'company' },
+          {
+            path: 'company',
+            canActivate: [permissionGuard(PermissionCodes.TenantSettingsRead)],
+            loadComponent: () =>
+              import('./features/settings/company-settings.page').then((m) => m.CompanySettingsPage),
+          },
+          {
+            path: 'company/branches',
+            canActivate: [permissionGuard(PermissionCodes.TenantSettingsRead)],
+            loadComponent: () =>
+              import('./features/settings/branches-settings.page').then(
+                (m) => m.BranchesSettingsPage,
+              ),
+          },
+          {
+            path: 'leave-types',
+            canActivate: [
+              permissionGuard(PermissionCodes.LeaveManage),
+              featureGuard(FeatureKeys.Leave),
+            ],
+            loadComponent: () =>
+              import('./features/settings/leave-types-settings.page').then(
+                (m) => m.LeaveTypesSettingsPage,
+              ),
+          },
+          {
+            path: 'workflows',
+            canActivate: [
+              permissionGuard(PermissionCodes.WorkflowsManage),
+              featureGuard(FeatureKeys.Workflows),
+            ],
+            loadComponent: () =>
+              import('./features/settings/workflows-settings.page').then(
+                (m) => m.WorkflowsSettingsPage,
+              ),
+          },
+          {
+            path: 'templates',
+            canActivate: [permissionGuard(PermissionCodes.TenantTemplatesManage)],
+            loadComponent: () =>
+              import('./features/settings/templates-settings.page').then(
+                (m) => m.TemplatesSettingsPage,
+              ),
+          },
+          {
+            path: 'users',
+            canActivate: [permissionGuard(PermissionCodes.UsersRead)],
+            loadComponent: () =>
+              import('./features/settings/users-settings.page').then((m) => m.UsersSettingsPage),
+          },
+          {
+            path: 'invitations',
+            canActivate: [permissionGuard(PermissionCodes.UsersRead)],
+            loadComponent: () =>
+              import('./features/settings/invitations-settings.page').then(
+                (m) => m.InvitationsSettingsPage,
+              ),
+          },
+          {
+            path: 'roles',
+            canActivate: [permissionGuard(PermissionCodes.RolesRead)],
+            loadComponent: () =>
+              import('./features/settings/roles-settings.page').then((m) => m.RolesSettingsPage),
+          },
+          {
+            path: 'subscription',
+            canActivate: [permissionGuard(PermissionCodes.SubscriptionRead)],
+            loadComponent: () =>
+              import('./features/settings/subscription-settings.page').then(
+                (m) => m.SubscriptionSettingsPage,
+              ),
+          },
+          {
+            path: 'audit',
+            canActivate: [permissionGuard(PermissionCodes.AuditRead)],
+            loadComponent: () =>
+              import('./features/settings/audit-settings.page').then((m) => m.AuditSettingsPage),
+          },
+        ],
       },
       {
         path: 'feature-locked',

@@ -39,4 +39,16 @@ public sealed class ShiftAssignment : Entity, ITenantOwned
             CreatedAt = DateTimeOffset.UtcNow,
         };
     }
+
+    public void Reassign(Guid? shiftId, bool isDayOff)
+    {
+        if (!isDayOff && shiftId is null)
+        {
+            throw new ArgumentException("Shift is required unless the day is off.");
+        }
+
+        IsDayOff = isDayOff;
+        ShiftId = isDayOff ? null : shiftId;
+    }
 }
+

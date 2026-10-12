@@ -241,6 +241,126 @@ public sealed class TenantTemplatesTests(RegisterApiFactory factory)
         Assert.Equal(HttpStatusCode.NotFound, reset.StatusCode);
     }
 
+    [Fact]
+    public async Task Create_custom_department_and_reject_duplicate_name()
+    {
+        await factory.ResetDatabaseAsync();
+        var session = await RegisterAndLoginAsync("Create Co", "create-tpl@example.com", "office");
+        var create = await session.Client.PostAsJsonAsync(
+            "/api/v1/tenant/templates/departments",
+            new UpdateNamedTemplateRequest("قسم مخصص", "Custom Dept"));
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var created = await create.Content.ReadFromJsonAsync<TemplateItemDto>(JsonOptions);
+        Assert.NotNull(created);
+        Assert.Null(created.SourceKey);
+        Assert.True(created.IsCustomized);
+        Assert.True(created.IsActive);
+
+        var dup = await session.Client.PostAsJsonAsync(
+            "/api/v1/tenant/templates/departments",
+            new UpdateNamedTemplateRequest("قسم مخصص", "Other En"));
+        Assert.Equal(HttpStatusCode.BadRequest, dup.StatusCode);
+        var dupBody = await dup.Content.ReadAsStringAsync();
+        Assert.Contains(ErrorCodes.TemplateDuplicateName, dupBody, StringComparison.Ordinal);
+
+        var reset = await session.Client.PostAsync(
+            $"/api/v1/tenant/templates/departments/{created.Id}/reset",
+            null);
+        Assert.Equal(HttpStatusCode.BadRequest, reset.StatusCode);
+        var resetBody = await reset.Content.ReadAsStringAsync();
+        Assert.Contains(ErrorCodes.TemplateResetNotAvailable, resetBody, StringComparison.Ordinal);
+
+        var delete = await session.Client.DeleteAsync(
+            $"/api/v1/tenant/templates/departments/{created.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_referenced_job_title_returns_in_use_and_create_is_tenant_isolated()
+    {
+        await factory.ResetDatabaseAsync();
+        var a = await RegisterAndLoginAsync("Ref A", "ref-a-tpl@example.com", "office");
+        var b = await RegisterAndLoginAsync("Ref B", "ref-b-tpl@example.com", "office");
+
+        var create = await a.Client.PostAsJsonAsync(
+            "/api/v1/tenant/templates/job-titles",
+            new UpdateNamedTemplateRequest("مسمى مخصص", "Custom Title"));
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var created = await create.Content.ReadFromJsonAsync<TemplateItemDto>(JsonOptions);
+        Assert.NotNull(created);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(a.TenantId);
+            var branch = await db.Branches.AsNoTracking().FirstAsync();
+            var legal = await db.LegalEntities.AsNoTracking().FirstAsync();
+            var hireDate = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var emp = Kadr.Platform.Domain.Employees.Employee.Hire(
+                a.TenantId,
+                legal.Id,
+                branch.Id,
+                "EMP-TPL-1",
+                "موظف مرجعي",
+                "Ref Employee",
+                hireDate,
+                Kadr.Platform.Domain.Employees.EmployeeStatus.Active,
+                Kadr.Platform.Domain.Employees.ContractType.Unlimited);
+            emp.UpdateJob(
+                branch.Id,
+                null,
+                created.Id,
+                null,
+                hireDate,
+                null,
+                Kadr.Platform.Domain.Employees.ContractType.Unlimited,
+                null,
+                null);
+            db.Employees.Add(emp);
+            await db.SaveChangesAsync();
+        }
+
+        var delete = await a.Client.DeleteAsync($"/api/v1/tenant/templates/job-titles/{created.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, delete.StatusCode);
+        var deleteBody = await delete.Content.ReadAsStringAsync();
+        Assert.Contains(ErrorCodes.TemplateItemInUse, deleteBody, StringComparison.Ordinal);
+
+        var cross = await b.Client.DeleteAsync($"/api/v1/tenant/templates/job-titles/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, cross.StatusCode);
+    }
+
+    [Fact]
+    public async Task Create_without_permission_is_forbidden()
+    {
+        await factory.ResetDatabaseAsync();
+        var setup = factory.CreateCookieClient();
+        var reg = await RegisterVerifiedAsync(setup, "NoPerm Co", "noperm-tpl@example.com");
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(reg.TenantId);
+            var user = await db.Users.SingleAsync(u => u.Email == reg.Email);
+            var employeeRole = await db.Roles.SingleAsync(r =>
+                r.TenantId == reg.TenantId && r.Name == SystemRoleNames.Employee);
+            var ownerLink = await db.UserRoles.SingleAsync(ur => ur.UserId == user.Id);
+            db.UserRoles.Remove(ownerLink);
+            db.UserRoles.Add(UserRole.Create(reg.TenantId, user.Id, employeeRole.Id));
+            await db.SaveChangesAsync();
+            scope.ServiceProvider.GetRequiredService<IPermissionCacheInvalidator>().Invalidate(reg.TenantId, user.Id);
+        }
+
+        var empToken = await LoginAccessTokenAsync(factory.CreateCookieClient(), reg.Email, reg.Slug);
+        var emp = factory.CreateCookieClient();
+        emp.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", empToken);
+        var forbidden = await emp.PostAsJsonAsync(
+            "/api/v1/tenant/templates/departments",
+            new UpdateNamedTemplateRequest("س", "E"));
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+    }
+
     private async Task<(HttpClient Client, Guid TenantId)> RegisterAndLoginAsync(
         string company,
         string email,
