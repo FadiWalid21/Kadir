@@ -49,7 +49,21 @@ public sealed class CapturingEmailSender : IEmailSender
         }
 
         var index = body.LastIndexOf(legacyMarker, StringComparison.Ordinal);
-        return index < 0 ? null : body[(index + legacyMarker.Length)..].Trim();
+        if (index < 0)
+        {
+            return null;
+        }
+
+        var start = index + legacyMarker.Length;
+        var end = start;
+        while (end < body.Length
+               && !char.IsWhiteSpace(body[end])
+               && body[end] is not '<' and not '"' and not '\'')
+        {
+            end++;
+        }
+
+        return end > start ? body[start..end] : null;
     }
 
     private static string? CombineBodies(EmailMessage? message)

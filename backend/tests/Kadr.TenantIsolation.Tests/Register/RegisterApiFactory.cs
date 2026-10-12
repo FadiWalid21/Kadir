@@ -58,6 +58,7 @@ public sealed class RegisterApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("RateLimiting:MePushTestPermitLimit", "1000");
         builder.UseSetting("RateLimiting:AttendancePunchPermitLimit", "1000");
         builder.UseSetting("PasswordReset:EmailPermitLimit", "1000");
+        builder.UseSetting("App:PublicWebBaseUrl", "https://app.test");
         builder.UseSetting("Google:ClientId", TestGoogleClientId);
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
         builder.UseSetting("Jwt:Issuer", "kadr-test");

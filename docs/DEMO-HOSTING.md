@@ -36,7 +36,7 @@ When `Brevo__ApiKey` and `Brevo__SenderEmail` are both set, the API sends real e
 
 ### Invite email not arriving (checklist)
 
-1. On MonsterASP, set **all four**: `Brevo__ApiKey`, `Brevo__SenderEmail`, `Brevo__SenderName`, `App__PublicWebBaseUrl` (or the legacy flat names above).
+1. On MonsterASP, set **all four**: `Brevo__ApiKey`, `Brevo__SenderEmail`, `Brevo__SenderName`, `App__PublicWebBaseUrl` (or the legacy flat names above). **Most common miss:** SenderEmail/Name set but **`Brevo__ApiKey` missing** → health stays `logging` and nothing is delivered.
 2. `Brevo__SenderEmail` must be a **verified** sender (or domain) in the Brevo dashboard — otherwise Brevo rejects the send (API logs include Brevo status + truncated error body; no secrets).
 3. **Restart / redeploy** the API after changing settings (DI chooses Brevo only at startup). Deploy must include the branch that has Brevo wiring (prefer `main` after merge).
 4. Platform admin → Health: email provider must be **`brevo`**, not `logging` / `messages_logged_not_delivered`. If health shows `logging`, the host is missing ApiKey or SenderEmail — fix env and restart; toast **Open invite link** still works.
