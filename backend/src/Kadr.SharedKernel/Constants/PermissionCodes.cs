@@ -40,6 +40,8 @@ public static class PermissionCodes
     public const string NotificationsManagePrefs = "notifications.manage_prefs";
     public const string ReportsRead = "reports.read";
     public const string ReportsExport = "reports.export";
+    public const string SalaryRead = "salary.read";
+    public const string SalaryManage = "salary.manage";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -81,5 +83,7 @@ public static class PermissionCodes
         NotificationsManagePrefs,
         ReportsRead,
         ReportsExport,
+        SalaryRead,
+        SalaryManage,
     ];
 }

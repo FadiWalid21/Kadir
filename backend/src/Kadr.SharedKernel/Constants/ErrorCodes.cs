@@ -125,4 +125,7 @@ public static class ErrorCodes
     public const string ReportsExportTooLarge = "reports.export_too_large";
     public const string ReportsValidationFailed = "reports.validation_failed";
     public const string ReportsNotFound = "reports.not_found";
+    public const string SalaryValidationFailed = "salary.validation_failed";
+    public const string SalaryNotFound = "salary.not_found";
+    public const string SalaryDuplicateKey = "salary.duplicate_key";
 }

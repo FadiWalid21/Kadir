@@ -367,6 +367,7 @@ try
     app.MapMeEndpoints();
     app.MapTenantEndpoints();
     app.MapBranchSettingsEndpoints();
+    app.MapPayComponentsEndpoints();
     app.MapTemplatesEndpoints();
     app.MapTenantTemplatesEndpoints();
     app.MapRolesEndpoints();

@@ -13,6 +13,7 @@ using Kadr.Platform.Domain.Notifications;
 using Kadr.Platform.Domain.Workflows;
 using Kadr.Platform.Domain.Idempotency;
 using Kadr.Platform.Domain.Org;
+using Kadr.Platform.Domain.Payroll;
 using Kadr.Platform.Domain.Plans;
 using Kadr.Platform.Domain.Settings;
 using Kadr.Platform.Domain.Subscriptions;
@@ -53,6 +54,7 @@ public class KadrDbContext : DbContext
     public DbSet<IndustryTemplate> IndustryTemplates => Set<IndustryTemplate>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+    public DbSet<PayComponent> PayComponents => Set<PayComponent>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
     public DbSet<JobTitle> JobTitles => Set<JobTitle>();
     public DbSet<Department> Departments => Set<Department>();
