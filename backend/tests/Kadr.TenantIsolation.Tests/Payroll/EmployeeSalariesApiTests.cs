@@ -53,6 +53,13 @@ public sealed class EmployeeSalariesApiTests(RegisterApiFactory factory)
         Assert.Null(firstDto.EffectiveTo);
         Assert.Equal(5000m, firstDto.BasicAmount);
         Assert.Single(firstDto.Components);
+        Assert.True(firstDto.Components[0].IsTaxable);
+        Assert.False(firstDto.Components[0].IsInsurable);
+
+        var historyAfterFirst = await client.GetFromJsonAsync<PagedEmployeeSalariesDto>(
+            $"/api/v1/employees/{employeeId}/salaries?page=1&pageSize=10",
+            JsonOptions);
+        Assert.Equal(5500m, historyAfterFirst!.Items[0].GrossAmount);
 
         var payComponents = await client.GetFromJsonAsync<PagedPayComponentsDto>(
             "/api/v1/payroll/pay-components?page=1&pageSize=50",

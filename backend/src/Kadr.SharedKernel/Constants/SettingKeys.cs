@@ -18,4 +18,7 @@ public static class SettingKeys
     public const string AttendanceOvertimeMinMinutes = "attendance.overtime_min_minutes";
     public const string AttendanceLocationAccuracyM = "attendance.location_accuracy_m";
     public const string AttendanceCorrectionMonthlyCap = "attendance.correction_monthly_cap";
+    public const string OvertimeMultiplierDay = "overtime.multiplier_day";
+    public const string OvertimeMultiplierNight = "overtime.multiplier_night";
+    public const string OvertimeMultiplierHoliday = "overtime.multiplier_holiday";
 }

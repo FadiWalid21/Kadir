@@ -10,6 +10,8 @@ export interface EmployeeSalaryComponentLine {
   payComponentNameAr: string;
   payComponentNameEn: string;
   amountOrRate: number;
+  isTaxable: boolean;
+  isInsurable: boolean;
 }
 
 export interface EmployeeSalary {
@@ -30,6 +32,7 @@ export interface EmployeeSalaryListItem {
   effectiveTo: string | null;
   currency: string;
   basicAmount: number;
+  grossAmount: number;
   changeReason: string;
   componentCount: number;
 }

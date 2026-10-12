@@ -370,7 +370,10 @@ try
     app.MapPayComponentsEndpoints();
     app.MapEmployeeSalariesEndpoints();
     app.MapEmployeeInsuranceEndpoints();
+    app.MapSalaryImportEndpoints();
+    app.MapOvertimeMultipliersEndpoints();
     app.MapTemplatesEndpoints();
+
 
 
     app.MapTenantTemplatesEndpoints();
