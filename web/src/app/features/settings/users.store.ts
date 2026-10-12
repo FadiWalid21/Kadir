@@ -22,6 +22,8 @@ export class UsersStore {
   readonly invitations = signal<InvitationListItem[]>([]);
   readonly roles = signal<RoleListItem[]>([]);
   readonly busy = signal(false);
+  /** Invitation id currently being resent or revoked (null when idle). */
+  readonly busyInviteId = signal<string | null>(null);
   readonly errorCode = signal<string | null>(null);
 
   readonly page = signal(1);
@@ -82,21 +84,25 @@ export class UsersStore {
 
   async resend(id: string, roleId?: string): Promise<InvitationListItem> {
     this.busy.set(true);
+    this.busyInviteId.set(id);
     try {
       const resent = await this.usersApi.resendInvitation(id, roleId);
       await this.loadInvitations();
       return resent;
     } finally {
+      this.busyInviteId.set(null);
       this.busy.set(false);
     }
   }
 
   async revoke(id: string): Promise<void> {
     this.busy.set(true);
+    this.busyInviteId.set(id);
     try {
       await this.usersApi.revokeInvitation(id);
       await this.loadInvitations();
     } finally {
+      this.busyInviteId.set(null);
       this.busy.set(false);
     }
   }
