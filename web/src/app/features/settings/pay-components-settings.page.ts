@@ -28,6 +28,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 type DrawerMode = 'create' | 'edit';
+type KindTab = 'all' | 'Earning' | 'Deduction' | 'EmployerCost';
 
 @Component({
   selector: 'kadr-pay-components-settings-page',
@@ -44,12 +45,21 @@ type DrawerMode = 'create' | 'edit';
     ConfirmDialogComponent,
   ],
   template: `
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-5">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-5">
       <header class="flex flex-col gap-3 text-start sm:flex-row sm:items-end sm:justify-between">
         <div class="flex min-w-0 flex-col gap-2">
-          <h1 class="text-2xl font-bold leading-tight text-fg">
-            {{ 'settings.payComponents.title' | transloco }}
-          </h1>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-2xl font-bold leading-tight text-fg">
+              {{ 'settings.payComponents.title' | transloco }}
+            </h1>
+            @if (state() === 'ready') {
+              <span
+                class="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-soft-fg tabular-nums"
+              >
+                {{ 'settings.payComponents.activeCount' | transloco: { n: activeCount() } }}
+              </span>
+            }
+          </div>
           <p class="text-sm text-fg-2">{{ 'settings.payComponents.subtitle' | transloco }}</p>
         </div>
         @if (canMutate()) {
@@ -59,86 +69,273 @@ type DrawerMode = 'create' | 'edit';
         }
       </header>
 
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div class="min-w-0 flex-1">
-          <kadr-input
-            [label]="'settings.payComponents.search' | transloco"
-            [value]="query()"
-            (valueChange)="onSearch($event)"
-          />
-        </div>
-        <label class="flex flex-col gap-2 text-sm text-fg">
-          <span class="font-medium">{{ 'settings.payComponents.statusFilter' | transloco }}</span>
-          <select
-            class="h-control rounded-md border border-line-strong bg-surface px-3 text-fg"
-            [value]="statusFilter()"
-            (change)="onStatusFilter($any($event.target).value)"
-          >
-            <option value="active">{{ 'ui.statusActive' | transloco }}</option>
-            <option value="inactive">{{ 'settings.payComponents.inactive' | transloco }}</option>
-            <option value="all">{{ 'settings.payComponents.statusAll' | transloco }}</option>
-          </select>
-        </label>
-      </div>
-
       @if (state() === 'loading') {
-        <kadr-skeleton height="12rem" />
+        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <kadr-skeleton height="5rem" />
+          <kadr-skeleton height="5rem" />
+          <kadr-skeleton height="5rem" />
+          <kadr-skeleton height="5rem" />
+        </div>
+        <kadr-skeleton height="16rem" />
       } @else if (state() === 'error') {
         <kadr-network-error
           [title]="'settings.payComponents.loadErrorTitle' | transloco"
           [description]="'settings.payComponents.loadErrorBody' | transloco"
           (retry)="reload()"
         />
-      } @else if (items().length === 0) {
-        <kadr-empty-state
-          [title]="'settings.payComponents.emptyTitle' | transloco"
-          [description]="'settings.payComponents.emptyBody' | transloco"
-        >
-          @if (canMutate()) {
-            <kadr-button variant="primary" type="button" (click)="openCreate()">
-              {{ 'settings.payComponents.add' | transloco }}
-            </kadr-button>
-          }
-        </kadr-empty-state>
       } @else {
-        <ul class="flex flex-col gap-2">
-          @for (item of items(); track item.id) {
-            <li
-              class="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-start sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-fg">{{ displayName(item) }}</p>
-                <p class="mt-1 text-xs text-fg-muted">
-                  <span class="font-mono">{{ item.key }}</span>
-                  · {{ kindLabel(item.kind) }}
-                  · {{ calcLabel(item.calcType) }}
-                  ·
-                  {{
-                    item.isActive
-                      ? ('ui.statusActive' | transloco)
-                      : ('settings.payComponents.inactive' | transloco)
-                  }}
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                @if (canMutate()) {
-                  <kadr-button variant="secondary" type="button" (click)="openEdit(item)">
-                    {{ 'settings.payComponents.edit' | transloco }}
-                  </kadr-button>
-                  @if (item.isActive) {
-                    <kadr-button
-                      variant="danger-soft"
-                      type="button"
-                      (click)="askDeactivate(item)"
-                    >
-                      {{ 'settings.payComponents.deactivate' | transloco }}
-                    </kadr-button>
-                  }
+        <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm">
+            <p class="text-xs text-fg-2">{{ 'settings.payComponents.tileTotal' | transloco }}</p>
+            <p class="mt-1 text-2xl font-bold tabular-nums text-fg">{{ counts().total }}</p>
+          </div>
+          <div class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm">
+            <p class="text-xs text-fg-2">{{ 'settings.payComponents.tileEarning' | transloco }}</p>
+            <p class="mt-1 text-2xl font-bold tabular-nums text-fg">{{ counts().earning }}</p>
+          </div>
+          <div class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm">
+            <p class="text-xs text-fg-2">{{ 'settings.payComponents.tileDeduction' | transloco }}</p>
+            <p class="mt-1 text-2xl font-bold tabular-nums text-fg">{{ counts().deduction }}</p>
+          </div>
+          <div class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm">
+            <p class="text-xs text-fg-2">{{ 'settings.payComponents.tileEmployer' | transloco }}</p>
+            <p class="mt-1 text-2xl font-bold tabular-nums text-fg">{{ counts().employer }}</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div
+            class="flex flex-wrap gap-1 rounded-lg bg-subtle p-1"
+            role="tablist"
+            [attr.aria-label]="'settings.payComponents.kindTabsAria' | transloco"
+          >
+            @for (tab of kindTabs; track tab.id) {
+              <button
+                type="button"
+                role="tab"
+                class="rounded-md px-3 py-1.5 text-sm transition-colors"
+                [class.bg-surface]="kindTab() === tab.id"
+                [class.text-fg]="kindTab() === tab.id"
+                [class.font-medium]="kindTab() === tab.id"
+                [class.shadow-sm]="kindTab() === tab.id"
+                [class.text-fg-2]="kindTab() !== tab.id"
+                [attr.aria-selected]="kindTab() === tab.id"
+                (click)="kindTab.set(tab.id)"
+              >
+                {{ tab.labelKey | transloco }}
+                <span class="ms-1 tabular-nums text-fg-muted">({{ kindCount(tab.id) }})</span>
+              </button>
+            }
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div class="min-w-0 flex-1">
+              <kadr-input
+                [label]="'settings.payComponents.search' | transloco"
+                [value]="query()"
+                (valueChange)="onSearch($event)"
+              />
+            </div>
+            <label class="flex flex-col gap-2 text-sm text-fg">
+              <span class="font-medium">{{ 'settings.payComponents.statusFilter' | transloco }}</span>
+              <select
+                class="h-control rounded-md border border-line-strong bg-surface px-3 text-fg"
+                [value]="statusFilter()"
+                (change)="onStatusFilter($any($event.target).value)"
+              >
+                <option value="active">{{ 'ui.statusActive' | transloco }}</option>
+                <option value="inactive">{{ 'settings.payComponents.inactive' | transloco }}</option>
+                <option value="all">{{ 'settings.payComponents.statusAll' | transloco }}</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        @if (filteredItems().length === 0) {
+          <kadr-empty-state
+            [title]="'settings.payComponents.emptyTitle' | transloco"
+            [description]="'settings.payComponents.emptyBody' | transloco"
+          >
+            @if (canMutate()) {
+              <kadr-button variant="primary" type="button" (click)="openCreate()">
+                {{ 'settings.payComponents.add' | transloco }}
+              </kadr-button>
+            }
+          </kadr-empty-state>
+        } @else {
+          <!-- Desktop table -->
+          <div class="hidden overflow-x-auto rounded-xl border border-line bg-surface shadow-sm md:block">
+            <table class="w-full text-start text-sm">
+              <thead class="bg-subtle text-xs text-fg-2">
+                <tr>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.colName' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.kind' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.isTaxable' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.isInsurable' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.calcType' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.colStatus' | transloco }}</th>
+                  <th class="px-3 py-2.5 font-medium">{{ 'settings.payComponents.colActions' | transloco }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of filteredItems(); track item.id) {
+                  <tr class="border-t border-line hover:bg-subtle/60">
+                    <td class="px-3 py-3">
+                      <button
+                        type="button"
+                        class="text-start"
+                        (click)="canMutate() && openEdit(item)"
+                      >
+                        <div class="font-medium text-fg">{{ displayName(item) }}</div>
+                        <div class="mt-0.5 font-mono text-xs text-fg-muted">{{ item.key }}</div>
+                      </button>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span [class]="kindBadgeClass(item.kind)">{{ kindLabel(item.kind) }}</span>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="rounded bg-subtle px-2 py-0.5 text-xs text-fg-2">
+                        {{
+                          (item.isTaxable
+                            ? 'settings.payComponents.taxableYes'
+                            : 'settings.payComponents.taxableNo'
+                          ) | transloco
+                        }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-3">
+                      <span class="rounded bg-subtle px-2 py-0.5 text-xs text-fg-2">
+                        {{
+                          (item.isInsurable
+                            ? 'settings.payComponents.insurableYes'
+                            : 'settings.payComponents.insurableNo'
+                          ) | transloco
+                        }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-3 text-fg-2">{{ calcLabel(item.calcType) }}</td>
+                    <td class="px-3 py-3">
+                      <div class="flex flex-col gap-1">
+                        <span
+                          class="inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                          [class.bg-success-soft]="item.isActive"
+                          [class.text-success]="item.isActive"
+                          [class.bg-subtle]="!item.isActive"
+                          [class.text-fg-2]="!item.isActive"
+                        >
+                          {{
+                            (item.isActive ? 'ui.statusActive' : 'settings.payComponents.inactive')
+                              | transloco
+                          }}
+                        </span>
+                        @if (item.sourceKey) {
+                          <span class="text-xs text-fg-muted">
+                            {{ 'settings.payComponents.fromTemplate' | transloco }}
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td class="px-3 py-3">
+                      @if (canMutate()) {
+                        <div class="flex flex-wrap gap-2">
+                          <kadr-button variant="secondary" type="button" size="sm" (click)="openEdit(item)">
+                            {{ 'settings.payComponents.edit' | transloco }}
+                          </kadr-button>
+                          @if (item.isActive) {
+                            <kadr-button
+                              variant="danger-soft"
+                              type="button"
+                              size="sm"
+                              (click)="askDeactivate(item)"
+                            >
+                              {{ 'settings.payComponents.deactivate' | transloco }}
+                            </kadr-button>
+                          }
+                        </div>
+                      }
+                    </td>
+                  </tr>
                 }
-              </div>
-            </li>
-          }
-        </ul>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <ul class="flex flex-col gap-2 md:hidden">
+            @for (item of filteredItems(); track item.id) {
+              <li class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="font-medium text-fg">{{ displayName(item) }}</p>
+                    <p class="mt-0.5 font-mono text-xs text-fg-muted">{{ item.key }}</p>
+                  </div>
+                  <span [class]="kindBadgeClass(item.kind)">{{ kindLabel(item.kind) }}</span>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <dt class="text-fg-2">{{ 'settings.payComponents.isTaxable' | transloco }}</dt>
+                    <dd class="mt-0.5 text-fg">
+                      {{
+                        (item.isTaxable
+                          ? 'settings.payComponents.taxableYes'
+                          : 'settings.payComponents.taxableNo'
+                        ) | transloco
+                      }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-fg-2">{{ 'settings.payComponents.isInsurable' | transloco }}</dt>
+                    <dd class="mt-0.5 text-fg">
+                      {{
+                        (item.isInsurable
+                          ? 'settings.payComponents.insurableYes'
+                          : 'settings.payComponents.insurableNo'
+                        ) | transloco
+                      }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-fg-2">{{ 'settings.payComponents.calcType' | transloco }}</dt>
+                    <dd class="mt-0.5 text-fg">{{ calcLabel(item.calcType) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-fg-2">{{ 'settings.payComponents.colStatus' | transloco }}</dt>
+                    <dd class="mt-0.5 text-fg">
+                      {{
+                        (item.isActive ? 'ui.statusActive' : 'settings.payComponents.inactive')
+                          | transloco
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+                @if (canMutate()) {
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <kadr-button variant="secondary" type="button" size="sm" (click)="openEdit(item)">
+                      {{ 'settings.payComponents.edit' | transloco }}
+                    </kadr-button>
+                    @if (item.isActive) {
+                      <kadr-button
+                        variant="danger-soft"
+                        type="button"
+                        size="sm"
+                        (click)="askDeactivate(item)"
+                      >
+                        {{ 'settings.payComponents.deactivate' | transloco }}
+                      </kadr-button>
+                    }
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+
+          <p class="text-xs text-fg-muted tabular-nums">
+            {{
+              'settings.payComponents.showingCount'
+                | transloco: { n: filteredItems().length, total: items().length }
+            }}
+          </p>
+        }
       }
     </div>
 
@@ -256,10 +453,18 @@ export class PayComponentsSettingsPage implements OnInit {
   private readonly transloco = inject(TranslocoService);
   private readonly title = inject(Title);
 
+  protected readonly kindTabs: { id: KindTab; labelKey: string }[] = [
+    { id: 'all', labelKey: 'settings.payComponents.tabAll' },
+    { id: 'Earning', labelKey: 'settings.payComponents.kinds.Earning' },
+    { id: 'Deduction', labelKey: 'settings.payComponents.kinds.Deduction' },
+    { id: 'EmployerCost', labelKey: 'settings.payComponents.kinds.EmployerCost' },
+  ];
+
   protected readonly state = signal<PageState>('loading');
   protected readonly items = signal<PayComponent[]>([]);
   protected readonly query = signal('');
   protected readonly statusFilter = signal<'active' | 'inactive' | 'all'>('active');
+  protected readonly kindTab = signal<KindTab>('all');
   protected readonly busy = signal(false);
   protected readonly drawerOpen = signal(false);
   protected readonly mode = signal<DrawerMode>('create');
@@ -278,9 +483,37 @@ export class PayComponentsSettingsPage implements OnInit {
       this.auth.hasPermission(PermissionCodes.SalaryManage) && !this.subscription.readOnly(),
   );
 
+  protected readonly counts = computed(() => {
+    const list = this.items();
+    return {
+      total: list.length,
+      earning: list.filter((x) => x.kind === 'Earning').length,
+      deduction: list.filter((x) => x.kind === 'Deduction').length,
+      employer: list.filter((x) => x.kind === 'EmployerCost').length,
+    };
+  });
+
+  protected readonly activeCount = computed(
+    () => this.items().filter((x) => x.isActive).length,
+  );
+
+  protected readonly filteredItems = computed(() => {
+    const tab = this.kindTab();
+    const list = this.items();
+    if (tab === 'all') return list;
+    return list.filter((x) => x.kind === tab);
+  });
+
   ngOnInit(): void {
     this.title.setTitle(this.transloco.translate('settings.payComponents.title'));
     void this.reload();
+  }
+
+  kindCount(tab: KindTab): number {
+    if (tab === 'all') return this.counts().total;
+    if (tab === 'Earning') return this.counts().earning;
+    if (tab === 'Deduction') return this.counts().deduction;
+    return this.counts().employer;
   }
 
   displayName(item: PayComponent): string {
@@ -293,6 +526,13 @@ export class PayComponentsSettingsPage implements OnInit {
 
   calcLabel(calc: string): string {
     return this.transloco.translate(`settings.payComponents.calcTypes.${calc}`);
+  }
+
+  kindBadgeClass(kind: string): string {
+    const base = 'inline-flex rounded px-2 py-0.5 text-xs font-medium ';
+    if (kind === 'Earning') return base + 'bg-success-soft text-success';
+    if (kind === 'Deduction') return base + 'bg-danger-soft text-danger';
+    return base + 'bg-subtle text-fg-2';
   }
 
   async reload(): Promise<void> {

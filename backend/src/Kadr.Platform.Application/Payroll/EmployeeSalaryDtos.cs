@@ -6,7 +6,9 @@ public sealed record EmployeeSalaryComponentDto(
     string PayComponentKey,
     string PayComponentNameAr,
     string PayComponentNameEn,
-    decimal AmountOrRate);
+    decimal AmountOrRate,
+    bool IsTaxable,
+    bool IsInsurable);
 
 public sealed record EmployeeSalaryDto(
     Guid Id,
@@ -25,6 +27,7 @@ public sealed record EmployeeSalaryListItemDto(
     DateOnly? EffectiveTo,
     string Currency,
     decimal BasicAmount,
+    decimal GrossAmount,
     string ChangeReason,
     int ComponentCount);
 

@@ -81,6 +81,13 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
               }}</kadr-button>
             </a>
           }
+          @if (canImportSalaries()) {
+            <a routerLink="/employees/salaries/import" class="contents">
+              <kadr-button variant="secondary" type="button">{{
+                'employees.salary.import' | transloco
+              }}</kadr-button>
+            </a>
+          }
           @if (canCreate()) {
             <a routerLink="/employees/new" class="contents">
               <kadr-button variant="primary" type="button">{{
@@ -395,6 +402,10 @@ export class EmployeesListPage implements OnInit {
 
   canImport(): boolean {
     return this.auth.hasPermission(PermissionCodes.EmployeesImport);
+  }
+
+  canImportSalaries(): boolean {
+    return this.auth.hasPermission(PermissionCodes.SalaryManage);
   }
 
   setStatus(value: string): void {

@@ -134,4 +134,5 @@ public static class ErrorCodes
     public const string InsuranceValidationFailed = "insurance.validation_failed";
     public const string InsuranceNotFound = "insurance.not_found";
     public const string InsuranceEmployeeNotFound = "insurance.employee_not_found";
+    public const string SalaryImportInvalid = "salary.import_invalid";
 }

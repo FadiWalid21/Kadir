@@ -44,6 +44,7 @@ public sealed class EmployeeSalaryService(
                 s.EffectiveTo,
                 s.Currency,
                 s.BasicAmount,
+                s.BasicAmount + s.Components.Sum(c => c.AmountOrRate),
                 s.ChangeReason,
                 s.Components.Count))
             .ToListAsync(cancellationToken)
@@ -252,7 +253,9 @@ public sealed class EmployeeSalaryService(
                     pay?.Key ?? string.Empty,
                     pay?.NameAr ?? string.Empty,
                     pay?.NameEn ?? string.Empty,
-                    c.AmountOrRate);
+                    c.AmountOrRate,
+                    pay?.IsTaxable ?? false,
+                    pay?.IsInsurable ?? false);
             })
             .ToList();
     }

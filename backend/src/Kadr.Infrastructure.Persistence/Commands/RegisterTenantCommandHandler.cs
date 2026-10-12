@@ -384,7 +384,10 @@ public sealed class RegisterTenantCommandHandler(
             TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeEnabled, JsonSerializer.Serialize(defaults.OvertimeEnabled)),
             TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeAfterEndMinutes, JsonSerializer.Serialize(defaults.OvertimeAfterEndMinutes)),
             TenantSetting.Create(tenantId, SettingKeys.AttendanceOvertimeMinMinutes, JsonSerializer.Serialize(defaults.OvertimeMinMinutes)),
-            TenantSetting.Create(tenantId, SettingKeys.AttendanceLocationAccuracyM, JsonSerializer.Serialize(100)));
+            TenantSetting.Create(tenantId, SettingKeys.AttendanceLocationAccuracyM, JsonSerializer.Serialize(100)),
+            TenantSetting.Create(tenantId, SettingKeys.OvertimeMultiplierDay, JsonSerializer.Serialize(1.35m)),
+            TenantSetting.Create(tenantId, SettingKeys.OvertimeMultiplierNight, JsonSerializer.Serialize(1.70m)),
+            TenantSetting.Create(tenantId, SettingKeys.OvertimeMultiplierHoliday, JsonSerializer.Serialize(2.00m)));
 
         foreach (var h in EgyptCivilHolidays.Placeholders)
         {

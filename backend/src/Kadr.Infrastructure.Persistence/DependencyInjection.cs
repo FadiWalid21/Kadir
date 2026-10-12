@@ -65,6 +65,9 @@ public static class DependencyInjection
         services.AddScoped<IPayComponentService, Payroll.PayComponentService>();
         services.AddScoped<IEmployeeSalaryService, Payroll.EmployeeSalaryService>();
         services.AddScoped<IEmployeeInsuranceService, Payroll.EmployeeInsuranceService>();
+        services.AddScoped<ISalaryImportService, Payroll.SalaryImportService>();
+        services.AddScoped<IOvertimeMultipliersService, Payroll.OvertimeMultipliersService>();
+
 
 
 

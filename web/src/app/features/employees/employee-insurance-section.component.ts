@@ -40,23 +40,52 @@ type SectionState = 'loading' | 'ready' | 'error';
     DrawerComponent,
   ],
   template: `
-    <section class="flex flex-col gap-3 text-start">
-      <div class="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 class="text-sm font-bold text-fg">{{ 'employees.insurance.title' | transloco }}</h3>
-          <p class="mt-1 text-xs text-fg-muted">{{ 'employees.insurance.subtitle' | transloco }}</p>
+    <section class="rounded-xl border border-line bg-surface p-4 text-start shadow-sm sm:p-5">
+      <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div class="flex items-start gap-2">
+          <div
+            class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-fg"
+            aria-hidden="true"
+          >
+            <span class="text-sm font-bold">SI</span>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-fg">{{ 'employees.insurance.title' | transloco }}</h3>
+            <p class="text-xs text-fg-2">{{ 'employees.insurance.subtitle' | transloco }}</p>
+          </div>
         </div>
-        @if (canMutate()) {
-          <kadr-button variant="secondary" type="button" (click)="openEdit()">
-            {{
-              (profile() ? 'employees.insurance.edit' : 'employees.insurance.add') | transloco
-            }}
-          </kadr-button>
-        }
+        <div class="flex flex-wrap items-center gap-2">
+          @if (profile(); as p) {
+            <span
+              class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
+              [class.bg-success-soft]="p.isInsured"
+              [class.text-success]="p.isInsured"
+              [class.bg-subtle]="!p.isInsured"
+              [class.text-fg-2]="!p.isInsured"
+            >
+              <span
+                class="size-1.5 rounded-full"
+                [class.bg-success]="p.isInsured"
+                [class.bg-fg-muted]="!p.isInsured"
+              ></span>
+              {{
+                (p.isInsured ? 'employees.insurance.insured' : 'employees.insurance.notInsured')
+                  | transloco
+              }}
+            </span>
+          }
+          @if (canMutate()) {
+            <kadr-button variant="secondary" type="button" (click)="openEdit()">
+              {{
+                (profile() ? 'employees.insurance.edit' : 'employees.insurance.add') | transloco
+              }}
+            </kadr-button>
+          }
+        </div>
       </div>
 
       @if (state() === 'loading') {
-        <kadr-skeleton height="6rem" />
+        <kadr-skeleton height="8rem" />
       } @else if (state() === 'error') {
         <kadr-empty-state
           [title]="'employees.insurance.loadErrorTitle' | transloco"
@@ -69,30 +98,48 @@ type SectionState = 'loading' | 'ready' | 'error';
       } @else if (!profile()) {
         <p class="text-sm text-fg-2">{{ 'employees.insurance.empty' | transloco }}</p>
       } @else {
-        <div class="rounded-lg border border-line bg-surface p-4 text-sm">
-          <p class="font-medium text-fg">
-            {{
-              (profile()!.isInsured
-                ? 'employees.insurance.insured'
-                : 'employees.insurance.notInsured'
-              ) | transloco
-            }}
-          </p>
+        <div class="flex flex-col gap-2">
           @if (profile()!.isInsured) {
-            <p class="mt-2 text-fg-2">
-              {{ 'employees.insurance.number' | transloco }}:
-              <span class="font-mono">{{ profile()!.insuranceNumber }}</span>
-            </p>
-            <p class="mt-1 text-fg-2 tabular-nums">
-              {{ 'employees.insurance.startDate' | transloco }}:
-              {{ profile()!.insuranceStartDate }}
-            </p>
+            <div class="flex items-center justify-between gap-2 rounded-lg bg-subtle p-2.5 text-sm">
+              <span class="text-fg-2">{{ 'employees.insurance.number' | transloco }}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-semibold tabular-nums text-fg">{{
+                  profile()!.insuranceNumber
+                }}</span>
+                @if (profile()!.insuranceNumber) {
+                  <kadr-button
+                    variant="ghost"
+                    type="button"
+                    size="sm"
+                    [attr.aria-label]="'employees.insurance.copyNumber' | transloco"
+                    (click)="copyNumber()"
+                  >
+                    {{ 'employees.insurance.copy' | transloco }}
+                  </kadr-button>
+                }
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 rounded-lg bg-subtle p-2.5 text-sm">
+              <span class="text-fg-2">{{ 'employees.insurance.startDate' | transloco }}</span>
+              <span class="tabular-nums text-fg">{{ profile()!.insuranceStartDate }}</span>
+            </div>
             @if (profile()!.insurableWageOverride != null) {
-              <p class="mt-1 text-fg-2 tabular-nums">
-                {{ 'employees.insurance.wageOverride' | transloco }}:
-                {{ profile()!.insurableWageOverride }}
-              </p>
+              <div class="rounded-lg bg-subtle p-3">
+                <div class="flex items-center justify-between gap-2 text-sm">
+                  <span class="font-medium text-fg">{{
+                    'employees.insurance.wageOverride' | transloco
+                  }}</span>
+                  <span class="font-bold tabular-nums text-accent">{{
+                    profile()!.insurableWageOverride
+                  }}</span>
+                </div>
+                <p class="mt-1 text-xs text-fg-2">
+                  {{ 'employees.insurance.wageOverrideHint' | transloco }}
+                </p>
+              </div>
             }
+          } @else {
+            <p class="text-sm text-fg-2">{{ 'employees.insurance.notInsuredBody' | transloco }}</p>
           }
         </div>
       }
@@ -179,6 +226,17 @@ export class EmployeeInsuranceSectionComponent implements OnChanges {
 
   reload(): void {
     void this.load();
+  }
+
+  async copyNumber(): Promise<void> {
+    const n = this.profile()?.insuranceNumber;
+    if (!n) return;
+    try {
+      await navigator.clipboard.writeText(n);
+      this.toast.show(this.i18n.translate('employees.insurance.copied'), 'success');
+    } catch {
+      this.toast.show(this.i18n.translate('employees.insurance.copyFail'), 'danger');
+    }
   }
 
   openEdit(): void {

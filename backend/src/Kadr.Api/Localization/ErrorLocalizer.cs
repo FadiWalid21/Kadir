@@ -131,6 +131,7 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.InsuranceValidationFailed] = ("بيانات التأمين غير صالحة.", "Insurance data is invalid."),
         [ErrorCodes.InsuranceNotFound] = ("ملف التأمين غير موجود.", "Insurance profile was not found."),
         [ErrorCodes.InsuranceEmployeeNotFound] = ("الموظف غير موجود.", "Employee was not found."),
+        [ErrorCodes.SalaryImportInvalid] = ("ملف استيراد الرواتب غير صالح.", "Salary import file is invalid."),
     };
 
     public string GetDetail(string errorCode, string? acceptLanguage)

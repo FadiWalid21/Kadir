@@ -154,6 +154,15 @@ export const routes: Routes = [
           import('./features/employees/employees-import.page').then((m) => m.EmployeesImportPage),
       },
       {
+        path: 'employees/salaries/import',
+        canActivate: [
+          permissionGuard(PermissionCodes.SalaryManage),
+          featureGuard(FeatureKeys.CoreHr),
+        ],
+        loadComponent: () =>
+          import('./features/employees/salaries-import.page').then((m) => m.SalariesImportPage),
+      },
+      {
         path: 'employees/:id/edit',
         canActivate: [
           permissionGuard(PermissionCodes.EmployeesUpdate),
