@@ -1,10 +1,10 @@
-using System.Text;
 using System.Text.Json;
 using Kadr.Identity.Application.Auth;
 using Kadr.Identity.Application.Options;
 using Kadr.Identity.Application.Security;
 using Kadr.Identity.Domain.Tokens;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
@@ -37,6 +37,7 @@ public sealed class PasswordResetService(
     IEmailSender emailSender,
     IMemoryCache cache,
     IOptions<PasswordResetOptions> options,
+    IOptions<AppOptions> appOptions,
     IClock clock,
     ILogger<PasswordResetService> logger) : IPasswordResetService
 {
@@ -257,21 +258,18 @@ public sealed class PasswordResetService(
         IReadOnlyList<(string CompanyName, string RawToken)> issued,
         CancellationToken cancellationToken)
     {
-        var body = new StringBuilder();
-        body.AppendLine("Use the reset token for the account you want to recover (valid for 30 minutes).");
-        body.AppendLine("استخدم رمز إعادة التعيين للحساب الذي تريد استرجاعه (صالح لمدة 30 دقيقة).");
-        foreach (var (companyName, rawToken) in issued)
-        {
-            body.AppendLine();
-            body.AppendLine($"{companyName}");
-            body.AppendLine($"Reset token: {rawToken}");
-        }
+        var baseUrl = appOptions.Value.PublicWebBaseUrl;
+        var rows = issued
+            .Select(i => (
+                i.CompanyName,
+                i.RawToken,
+                PublicWebLinks.TryBuild(baseUrl, PublicWebLinks.ResetPasswordPath, i.RawToken)))
+            .ToList();
 
         try
         {
-            await emailSender.SendAsync(
-                    new EmailMessage(to, "Reset your Kadr password / إعادة تعيين كلمة المرور", body.ToString()),
-                    cancellationToken)
+            await emailSender
+                .SendAsync(AuthEmailBodies.PasswordReset(to, rows), cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)

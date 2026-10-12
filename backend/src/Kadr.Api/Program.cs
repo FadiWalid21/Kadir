@@ -14,8 +14,10 @@ using Kadr.Infrastructure.Persistence;
 using Kadr.Infrastructure.Persistence.Seeding;
 using Kadr.Platform.Application;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Kadr.SharedKernel.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -64,6 +66,23 @@ try
     builder.Services.AddOptions<WebPushOptions>()
         .Bind(builder.Configuration.GetSection(WebPushOptions.SectionName))
         .Validate(options => WebPushOptions.Validate(options) is null, "WebPush configuration is invalid.")
+        .ValidateOnStart();
+
+    // Bridge legacy flat user-secret BREVO_API_KEY → Brevo:ApiKey before options bind.
+    var legacyBrevoKey = builder.Configuration["BREVO_API_KEY"];
+    if (!string.IsNullOrWhiteSpace(legacyBrevoKey)
+        && string.IsNullOrWhiteSpace(builder.Configuration["Brevo:ApiKey"]))
+    {
+        builder.Configuration.AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Brevo:ApiKey"] = legacyBrevoKey });
+    }
+
+    builder.Services.AddOptions<AppOptions>()
+        .Bind(builder.Configuration.GetSection(AppOptions.SectionName));
+
+    builder.Services.AddOptions<BrevoOptions>()
+        .Bind(builder.Configuration.GetSection(BrevoOptions.SectionName))
+        .Validate(options => BrevoOptions.Validate(options) is null, "Brevo configuration is invalid.")
         .ValidateOnStart();
 
     builder.Services.Configure<ForwardedHeadersOptions>(options =>

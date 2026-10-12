@@ -26,7 +26,13 @@ Set these in the MonsterASP control panel (environment variables / app settings)
 | `PlatformAdmin__Email` | Seed platform admin (optional) |
 | `PlatformAdmin__Password` | Seed password (secret; optional) |
 | `PlatformAdmin__FullName` | Seed display name (optional) |
+| `App__PublicWebBaseUrl` | `https://kadir-teal.vercel.app` (no trailing slash; invite / verify / reset email links) |
+| `Brevo__ApiKey` | Brevo transactional API key (secret) |
+| `Brevo__SenderEmail` | Verified sender address in the Brevo account |
+| `Brevo__SenderName` | `Kadr` (optional; default Kadr) |
 | `ASPNETCORE_ENVIRONMENT` | `Production` |
+
+When `Brevo__ApiKey` and `Brevo__SenderEmail` are both set, the API sends real email via Brevo. If either is missing, it falls back to logging only (platform health email = degraded). Local user-secrets may still use the legacy flat name `BREVO_API_KEY`; the host also accepts `Brevo:ApiKey`.
 
 Git Deploy project path:
 
@@ -62,9 +68,10 @@ Without a successful deploy that baked `API_BASE_URL`, the SPA calls `/api/v1/..
 2. Industries endpoint returns a list
 3. From the Vercel site: onboarding industry step shows sector cards (not only Retry)
 4. Stepper labels show Arabic/English (e.g. الحساب / القطاع), not raw keys like `onboarding.steps.account` — hard-refresh after a web deploy that includes the Transloco stepper fix
-5. Register tenant → verify email (check email provider / logs)
-6. Login → refresh keeps session (cross-site cookie + CSRF header)
-7. Optional: attendance punch needs geolocation permission (CSP allows `geolocation=(self)`)
+5. Register tenant → verify email (Brevo inbox, or Copy invite / verify link from toast when email falls back)
+6. Invite user → email link `…/accept-invitation?token=…` or toast **Open invite link**
+7. Login → refresh keeps session (cross-site cookie + CSRF header)
+8. Optional: attendance punch needs geolocation permission (CSP allows `geolocation=(self)`)
 
 ## 4. CI
 

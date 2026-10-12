@@ -8,7 +8,8 @@ public sealed record InvitationListItemDto(
     Guid RoleId,
     string RoleName,
     DateTimeOffset ExpiresAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? AcceptUrl = null);
 
 public sealed record ValidateInvitationRequest(string Token);
 

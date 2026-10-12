@@ -1,6 +1,7 @@
 using Kadr.Identity.Application.Auth;
 using Kadr.Identity.Application.Security;
 using Kadr.Identity.Domain.Tokens;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Application;
@@ -10,6 +11,7 @@ using Kadr.SharedKernel.Tenancy;
 using Kadr.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Kadr.Infrastructure.Persistence.Auth;
 
@@ -17,6 +19,7 @@ public sealed class ResendVerificationCommandHandler(
     KadrDbContext db,
     ITenantContextAccessor tenantContext,
     IEmailSender emailSender,
+    IOptions<AppOptions> appOptions,
     IClock clock,
     ILogger<ResendVerificationCommandHandler> logger) : ICommandHandler<ResendVerificationCommand>
 {
@@ -68,12 +71,13 @@ public sealed class ResendVerificationCommandHandler(
 
         try
         {
-            await emailSender.SendAsync(
-                new EmailMessage(
-                    user.Email,
-                    "Verify your Kadr email / تأكيد البريد",
-                    $"Verify your email with token: {raw}"),
-                cancellationToken).ConfigureAwait(false);
+            var verifyUrl = PublicWebLinks.TryBuild(
+                appOptions.Value.PublicWebBaseUrl,
+                PublicWebLinks.VerifyEmailPath,
+                raw);
+            await emailSender
+                .SendAsync(AuthEmailBodies.VerifyEmail(user.Email, verifyUrl, raw), cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {

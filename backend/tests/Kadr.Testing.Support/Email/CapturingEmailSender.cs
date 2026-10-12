@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Kadr.SharedKernel.Abstractions;
 
 namespace Kadr.Testing.Support.Email;
@@ -18,29 +19,51 @@ public sealed class CapturingEmailSender : IEmailSender
         return Task.CompletedTask;
     }
 
-    public string? ExtractLastVerificationToken()
+    public string? ExtractLastVerificationToken() =>
+        ExtractTokenFromBodies(
+            "verify-email\\?token=",
+            "token: ");
+
+    public string? ExtractLastInvitationToken() =>
+        ExtractTokenFromBodies(
+            "accept-invitation\\?token=",
+            "Invitation token: ");
+
+    public string? ExtractLastPasswordResetToken() =>
+        ExtractTokenFromBodies(
+            "reset-password\\?token=",
+            "Reset token: ");
+
+    private string? ExtractTokenFromBodies(string urlPattern, string legacyMarker)
     {
-        var body = Last?.HtmlBody;
+        var body = CombineBodies(Last);
         if (body is null)
         {
             return null;
         }
 
-        const string marker = "token: ";
-        var index = body.LastIndexOf(marker, StringComparison.Ordinal);
-        return index < 0 ? null : body[(index + marker.Length)..].Trim();
+        var urlMatch = Regex.Match(body, urlPattern + "([^\\s&\"'<>]+)", RegexOptions.IgnoreCase);
+        if (urlMatch.Success)
+        {
+            return Uri.UnescapeDataString(urlMatch.Groups[1].Value);
+        }
+
+        var index = body.LastIndexOf(legacyMarker, StringComparison.Ordinal);
+        return index < 0 ? null : body[(index + legacyMarker.Length)..].Trim();
     }
 
-    public string? ExtractLastInvitationToken()
+    private static string? CombineBodies(EmailMessage? message)
     {
-        var body = Last?.HtmlBody;
-        if (body is null)
+        if (message is null)
         {
             return null;
         }
 
-        const string marker = "Invitation token: ";
-        var index = body.LastIndexOf(marker, StringComparison.Ordinal);
-        return index < 0 ? null : body[(index + marker.Length)..].Trim();
+        if (!string.IsNullOrEmpty(message.TextBody) && !string.IsNullOrEmpty(message.HtmlBody))
+        {
+            return message.TextBody + "\n" + message.HtmlBody;
+        }
+
+        return message.TextBody ?? message.HtmlBody;
     }
 }

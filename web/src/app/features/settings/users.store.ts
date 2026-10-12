@@ -69,21 +69,23 @@ export class UsersStore {
     }
   }
 
-  async invite(email: string, roleId: string): Promise<void> {
+  async invite(email: string, roleId: string): Promise<InvitationListItem> {
     this.busy.set(true);
     try {
-      await this.usersApi.invite(email, roleId);
+      const created = await this.usersApi.invite(email, roleId);
       await this.loadInvitations();
+      return created;
     } finally {
       this.busy.set(false);
     }
   }
 
-  async resend(id: string, roleId?: string): Promise<void> {
+  async resend(id: string, roleId?: string): Promise<InvitationListItem> {
     this.busy.set(true);
     try {
-      await this.usersApi.resendInvitation(id, roleId);
+      const resent = await this.usersApi.resendInvitation(id, roleId);
       await this.loadInvitations();
+      return resent;
     } finally {
       this.busy.set(false);
     }

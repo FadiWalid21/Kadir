@@ -6,6 +6,7 @@ using Kadr.Identity.Domain.Users;
 using Kadr.Infrastructure.Persistence.Auth;
 using Kadr.Infrastructure.Persistence.Users;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Invitations;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Abstractions;
@@ -15,6 +16,7 @@ using Kadr.SharedKernel.Tenancy;
 using Kadr.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Kadr.Infrastructure.Persistence.Invitations;
 
@@ -27,6 +29,7 @@ public sealed class InvitationService(
     IPasswordHasher passwordHasher,
     ICommonPasswordList commonPasswords,
     IEmailSender emailSender,
+    IOptions<AppOptions> appOptions,
     IAuditLogWriter audit,
     IClock clock,
     ILogger<InvitationService> logger) : IInvitationService
@@ -120,8 +123,10 @@ public sealed class InvitationService(
                 cancellationToken)
             .ConfigureAwait(false);
 
-        await SendInviteEmailAsync(email, rawToken, cancellationToken).ConfigureAwait(false);
-        return Result.Success(await ToListItemAsync(invitation, cancellationToken).ConfigureAwait(false));
+        var acceptUrl = BuildAcceptUrl(rawToken);
+        await SendInviteEmailAsync(email, rawToken, acceptUrl, cancellationToken).ConfigureAwait(false);
+        return Result.Success(
+            await ToListItemAsync(invitation, acceptUrl, cancellationToken).ConfigureAwait(false));
     }
 
     public async Task<Result<IReadOnlyList<InvitationListItemDto>>> ListPendingAsync(
@@ -140,7 +145,7 @@ public sealed class InvitationService(
                 join r in db.Roles.AsNoTracking() on i.RoleId equals r.Id
                 where i.AcceptedAt == null && i.RevokedAt == null && i.ExpiresAt > now
                 orderby i.CreatedAt descending
-                select new InvitationListItemDto(i.Id, i.Email, i.RoleId, r.Name, i.ExpiresAt, i.CreatedAt))
+                select new InvitationListItemDto(i.Id, i.Email, i.RoleId, r.Name, i.ExpiresAt, i.CreatedAt, null))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -201,8 +206,11 @@ public sealed class InvitationService(
                 cancellationToken)
             .ConfigureAwait(false);
 
-        await SendInviteEmailAsync(invitation.Email, rawToken, cancellationToken).ConfigureAwait(false);
-        return Result.Success(await ToListItemAsync(invitation, cancellationToken).ConfigureAwait(false));
+        var acceptUrl = BuildAcceptUrl(rawToken);
+        await SendInviteEmailAsync(invitation.Email, rawToken, acceptUrl, cancellationToken)
+            .ConfigureAwait(false);
+        return Result.Success(
+            await ToListItemAsync(invitation, acceptUrl, cancellationToken).ConfigureAwait(false));
     }
 
     public async Task<Result> RevokeAsync(Guid id, CancellationToken cancellationToken = default)
@@ -397,16 +405,31 @@ public sealed class InvitationService(
         return Result.Success();
     }
 
-    private async Task SendInviteEmailAsync(string email, string rawToken, CancellationToken cancellationToken)
+    private string? BuildAcceptUrl(string rawToken)
+    {
+        var url = PublicWebLinks.TryBuild(
+            appOptions.Value.PublicWebBaseUrl,
+            PublicWebLinks.AcceptInvitationPath,
+            rawToken);
+        if (url is null)
+        {
+            logger.LogWarning(
+                "App:PublicWebBaseUrl is empty; invitation email will not include an accept link");
+        }
+
+        return url;
+    }
+
+    private async Task SendInviteEmailAsync(
+        string email,
+        string rawToken,
+        string? acceptUrl,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await emailSender.SendAsync(
-                    new EmailMessage(
-                        email,
-                        "You're invited to Kadr / دعوة للانضمام إلى كادر",
-                        $"Invitation token: {rawToken}"),
-                    cancellationToken)
+            await emailSender
+                .SendAsync(AuthEmailBodies.Invitation(email, acceptUrl, rawToken), cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -417,6 +440,7 @@ public sealed class InvitationService(
 
     private async Task<InvitationListItemDto> ToListItemAsync(
         Invitation invitation,
+        string? acceptUrl,
         CancellationToken cancellationToken)
     {
         var roleName = await db.Roles.AsNoTracking()
@@ -430,6 +454,7 @@ public sealed class InvitationService(
             invitation.RoleId,
             roleName,
             invitation.ExpiresAt,
-            invitation.CreatedAt);
+            invitation.CreatedAt,
+            acceptUrl);
     }
 }
