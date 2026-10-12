@@ -64,6 +64,8 @@ public static class DependencyInjection
         services.AddScoped<IBranchSettingsService, Branches.BranchSettingsService>();
         services.AddScoped<IPayComponentService, Payroll.PayComponentService>();
         services.AddScoped<IEmployeeSalaryService, Payroll.EmployeeSalaryService>();
+        services.AddScoped<IEmployeeInsuranceService, Payroll.EmployeeInsuranceService>();
+
 
 
         services.AddScoped<IPlatformLookupService, Lookups.PlatformLookupService>();

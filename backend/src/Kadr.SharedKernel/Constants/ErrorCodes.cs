@@ -131,4 +131,7 @@ public static class ErrorCodes
     public const string SalaryEmployeeNotFound = "salary.employee_not_found";
     public const string SalaryEffectiveOverlap = "salary.effective_overlap";
     public const string SalaryInvalidComponent = "salary.invalid_component";
+    public const string InsuranceValidationFailed = "insurance.validation_failed";
+    public const string InsuranceNotFound = "insurance.not_found";
+    public const string InsuranceEmployeeNotFound = "insurance.employee_not_found";
 }

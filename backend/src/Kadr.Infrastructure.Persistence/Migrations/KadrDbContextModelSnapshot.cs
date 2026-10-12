@@ -2578,6 +2578,68 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.ToTable("legal_entities", (string)null);
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeInsuranceProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal?>("InsurableWageOverride")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("insurable_wage_override");
+
+                    b.Property<string>("InsuranceNumber")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("insurance_number");
+
+                    b.Property<DateOnly?>("InsuranceStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("insurance_start_date");
+
+                    b.Property<bool>("IsInsured")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_insured");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_insurance_profiles");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_insurance_profiles_tenant_id_employee_id");
+
+                    b.HasIndex("TenantId", "IsInsured")
+                        .HasDatabaseName("ix_employee_insurance_profiles_tenant_id_is_insured");
+
+                    b.ToTable("employee_insurance_profiles", (string)null);
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalary", b =>
                 {
                     b.Property<Guid>("Id")

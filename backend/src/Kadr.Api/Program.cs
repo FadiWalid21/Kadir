@@ -369,7 +369,9 @@ try
     app.MapBranchSettingsEndpoints();
     app.MapPayComponentsEndpoints();
     app.MapEmployeeSalariesEndpoints();
+    app.MapEmployeeInsuranceEndpoints();
     app.MapTemplatesEndpoints();
+
 
     app.MapTenantTemplatesEndpoints();
     app.MapRolesEndpoints();
