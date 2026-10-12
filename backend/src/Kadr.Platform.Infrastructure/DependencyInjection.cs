@@ -1,4 +1,5 @@
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Infrastructure.Email;
 using Kadr.Platform.Infrastructure.Imaging;
@@ -19,9 +20,10 @@ public static class DependencyInjection
     {
         services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IImageProcessor, LogoImageProcessor>();
-        services.AddSingleton<IEmailSender, LoggingEmailSender>();
         services.AddSingleton<IPushEndpointValidator, PushEndpointValidator>();
         services.AddSingleton<IIndustryTemplateSeedSource, IndustryTemplateSeedSource>();
+
+        RegisterEmailSender(services, configuration);
 
         var webPushEnabled = configuration.GetValue("WebPush:Enabled", false);
         if (webPushEnabled)
@@ -35,5 +37,25 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    private static void RegisterEmailSender(IServiceCollection services, IConfiguration configuration)
+    {
+        var apiKey = configuration["Brevo:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            // Legacy local user-secret name (flat key). Prefer Brevo:ApiKey going forward.
+            apiKey = configuration["BREVO_API_KEY"];
+        }
+
+        var senderEmail = configuration["Brevo:SenderEmail"];
+        if (!string.IsNullOrWhiteSpace(apiKey) && !string.IsNullOrWhiteSpace(senderEmail))
+        {
+            services.AddHttpClient(BrevoEmailSender.HttpClientName);
+            services.AddSingleton<IEmailSender, BrevoEmailSender>();
+            return;
+        }
+
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
     }
 }

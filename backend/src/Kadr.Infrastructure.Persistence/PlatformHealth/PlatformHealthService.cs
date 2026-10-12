@@ -22,6 +22,7 @@ public sealed class PlatformHealthService(
 {
     private const string LocalStorageType = "LocalFileStorage";
     private const string LoggingEmailType = "LoggingEmailSender";
+    private const string BrevoEmailType = "BrevoEmailSender";
     private static readonly TimeSpan DatabaseTimeout = TimeSpan.FromSeconds(3);
 
     public async Task<PlatformHealthDto> CheckAsync(CancellationToken cancellationToken = default)
@@ -94,6 +95,16 @@ public sealed class PlatformHealthService(
     private PlatformHealthComponentDto DescribeEmail()
     {
         var typeName = emailSender.GetType().Name;
+        if (typeName == BrevoEmailType)
+        {
+            return new PlatformHealthComponentDto(
+                PlatformHealthComponents.Email,
+                PlatformHealthStatuses.Configured,
+                "brevo",
+                "not_probed",
+                null);
+        }
+
         return typeName == LoggingEmailType
             ? new PlatformHealthComponentDto(
                 PlatformHealthComponents.Email,

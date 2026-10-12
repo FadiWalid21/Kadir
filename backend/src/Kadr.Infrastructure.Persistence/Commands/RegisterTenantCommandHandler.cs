@@ -8,6 +8,7 @@ using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Auth;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Tenants;
 using Kadr.Platform.Domain.Attendance;
 using Kadr.Platform.Domain.Org;
@@ -24,6 +25,7 @@ using Kadr.SharedKernel.Tenancy;
 using Kadr.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Kadr.Infrastructure.Persistence.Commands;
 
@@ -33,6 +35,7 @@ public sealed class RegisterTenantCommandHandler(
     IPasswordHasher passwordHasher,
     ICommonPasswordList commonPasswords,
     IEmailSender emailSender,
+    IOptions<AppOptions> appOptions,
     IEmailUniquenessChecker emailUniqueness,
     IRegisterTenantFailureInjector failureInjector,
     ITemplateApplyService templateApply,
@@ -251,12 +254,13 @@ public sealed class RegisterTenantCommandHandler(
             {
                 try
                 {
-                    await emailSender.SendAsync(
-                        new EmailMessage(
-                            email,
-                            "Verify your Kadr email / تأكيد البريد",
-                            $"Verify your email with token: {rawToken}"),
-                        cancellationToken).ConfigureAwait(false);
+                    var verifyUrl = PublicWebLinks.TryBuild(
+                        appOptions.Value.PublicWebBaseUrl,
+                        PublicWebLinks.VerifyEmailPath,
+                        rawToken);
+                    await emailSender
+                        .SendAsync(AuthEmailBodies.VerifyEmail(email, verifyUrl, rawToken), cancellationToken)
+                        .ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

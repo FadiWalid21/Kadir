@@ -261,9 +261,9 @@ export class InvitationsSettingsPage implements OnInit {
       return;
     }
     try {
-      await this.store.invite(email, this.inviteRoleId());
+      const created = await this.store.invite(email, this.inviteRoleId());
       this.inviteOpen.set(false);
-      this.toast.show(this.i18n.translate('settings.users.inviteSent'), 'success');
+      await this.notifyInviteLink(created.acceptUrl ?? null, 'settings.users.inviteSent');
     } catch (e) {
       const code = problemDetailsFromError(e as HttpErrorResponse)?.code;
       this.inviteError.set(
@@ -276,11 +276,28 @@ export class InvitationsSettingsPage implements OnInit {
 
   protected async resend(inv: InvitationListItem): Promise<void> {
     try {
-      await this.store.resend(inv.id);
-      this.toast.show(this.i18n.translate('settings.users.resent'), 'success');
+      const resent = await this.store.resend(inv.id);
+      await this.notifyInviteLink(resent.acceptUrl ?? null, 'settings.users.resent');
     } catch {
       this.toast.show(this.i18n.translate('settings.users.inviteFailed'), 'danger');
     }
+  }
+
+  private async notifyInviteLink(acceptUrl: string | null, messageKey: string): Promise<void> {
+    if (acceptUrl) {
+      try {
+        await navigator.clipboard.writeText(acceptUrl);
+      } catch {
+        /* clipboard may be denied; still show open link */
+      }
+      this.toast.show(this.i18n.translate(messageKey), 'success', 12_000, {
+        label: this.i18n.translate('settings.users.copyInviteLink'),
+        url: acceptUrl,
+      });
+      return;
+    }
+
+    this.toast.show(this.i18n.translate(messageKey), 'success');
   }
 
   protected askRevoke(inv: InvitationListItem): void {

@@ -42,6 +42,8 @@ export interface InvitationListItem {
   roleName: string;
   expiresAt: string;
   createdAt: string;
+  /** Present once on invite/resend responses — never stored for list rows. */
+  acceptUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
