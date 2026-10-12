@@ -6,6 +6,7 @@ using Kadr.Identity.Domain.Tokens;
 using Kadr.Identity.Domain.Users;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Auth;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Tenants;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
@@ -130,8 +131,8 @@ public sealed class SignInMethodsService(
         await SendSecurityNoticeAsync(
                 user.Email,
                 "Google sign-in was linked to your Kadr account / تم ربط تسجيل الدخول بجوجل بحسابك",
-                "Google sign-in was linked to your Kadr account. If this was not you, reset your password immediately.\n"
-                + "تم ربط تسجيل الدخول بجوجل بحسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
+                "Google sign-in was linked to your Kadr account. If this was not you, reset your password immediately.",
+                "تم ربط تسجيل الدخول بجوجل بحسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
                 userId,
                 cancellationToken)
             .ConfigureAwait(false);
@@ -188,8 +189,8 @@ public sealed class SignInMethodsService(
         await SendSecurityNoticeAsync(
                 user.Email,
                 "Google sign-in was removed from your Kadr account / تمت إزالة تسجيل الدخول بجوجل من حسابك",
-                "Google sign-in was removed from your Kadr account. If this was not you, reset your password immediately.\n"
-                + "تمت إزالة تسجيل الدخول بجوجل من حسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
+                "Google sign-in was removed from your Kadr account. If this was not you, reset your password immediately.",
+                "تمت إزالة تسجيل الدخول بجوجل من حسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
                 userId,
                 cancellationToken)
             .ConfigureAwait(false);
@@ -248,8 +249,8 @@ public sealed class SignInMethodsService(
                 hadPassword
                     ? "Your Kadr password was changed / تم تغيير كلمة المرور"
                     : "A password was added to your Kadr account / تمت إضافة كلمة مرور لحسابك",
-                "The sign-in settings of your Kadr account changed. If this was not you, reset your password immediately.\n"
-                + "تغيّرت إعدادات تسجيل الدخول لحسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
+                "The sign-in settings of your Kadr account changed. If this was not you, reset your password immediately.",
+                "تغيّرت إعدادات تسجيل الدخول لحسابك في كادر. إذا لم تكن أنت، فأعد تعيين كلمة المرور فوراً.",
                 userId,
                 cancellationToken)
             .ConfigureAwait(false);
@@ -350,13 +351,15 @@ public sealed class SignInMethodsService(
     private async Task SendSecurityNoticeAsync(
         string to,
         string subject,
-        string body,
+        string bodyEn,
+        string bodyAr,
         Guid userId,
         CancellationToken cancellationToken)
     {
         try
         {
-            await emailSender.SendAsync(new EmailMessage(to, subject, body), cancellationToken)
+            await emailSender
+                .SendAsync(AuthEmailBodies.SecurityNotice(to, subject, bodyEn, bodyAr), cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (Exception ex)

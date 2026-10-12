@@ -1,4 +1,4 @@
-using System.Net;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Domain.Notifications;
 using Kadr.SharedKernel.Abstractions;
 
@@ -16,19 +16,12 @@ public static class NotificationEmailTemplates
         var arabic = !string.Equals(preferredLanguage, "en", StringComparison.OrdinalIgnoreCase);
         var title = arabic ? notification.TitleAr : notification.TitleEn;
         var body = arabic ? notification.BodyAr : notification.BodyEn;
-        var subject = $"{(arabic ? "كادر" : "Kadr")}: {title}";
+        var brand = arabic ? "كادر" : EmailLayout.BrandName;
+        var subject = $"{brand}: {title}";
 
         var link = BuildLink(appBaseUrl, notification.LinkPath);
         var cta = CallToAction(notification.Type, arabic);
-        var dir = arabic ? "rtl" : "ltr";
-        var lang = arabic ? "ar" : "en";
-
-        var html =
-            $"<div dir=\"{dir}\" lang=\"{lang}\">"
-            + $"<h2>{WebUtility.HtmlEncode(title)}</h2>"
-            + $"<p>{WebUtility.HtmlEncode(body)}</p>"
-            + (link is null ? string.Empty : $"<p><a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(cta)}</a></p>")
-            + "</div>";
+        var html = EmailLayout.WrapLocalized(brand, title, body, arabic, link, link is null ? null : cta);
         var text = link is null ? $"{title}\n{body}" : $"{title}\n{body}\n{cta}: {link}";
         return new EmailMessage(toEmail, subject, html, text);
     }

@@ -214,14 +214,13 @@ public sealed class PasswordResetService(
 
         try
         {
-            await emailSender.SendAsync(
-                    new EmailMessage(
+            await emailSender
+                .SendAsync(
+                    AuthEmailBodies.SecurityNotice(
                         email,
                         "Your Kadr password was reset / تمت إعادة تعيين كلمة المرور",
-                        "The password of your Kadr account was reset and all sessions were signed out. "
-                        + "If this was not you, contact support immediately.\n"
-                        + "تمت إعادة تعيين كلمة مرور حسابك في كادر وتسجيل الخروج من جميع الجلسات. "
-                        + "إذا لم تكن أنت، تواصل مع الدعم فوراً."),
+                        "The password of your Kadr account was reset and all sessions were signed out. If this was not you, contact support immediately.",
+                        "تمت إعادة تعيين كلمة مرور حسابك في كادر وتسجيل الخروج من جميع الجلسات. إذا لم تكن أنت، تواصل مع الدعم فوراً."),
                     cancellationToken)
                 .ConfigureAwait(false);
         }

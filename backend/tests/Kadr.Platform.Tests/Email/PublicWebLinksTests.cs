@@ -25,7 +25,7 @@ public sealed class PublicWebLinksTests
     }
 
     [Fact]
-    public void Invitation_body_includes_link_and_legacy_marker()
+    public void Invitation_body_includes_link_without_raw_token_in_html()
     {
         var msg = AuthEmailBodies.Invitation(
             "a@b.com",
@@ -33,7 +33,7 @@ public sealed class PublicWebLinksTests
             "raw");
 
         Assert.Contains("accept-invitation?token=raw", msg.HtmlBody, StringComparison.Ordinal);
-        Assert.Contains("Invitation token: raw", msg.HtmlBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("Invitation token: raw", msg.HtmlBody, StringComparison.Ordinal);
         Assert.Contains("accept-invitation?token=raw", msg.TextBody!, StringComparison.Ordinal);
     }
 }
