@@ -128,4 +128,7 @@ public static class ErrorCodes
     public const string SalaryValidationFailed = "salary.validation_failed";
     public const string SalaryNotFound = "salary.not_found";
     public const string SalaryDuplicateKey = "salary.duplicate_key";
+    public const string SalaryEmployeeNotFound = "salary.employee_not_found";
+    public const string SalaryEffectiveOverlap = "salary.effective_overlap";
+    public const string SalaryInvalidComponent = "salary.invalid_component";
 }

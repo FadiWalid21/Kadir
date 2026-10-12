@@ -2578,6 +2578,119 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                     b.ToTable("legal_entities", (string)null);
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("BasicAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("basic_amount");
+
+                    b.Property<string>("ChangeReason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("change_reason");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_salaries");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_salaries_tenant_id_employee_id")
+                        .HasFilter("effective_to IS NULL");
+
+                    b.HasIndex("TenantId", "EmployeeId", "EffectiveFrom")
+                        .HasDatabaseName("ix_employee_salaries_tenant_id_employee_id_effective_from");
+
+                    b.HasIndex("TenantId", "EmployeeId", "EffectiveTo")
+                        .HasDatabaseName("ix_employee_salaries_tenant_id_employee_id_effective_to");
+
+                    b.ToTable("employee_salaries", (string)null);
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalaryComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("AmountOrRate")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount_or_rate");
+
+                    b.Property<Guid>("EmployeeSalaryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_salary_id");
+
+                    b.Property<Guid>("PayComponentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pay_component_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_salary_components");
+
+                    b.HasIndex("EmployeeSalaryId")
+                        .HasDatabaseName("ix_employee_salary_components_employee_salary_id");
+
+                    b.HasIndex("TenantId", "PayComponentId")
+                        .HasDatabaseName("ix_employee_salary_components_tenant_id_pay_component_id");
+
+                    b.HasIndex("TenantId", "EmployeeSalaryId", "PayComponentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employee_salary_components_tenant_id_employee_salary_id_pay");
+
+                    b.ToTable("employee_salary_components", (string)null);
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Payroll.PayComponent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3762,6 +3875,16 @@ namespace Kadr.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_notification_deliveries_notifications_notification_id");
                 });
 
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalaryComponent", b =>
+                {
+                    b.HasOne("Kadr.Platform.Domain.Payroll.EmployeeSalary", null)
+                        .WithMany("Components")
+                        .HasForeignKey("EmployeeSalaryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_employee_salary_components_employee_salaries_employee_salar");
+                });
+
             modelBuilder.Entity("Kadr.Platform.Domain.Workflows.ApprovalWorkflowStep", b =>
                 {
                     b.HasOne("Kadr.Platform.Domain.Workflows.ApprovalWorkflow", null)
@@ -3775,6 +3898,11 @@ namespace Kadr.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Kadr.Platform.Domain.Employees.Employee", b =>
                 {
                     b.Navigation("EmergencyContacts");
+                });
+
+            modelBuilder.Entity("Kadr.Platform.Domain.Payroll.EmployeeSalary", b =>
+                {
+                    b.Navigation("Components");
                 });
 #pragma warning restore 612, 618
         }

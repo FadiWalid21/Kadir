@@ -28,6 +28,7 @@ import { SelectComponent, SelectOption } from '../../shared/ui/select/select.com
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { TabsComponent, TabItem } from '../../shared/ui/tabs/tabs.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
+import { EmployeeSalaryPanelComponent } from './employee-salary-panel.component';
 
 type PageState = 'loading' | 'ready' | 'error' | 'locked';
 
@@ -48,6 +49,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
     InputComponent,
     SelectComponent,
     ConfirmDialogComponent,
+    EmployeeSalaryPanelComponent,
   ],
   template: `
     <div class="flex flex-col gap-5">
@@ -257,6 +259,10 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
             </section>
           }
 
+          @if (activeTab() === 'salary' && employee(); as salEmp) {
+            <kadr-employee-salary-panel [employeeId]="salEmp.id" />
+          }
+
           @if (activeTab() === 'documents') {
             <div class="flex flex-col gap-4">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -451,14 +457,22 @@ export class EmployeeProfilePage implements OnInit {
   protected readonly deleteTarget = signal<EmployeeDocumentItem | null>(null);
   protected readonly deleting = signal(false);
 
-  protected readonly tabs = computed((): TabItem[] => [
-    { id: 'overview', label: this.i18n.translate('employees.tabOverview') },
-    { id: 'job', label: this.i18n.translate('employees.tabJob') },
-    { id: 'documents', label: this.i18n.translate('employees.tabDocuments') },
-    { id: 'attendance', label: this.i18n.translate('employees.tabAttendance') },
-    { id: 'leave', label: this.i18n.translate('employees.tabLeave') },
-    { id: 'audit', label: this.i18n.translate('employees.tabAudit') },
-  ]);
+  protected readonly tabs = computed((): TabItem[] => {
+    const items: TabItem[] = [
+      { id: 'overview', label: this.i18n.translate('employees.tabOverview') },
+      { id: 'job', label: this.i18n.translate('employees.tabJob') },
+      { id: 'documents', label: this.i18n.translate('employees.tabDocuments') },
+    ];
+    if (this.auth.hasPermission(PermissionCodes.SalaryRead)) {
+      items.push({ id: 'salary', label: this.i18n.translate('employees.tabSalary') });
+    }
+    items.push(
+      { id: 'attendance', label: this.i18n.translate('employees.tabAttendance') },
+      { id: 'leave', label: this.i18n.translate('employees.tabLeave') },
+      { id: 'audit', label: this.i18n.translate('employees.tabAudit') },
+    );
+    return items;
+  });
 
   protected readonly docCounts = computed(() => {
     const items = this.docs();
@@ -483,7 +497,12 @@ export class EmployeeProfilePage implements OnInit {
 
   ngOnInit(): void {
     const tab = this.route.snapshot.queryParamMap.get('tab');
-    if (tab) this.activeTab.set(tab);
+    if (
+      tab &&
+      (tab !== 'salary' || this.auth.hasPermission(PermissionCodes.SalaryRead))
+    ) {
+      this.activeTab.set(tab);
+    }
     void this.reload();
   }
 
