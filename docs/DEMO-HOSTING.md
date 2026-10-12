@@ -48,12 +48,13 @@ Local user-secrets do **not** apply on MonsterASP.
 ## 2. Vercel
 
 - Root Directory: `web`
+- Node.js Version: **22.x** (set in Project → Settings → Build and Deployment, or via `engines.node` in `web/package.json`)
 - Production env: `API_BASE_URL` = `https://kadir.runasp.net` (no trailing slash; build script appends `/api/v1`)
-- Redeploy after setting or changing the variable
+- After setting or changing the variable: Deployments → … on latest → **Redeploy** with **Clear cache**
 
-Build uses `npm run build` → `scripts/write-prod-env.mjs` writes `environment.prod.ts`.
+Build uses `npm run build` → `scripts/write-prod-env.mjs` writes `environment.prod.ts`. If `API_BASE_URL` is missing, the build **fails** (does not ship a relative `/api/v1` base).
 
-Without `API_BASE_URL`, the SPA calls `/api/v1/...` on the Vercel host (not MonsterASP) and industries will fail.
+Without a successful deploy that baked `API_BASE_URL`, the SPA calls `/api/v1/...` on the Vercel host (not MonsterASP) and industries show **تعذر تحميل القطاعات**.
 
 ## 3. Smoke checklist
 
