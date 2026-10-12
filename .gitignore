@@ -32,7 +32,9 @@ appsettings.Production.json
 
 # ---- Local data ----
 uploads/
-storage/
+# Runtime blob folders only — do not ignore C# namespace Infrastructure/Storage/
+/storage/
+backend/src/Kadr.Api/storage/
 .data/
 pgdata/
 logs/
