@@ -39,6 +39,7 @@ describe('InvitationsSettingsPage', () => {
             invitations: signal([]),
             roles: signal([]),
             busy: signal(false),
+            busyInviteId: signal(null),
             loadRoles: vi.fn().mockResolvedValue(undefined),
             loadInvitations: vi.fn().mockResolvedValue(undefined),
           },

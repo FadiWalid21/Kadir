@@ -113,12 +113,19 @@ import { UsersStore } from './users.store';
                     variant="secondary"
                     size="sm"
                     type="button"
-                    [loading]="store.busy()"
+                    [loading]="store.busyInviteId() === inv.id"
+                    [disabled]="rowActionsLocked(inv.id)"
                     (click)="resend(inv)"
                   >
                     {{ 'settings.users.resend' | transloco }}
                   </kadr-button>
-                  <kadr-button variant="danger-soft" size="sm" type="button" (click)="askRevoke(inv)">
+                  <kadr-button
+                    variant="danger-soft"
+                    size="sm"
+                    type="button"
+                    [disabled]="rowActionsLocked(inv.id)"
+                    (click)="askRevoke(inv)"
+                  >
                     {{ 'settings.users.revoke' | transloco }}
                   </kadr-button>
                 </div>
@@ -196,7 +203,7 @@ import { UsersStore } from './users.store';
         [confirmLabel]="'settings.users.revoke' | transloco"
         [cancelLabel]="'ui.cancel' | transloco"
         [danger]="true"
-        [busy]="store.busy()"
+        [busy]="!!revokeTarget() && store.busyInviteId() === revokeTarget()!.id"
         (confirmed)="confirmRevoke()"
         (cancelled)="revokeTarget.set(null)"
       />
@@ -246,6 +253,12 @@ export class InvitationsSettingsPage implements OnInit {
   protected roleDescription(ar: string | null, en: string | null): string | undefined {
     const lang = this.i18n.getActiveLang();
     return (lang === 'ar' ? ar : en) ?? ar ?? en ?? undefined;
+  }
+
+  /** True when another invitation row is mid resend/revoke. */
+  protected rowActionsLocked(inviteId: string): boolean {
+    const busyId = this.store.busyInviteId();
+    return busyId !== null && busyId !== inviteId;
   }
 
   protected openInvite(): void {
