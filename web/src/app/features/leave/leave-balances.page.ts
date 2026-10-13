@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   OnInit,
   signal,
@@ -10,6 +11,8 @@ import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LeaveApi, LeaveBalance } from '../../core/api/leave.api';
 import { problemDetailsFromError } from '../../core/api/auth.api';
+import { AuthService } from '../../core/auth/auth.service';
+import { PermissionCodes } from '../../core/auth/permission-codes';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
@@ -58,7 +61,9 @@ type PageState = 'loading' | 'ready' | 'error';
               <th class="px-4 py-3 font-medium">{{ 'leave.balances.colEmployee' | transloco }}</th>
               <th class="px-4 py-3 font-medium">{{ 'leave.balances.colType' | transloco }}</th>
               <th class="px-4 py-3 font-medium">{{ 'leave.balances.colRemaining' | transloco }}</th>
-              <th class="px-4 py-3 font-medium">{{ 'leave.balances.colActions' | transloco }}</th>
+              @if (canAdjust()) {
+                <th class="px-4 py-3 font-medium">{{ 'leave.balances.colActions' | transloco }}</th>
+              }
             </tr>
           </thead>
           <tbody>
@@ -67,11 +72,13 @@ type PageState = 'loading' | 'ready' | 'error';
                 <td class="px-4 py-3 text-fg">{{ row.employeeNameAr }}</td>
                 <td class="px-4 py-3 text-fg-2">{{ row.leaveTypeNameAr }}</td>
                 <td class="px-4 py-3 tabular-nums text-fg">{{ row.remaining }}</td>
-                <td class="px-4 py-3">
-                  <kadr-button variant="secondary" type="button" (click)="openAdjust(row)">
-                    {{ 'leave.balances.adjust' | transloco }}
-                  </kadr-button>
-                </td>
+                @if (canAdjust()) {
+                  <td class="px-4 py-3">
+                    <kadr-button variant="secondary" type="button" (click)="openAdjust(row)">
+                      {{ 'leave.balances.adjust' | transloco }}
+                    </kadr-button>
+                  </td>
+                }
               </tr>
             }
           </tbody>
@@ -114,6 +121,7 @@ type PageState = 'loading' | 'ready' | 'error';
 })
 export class LeaveBalancesPage implements OnInit {
   private readonly api = inject(LeaveApi);
+  private readonly auth = inject(AuthService);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
@@ -122,6 +130,9 @@ export class LeaveBalancesPage implements OnInit {
   protected readonly items = signal<LeaveBalance[]>([]);
   protected readonly adjustRow = signal<LeaveBalance | null>(null);
   protected readonly saving = signal(false);
+  protected readonly canAdjust = computed(() =>
+    this.auth.hasPermission(PermissionCodes.LeaveManage),
+  );
   protected delta = 1;
   protected reason = '';
 
@@ -131,6 +142,9 @@ export class LeaveBalancesPage implements OnInit {
   }
 
   protected openAdjust(row: LeaveBalance): void {
+    if (!this.canAdjust()) {
+      return;
+    }
     this.delta = 1;
     this.reason = '';
     this.adjustRow.set(row);
@@ -148,7 +162,7 @@ export class LeaveBalancesPage implements OnInit {
 
   protected async saveAdjust(): Promise<void> {
     const row = this.adjustRow();
-    if (!row || !this.reason.trim() || this.delta === 0) {
+    if (!this.canAdjust() || !row || !this.reason.trim() || this.delta === 0) {
       return;
     }
     this.saving.set(true);
