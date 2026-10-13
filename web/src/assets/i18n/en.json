@@ -103,6 +103,12 @@
       "safariOnly": "Works in Safari only.",
       "gotIt": "Got it",
       "never": "Don’t show this again"
+    },
+    "browser": {
+      "title": "Install Kadr",
+      "body": "Your browser did not offer a one-tap install. Use the browser menu:",
+      "step1": "Open the browser menu (⋮ or ⋯).",
+      "step2": "Choose Install app or Add to Home Screen."
     }
   },
   "auth": {
