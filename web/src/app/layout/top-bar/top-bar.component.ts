@@ -33,15 +33,6 @@ import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.com
       class="kadr-safe-top flex h-14 items-center gap-3 border-b border-line bg-surface px-4 md:px-6"
       [attr.aria-label]="'shell.topBar' | transloco"
     >
-      <div
-        class="hidden min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-subtle px-3 text-sm text-fg-muted sm:flex"
-        [attr.title]="'shell.notAvailableYet' | transloco"
-        role="search"
-      >
-        <kadr-icon name="search" size="sm" />
-        <span class="truncate py-2">{{ 'shell.searchPlaceholder' | transloco }}</span>
-      </div>
-
       <div class="ms-auto flex items-center gap-1">
         <kadr-dropdown-menu [ariaLabel]="'shell.notifications' | transloco">
           <span dropdownTrigger class="relative inline-flex size-11 items-center justify-center">
