@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   OnInit,
   signal,
@@ -10,6 +11,8 @@ import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LeaveApi, RequestInboxItem } from '../../core/api/leave.api';
 import { problemDetailsFromError } from '../../core/api/auth.api';
+import { AuthService } from '../../core/auth/auth.service';
+import { PermissionCodes } from '../../core/auth/permission-codes';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
@@ -64,14 +67,16 @@ type PageState = 'loading' | 'ready' | 'error';
                 <bdi>{{ item.subjectId }}</bdi>
               </p>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <kadr-button variant="primary" type="button" (click)="approve(item)">
-                {{ 'leave.approvals.approve' | transloco }}
-              </kadr-button>
-              <kadr-button variant="danger-soft" type="button" (click)="rejectTarget.set(item)">
-                {{ 'leave.approvals.reject' | transloco }}
-              </kadr-button>
-            </div>
+            @if (canApprove()) {
+              <div class="flex flex-wrap gap-2">
+                <kadr-button variant="primary" type="button" (click)="approve(item)">
+                  {{ 'leave.approvals.approve' | transloco }}
+                </kadr-button>
+                <kadr-button variant="danger-soft" type="button" (click)="rejectTarget.set(item)">
+                  {{ 'leave.approvals.reject' | transloco }}
+                </kadr-button>
+              </div>
+            }
           </li>
         }
       </ul>
@@ -102,6 +107,7 @@ type PageState = 'loading' | 'ready' | 'error';
 })
 export class LeaveApprovalsPage implements OnInit {
   private readonly api = inject(LeaveApi);
+  private readonly auth = inject(AuthService);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
@@ -110,6 +116,9 @@ export class LeaveApprovalsPage implements OnInit {
   protected readonly items = signal<RequestInboxItem[]>([]);
   protected readonly rejectTarget = signal<RequestInboxItem | null>(null);
   protected readonly saving = signal(false);
+  protected readonly canApprove = computed(() =>
+    this.auth.hasPermission(PermissionCodes.LeaveApprove),
+  );
   protected rejectReason = '';
 
   ngOnInit(): void {
@@ -129,6 +138,9 @@ export class LeaveApprovalsPage implements OnInit {
   }
 
   protected async approve(item: RequestInboxItem): Promise<void> {
+    if (!this.canApprove()) {
+      return;
+    }
     try {
       await this.api.approve(item.taskId);
       this.toast.show(this.transloco.translate('leave.approvals.approved'), 'success');
@@ -141,7 +153,7 @@ export class LeaveApprovalsPage implements OnInit {
 
   protected async reject(): Promise<void> {
     const item = this.rejectTarget();
-    if (!item || this.rejectReason.trim().length < 3) {
+    if (!this.canApprove() || !item || this.rejectReason.trim().length < 3) {
       return;
     }
     this.saving.set(true);

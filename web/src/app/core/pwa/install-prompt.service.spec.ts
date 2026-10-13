@@ -65,6 +65,15 @@ describe('InstallPromptService', () => {
     expect(service.showMenuItem()).toBe(true);
   });
 
+  it('shows menu item when not installed even without BIP or iOS', () => {
+    const service = TestBed.inject(InstallPromptService);
+    expect(service.canInstall()).toBe(false);
+    expect(service.isIos()).toBe(false);
+    expect(service.isInstalled()).toBe(false);
+    expect(service.showMenuItem()).toBe(true);
+    expect(service.showBanner()).toBe(false);
+  });
+
   it('hides install UI when standalone (isInstalled)', () => {
     stubMatchMedia(true);
     TestBed.resetTestingModule();
@@ -91,6 +100,20 @@ describe('InstallPromptService', () => {
     fireBeforeInstallPrompt();
     expect(again.showBanner()).toBe(false);
     expect(again.showMenuItem()).toBe(true);
+  });
+
+  it('dismiss keeps menu visible even without BIP', () => {
+    const service = TestBed.inject(InstallPromptService);
+    service.dismissBanner();
+    expect(service.showBanner()).toBe(false);
+    expect(service.showMenuItem()).toBe(true);
+  });
+
+  it('promptInstall without BIP opens how-to dialog', async () => {
+    const service = TestBed.inject(InstallPromptService);
+    const accepted = await service.promptInstall();
+    expect(accepted).toBe(false);
+    expect(service.showHowTo()).toBe(true);
   });
 
   it('appinstalled clears the install prompt', () => {

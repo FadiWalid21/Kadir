@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   OnInit,
   signal,
@@ -10,6 +11,8 @@ import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LeaveApi, LeaveBalance, LeaveType } from '../../core/api/leave.api';
 import { problemDetailsFromError } from '../../core/api/auth.api';
+import { AuthService } from '../../core/auth/auth.service';
+import { PermissionCodes } from '../../core/auth/permission-codes';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
@@ -17,7 +20,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 
-type PageState = 'loading' | 'ready' | 'error';
+type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
 
 @Component({
   selector: 'kadr-leave-me-page',
@@ -37,9 +40,11 @@ type PageState = 'loading' | 'ready' | 'error';
         <h1 class="text-2xl font-bold text-fg">{{ 'leave.me.title' | transloco }}</h1>
         <p class="mt-1 text-sm text-fg-2">{{ 'leave.me.subtitle' | transloco }}</p>
       </div>
-      <kadr-button variant="primary" type="button" (click)="drawerOpen.set(true)">
-        {{ 'leave.me.request' | transloco }}
-      </kadr-button>
+      @if (canRequest() && state() === 'ready') {
+        <kadr-button variant="primary" type="button" (click)="drawerOpen.set(true)">
+          {{ 'leave.me.request' | transloco }}
+        </kadr-button>
+      }
     </header>
 
     @if (state() === 'loading') {
@@ -49,6 +54,11 @@ type PageState = 'loading' | 'ready' | 'error';
         [title]="'leave.loadErrorTitle' | transloco"
         [description]="'leave.loadErrorBody' | transloco"
         (retry)="reload()"
+      />
+    } @else if (state() === 'noEmployee') {
+      <kadr-empty-state
+        [title]="'leave.me.noEmployeeTitle' | transloco"
+        [description]="'leave.me.noEmployeeBody' | transloco"
       />
     } @else if (balances().length === 0) {
       <kadr-empty-state
@@ -110,6 +120,7 @@ type PageState = 'loading' | 'ready' | 'error';
 })
 export class LeaveMePage implements OnInit {
   private readonly api = inject(LeaveApi);
+  private readonly auth = inject(AuthService);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
@@ -119,6 +130,9 @@ export class LeaveMePage implements OnInit {
   protected readonly types = signal<LeaveType[]>([]);
   protected readonly drawerOpen = signal(false);
   protected readonly saving = signal(false);
+  protected readonly canRequest = computed(() =>
+    this.auth.hasPermission(PermissionCodes.LeaveRequest),
+  );
 
   protected leaveTypeId = '';
   protected startDate = '';
@@ -145,13 +159,19 @@ export class LeaveMePage implements OnInit {
         this.leaveTypeId = types[0].id;
       }
       this.state.set('ready');
-    } catch {
+    } catch (err) {
+      if (problemDetailsFromError(err)?.code === 'attendance.no_employee') {
+        this.balances.set([]);
+        this.types.set([]);
+        this.state.set('noEmployee');
+        return;
+      }
       this.state.set('error');
     }
   }
 
   protected async submit(): Promise<void> {
-    if (!this.leaveTypeId || !this.startDate || !this.endDate) {
+    if (!this.canRequest() || !this.leaveTypeId || !this.startDate || !this.endDate) {
       return;
     }
     this.saving.set(true);

@@ -41,13 +41,8 @@ export class InstallPromptService {
     return this.canInstall() || this.isIos();
   });
 
-  /** Avatar menu: ignore dismiss; show when installable or iOS not standalone. */
-  readonly showMenuItem = computed(() => {
-    if (this.isInstalled()) {
-      return false;
-    }
-    return this.canInstall() || this.isIos();
-  });
+  /** Avatar menu: ignore dismiss; show whenever the app is not installed (16a). */
+  readonly showMenuItem = computed(() => !this.isInstalled());
 
   constructor() {
     this.restoreDismiss();
@@ -82,23 +77,23 @@ export class InstallPromptService {
   }
 
   async promptInstall(): Promise<boolean> {
-    if (this.isIos() && !this.canInstall()) {
-      this.showHowTo.set(true);
-      return false;
-    }
     const event = this.deferred;
-    if (!event) {
-      return false;
+    if (event && this.canInstall()) {
+      await event.prompt();
+      const choice = await event.userChoice;
+      this.deferred = null;
+      this.promptAvailable.set(false);
+      return choice.outcome === 'accepted';
     }
-    await event.prompt();
-    const choice = await event.userChoice;
-    this.deferred = null;
-    this.promptAvailable.set(false);
-    return choice.outcome === 'accepted';
+    // No native prompt: open instructions (iOS sheet or browser how-to). Never a dead click.
+    if (!this.isInstalled()) {
+      this.showHowTo.set(true);
+    }
+    return false;
   }
 
   openHowToInstall(): void {
-    if (this.isIos() && !this.isInstalled()) {
+    if (!this.isInstalled()) {
       this.showHowTo.set(true);
     }
   }

@@ -103,6 +103,12 @@
       "safariOnly": "Works in Safari only.",
       "gotIt": "Got it",
       "never": "Don’t show this again"
+    },
+    "browser": {
+      "title": "Install Kadr",
+      "body": "Your browser did not offer a one-tap install. Use the browser menu:",
+      "step1": "Open the browser menu (⋮ or ⋯).",
+      "step2": "Choose Install app or Add to Home Screen."
     }
   },
   "auth": {
@@ -2025,6 +2031,8 @@
       "subtitle": "Balances come from your leave types and adjustments — not fixed in the app.",
       "request": "Request leave",
       "requestTitle": "New leave request",
+      "noEmployeeTitle": "No employee profile linked",
+      "noEmployeeBody": "Ask HR to link your user to an employee record to view leave balances and request leave.",
       "emptyTitle": "No balances yet",
       "emptyBody": "Balances appear after leave types are configured for your company.",
       "used": "Used",

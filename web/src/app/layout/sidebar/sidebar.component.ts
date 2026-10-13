@@ -13,6 +13,8 @@ import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
+import { FeatureKeys } from '../../core/subscription/feature-keys';
+import { SubscriptionStore } from '../../core/subscription/subscription.store';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.component';
 
@@ -23,6 +25,7 @@ export interface NavLeaf {
   route?: string;
   disabled?: boolean;
   permission?: string;
+  feature?: string;
   /** When set, show a numeric badge (approvals stub). */
   badge?: number;
   badgeAriaKey?: string;
@@ -41,6 +44,7 @@ export interface NavGroup {
   labelKey: string;
   icon: IconName;
   permission?: string;
+  feature?: string;
   /** Show group if any child is visible (ignores own permission when set). */
   anyChildPermission?: boolean;
   children: NavChild[];
@@ -200,6 +204,7 @@ export type NavEntry = NavLeaf | NavGroup | NavDivider;
 })
 export class SidebarComponent {
   private readonly auth = inject(AuthService);
+  private readonly subscription = inject(SubscriptionStore);
   private readonly router = inject(Router);
 
   readonly collapsed = input(false);
@@ -310,12 +315,24 @@ export class SidebarComponent {
       },
     ];
 
+    const canLeaveTeam = this.auth.hasPermission(PermissionCodes.LeaveReadTeam);
+
     const leaveChildren: NavChild[] = [
       {
         labelKey: 'shell.nav.leaveMe',
         route: '/leave/me',
         matchPrefix: '/leave/me',
       },
+      ...(canLeaveTeam
+        ? [
+            {
+              labelKey: 'shell.nav.leaveApprovals',
+              route: '/leave/approvals',
+              permission: PermissionCodes.LeaveReadTeam,
+              matchPrefix: '/leave/approvals',
+            },
+          ]
+        : []),
       ...(this.auth.hasPermission(PermissionCodes.LeaveReadAll)
         ? [
             {
@@ -326,10 +343,6 @@ export class SidebarComponent {
           ]
         : []),
     ];
-
-    const approvalsRoute = this.auth.hasPermission(PermissionCodes.LeaveReadTeam)
-      ? '/leave/approvals'
-      : '/attendance/requests';
 
     return [
       { kind: 'leaf', labelKey: 'shell.nav.home', icon: 'home', route: '/' },
@@ -355,19 +368,22 @@ export class SidebarComponent {
         labelKey: 'shell.nav.leave',
         icon: 'calendar',
         permission: PermissionCodes.LeaveReadOwn,
+        feature: FeatureKeys.Leave,
         children: leaveChildren,
       },
-      {
-        kind: 'leaf',
-        labelKey: 'shell.nav.approvals',
-        icon: 'inbox',
-        route: approvalsRoute,
-        permission: this.auth.hasPermission(PermissionCodes.LeaveReadTeam)
-          ? PermissionCodes.LeaveReadTeam
-          : PermissionCodes.AttendanceReadOwn,
-        badge: 0,
-        badgeAriaKey: 'shell.nav.approvalsPending',
-      },
+      ...(canLeaveTeam
+        ? []
+        : [
+            {
+              kind: 'leaf' as const,
+              labelKey: 'shell.nav.approvals',
+              icon: 'inbox' as IconName,
+              route: '/attendance/requests',
+              permission: PermissionCodes.AttendanceReadOwn,
+              badge: 0,
+              badgeAriaKey: 'shell.nav.approvalsPending',
+            },
+          ]),
       {
         kind: 'group',
         id: 'payroll',
@@ -405,6 +421,9 @@ export class SidebarComponent {
     this.entries().filter((entry) => {
       if (entry.kind === 'divider') {
         return true;
+      }
+      if (entry.feature && !this.subscription.hasFeature(entry.feature)) {
+        return false;
       }
       if (entry.kind === 'group' && entry.anyChildPermission) {
         return this.visibleChildren(entry).length > 0;
