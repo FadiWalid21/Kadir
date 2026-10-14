@@ -19,4 +19,9 @@ public interface IUserService
         Guid id,
         UpdateUserRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<Result<UserDetailDto>> SetEmployeeLinkAsync(
+        Guid id,
+        SetUserEmployeeRequest request,
+        CancellationToken cancellationToken = default);
 }

@@ -73,6 +73,8 @@ public sealed record EmployeeDetailDto(
     DateOnly? ContractEndDate,
     string Status,
     Guid? UserId,
+    string? LinkedUserEmail,
+    string? LinkedUserFullName,
     IReadOnlyList<EmergencyContactDto> EmergencyContacts,
     IReadOnlyList<EmployeeListItemDto> DirectReports,
     IReadOnlyList<EmployeeDocumentListItemDto> UrgentDocuments);

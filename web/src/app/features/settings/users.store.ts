@@ -116,4 +116,14 @@ export class UsersStore {
       this.busy.set(false);
     }
   }
+
+  async setEmployeeLink(id: string, employeeId: string | null): Promise<void> {
+    this.busy.set(true);
+    try {
+      await this.usersApi.setEmployeeLink(id, employeeId);
+      await this.loadUsers();
+    } finally {
+      this.busy.set(false);
+    }
+  }
 }

@@ -186,6 +186,63 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Self_punch_works_after_link_api()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Link Punch Co", "link-punch@example.com");
+        var session = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var client = helper.Authed(session.AccessToken);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف حضور",
+                hireDate = "2024-01-15",
+                status = "Active",
+            });
+        var emp = (await create.Content.ReadFromJsonAsync<EmployeeDetailDto>(JsonOptions))!;
+
+        Guid userId = await helper.WithTenantAsync(a.TenantId, db =>
+            db.Users.Where(u => u.Email == a.Email).Select(u => u.Id).SingleAsync());
+
+        var link = await client.PutAsJsonAsync(
+            $"/api/v1/users/{userId}/employee",
+            new { employeeId = emp.Id });
+        Assert.Equal(HttpStatusCode.OK, link.StatusCode);
+
+        var branches = await client.GetFromJsonAsync<List<BranchLocationDto>>(
+            "/api/v1/attendance/settings/branches",
+            JsonOptions);
+        Assert.NotNull(branches);
+        var loc = await client.PutAsJsonAsync(
+            $"/api/v1/attendance/settings/branches/{branches[0].BranchId}/location",
+            new
+            {
+                latitude = Lat,
+                longitude = Lon,
+                geofenceRadiusMeters = 150,
+                outOfRangePolicy = "Block",
+            });
+        Assert.Equal(HttpStatusCode.OK, loc.StatusCode);
+
+        var punch = await client.PostAsJsonAsync(
+            "/api/v1/attendance/punch",
+            new
+            {
+                latitude = Lat,
+                longitude = Lon,
+                accuracyM = 20,
+                positionAgeMs = 1000,
+                clientRequestId = Guid.NewGuid(),
+                reason = (string?)null,
+            });
+        var punchBody = await punch.Content.ReadAsStringAsync();
+        Assert.True(punch.IsSuccessStatusCode, punchBody);
+    }
+
+    [Fact]
     public async Task Proxy_punch_creates_manual_in_with_reason()
     {
         await factory.ResetDatabaseAsync();

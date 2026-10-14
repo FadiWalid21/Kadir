@@ -955,6 +955,19 @@ public sealed class EmployeeService(
 
         var masked = MaskNationalId(e.NationalId);
 
+        string? linkedUserEmail = null;
+        string? linkedUserFullName = null;
+        if (e.UserId is Guid linkedUserId)
+        {
+            var linked = await db.Users.AsNoTracking()
+                .Where(u => u.Id == linkedUserId)
+                .Select(u => new { u.Email, u.FullName })
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            linkedUserEmail = linked?.Email;
+            linkedUserFullName = linked?.FullName;
+        }
+
         return new EmployeeDetailDto(
             e.Id,
             e.EmployeeNumber,
@@ -986,6 +999,8 @@ public sealed class EmployeeService(
             e.ContractEndDate,
             e.Status.ToString(),
             e.UserId,
+            linkedUserEmail,
+            linkedUserFullName,
             e.EmergencyContacts
                 .OrderBy(c => c.SortOrder)
                 .Select(c => new EmergencyContactDto(c.Id, c.Name, c.Relationship, c.Phone, c.SortOrder))

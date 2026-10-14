@@ -100,6 +100,94 @@ public sealed class InvitationApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Accept_auto_links_when_exactly_one_employee_email_matches()
+    {
+        await factory.ResetDatabaseAsync();
+        var owner = await RegisterOwnerAsync("Invite Autolink Co", "invite-autolink@example.com");
+        var client = AuthedClient(owner.Token);
+        var empRoleId = await RoleIdAsync(owner.TenantId, SystemRoleNames.Employee);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف مدعو",
+                hireDate = "2024-01-15",
+                status = "Active",
+                email = "hire.autolink@example.com",
+            });
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var emp = (await create.Content.ReadFromJsonAsync<Kadr.Platform.Application.Employees.EmployeeDetailDto>(JsonOptions))!;
+
+        factory.Emails.Clear();
+        await client.PostAsJsonAsync(
+            "/api/v1/users/invite",
+            new InviteUserRequest("hire.autolink@example.com", empRoleId));
+        var raw = factory.Emails.ExtractLastInvitationToken();
+        Assert.False(string.IsNullOrWhiteSpace(raw));
+
+        var accept = await factory.CreateCookieClient().PostAsJsonAsync(
+            "/api/v1/auth/accept-invitation",
+            new AcceptInvitationRequest(raw!, "Hire Auto", Password));
+        Assert.Equal(HttpStatusCode.NoContent, accept.StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            var user = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "hire.autolink@example.com");
+            Assert.Equal(emp.Id, user.EmployeeId);
+            var employee = await db.Employees.AsNoTracking().SingleAsync(e => e.Id == emp.Id);
+            Assert.Equal(user.Id, employee.UserId);
+        }
+    }
+
+    [Fact]
+    public async Task Accept_skips_autolink_when_two_employees_share_email()
+    {
+        await factory.ResetDatabaseAsync();
+        var owner = await RegisterOwnerAsync("Invite Dup Email Co", "invite-dupemail@example.com");
+        var client = AuthedClient(owner.Token);
+        var empRoleId = await RoleIdAsync(owner.TenantId, SystemRoleNames.Employee);
+
+        foreach (var name in new[] { "أول", "ثاني" })
+        {
+            var create = await client.PostAsJsonAsync(
+                "/api/v1/employees",
+                new
+                {
+                    fullNameAr = name,
+                    hireDate = "2024-01-15",
+                    status = "Active",
+                    email = "shared.hire@example.com",
+                });
+            Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        }
+
+        factory.Emails.Clear();
+        await client.PostAsJsonAsync(
+            "/api/v1/users/invite",
+            new InviteUserRequest("shared.hire@example.com", empRoleId));
+        var raw = factory.Emails.ExtractLastInvitationToken();
+
+        var accept = await factory.CreateCookieClient().PostAsJsonAsync(
+            "/api/v1/auth/accept-invitation",
+            new AcceptInvitationRequest(raw!, "Shared Hire", Password));
+        Assert.Equal(HttpStatusCode.NoContent, accept.StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            var user = await db.Users.AsNoTracking().SingleAsync(u => u.Email == "shared.hire@example.com");
+            Assert.Null(user.EmployeeId);
+            Assert.Equal(0, await db.Employees.CountAsync(e => e.UserId == user.Id));
+        }
+    }
+
+    [Fact]
     public async Task Accept_skips_inviter_notification_when_CreatedBy_null()
     {
         await factory.ResetDatabaseAsync();

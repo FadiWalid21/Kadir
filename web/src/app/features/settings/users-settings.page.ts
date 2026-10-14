@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { EmployeesApi } from '../../core/api/employees.api';
 import { UserListItem } from '../../core/api/users.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
@@ -49,6 +50,7 @@ import { UsersStore } from './users.store';
       <header class="text-start">
         <h1 class="text-2xl font-bold leading-tight text-fg">{{ 'settings.users.title' | transloco }}</h1>
         <p class="mt-1 max-w-2xl text-sm text-fg-2">{{ 'settings.users.subtitle' | transloco }}</p>
+        <p class="mt-2 max-w-2xl text-sm text-fg-muted">{{ 'settings.users.linkHint' | transloco }}</p>
       </header>
 
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
@@ -107,6 +109,9 @@ import { UsersStore } from './users.store';
                   <td class="px-3 py-2">
                     <kadr-badge tone="neutral" [label]="u.roleName" />
                   </td>
+                  <td class="px-3 py-2 text-sm text-fg-2">
+                    {{ u.employeeNameAr || ('settings.users.notLinked' | transloco) }}
+                  </td>
                   <td class="px-3 py-2">
                     <kadr-badge
                       [tone]="u.isActive ? 'success' : 'warning'"
@@ -115,14 +120,7 @@ import { UsersStore } from './users.store';
                   </td>
                   <td class="px-3 py-2 text-xs text-fg-2">{{ formatDate(u.lastLoginAt) }}</td>
                   <td class="px-3 py-2">
-                    @if (isOwnerRow(u)) {
-                      <span class="inline-flex size-8 items-center justify-center text-fg-muted" [attr.aria-label]="'settings.users.ownerLocked' | transloco">
-                        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <rect x="5" y="11" width="14" height="10" rx="2" />
-                          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-                        </svg>
-                      </span>
-                    } @else if (canUpdate()) {
+                    @if (canUpdate()) {
                       <kadr-dropdown-menu [ariaLabel]="'settings.users.rowActions' | transloco">
                         <span dropdownTrigger class="inline-flex size-8 items-center justify-center rounded-md hover:bg-hover">
                           <svg viewBox="0 0 24 24" class="size-4" fill="currentColor" aria-hidden="true">
@@ -132,19 +130,38 @@ import { UsersStore } from './users.store';
                           </svg>
                         </span>
                         <div dropdownContent>
-                          <button type="button" class="block w-full px-3 py-2 text-start text-sm hover:bg-hover" role="menuitem" (click)="openEdit(u)">
-                            {{ 'settings.users.edit' | transloco }}
+                          @if (!isOwnerRow(u)) {
+                            <button type="button" class="block w-full px-3 py-2 text-start text-sm hover:bg-hover" role="menuitem" (click)="openEdit(u)">
+                              {{ 'settings.users.edit' | transloco }}
+                            </button>
+                          }
+                          <button type="button" class="block w-full px-3 py-2 text-start text-sm hover:bg-hover" role="menuitem" (click)="openLink(u)">
+                            {{ (u.employeeId ? 'settings.users.changeLink' : 'settings.users.linkEmployee') | transloco }}
                           </button>
-                          <button
-                            type="button"
-                            class="block w-full px-3 py-2 text-start text-sm hover:bg-hover"
-                            role="menuitem"
-                            (click)="toggleActive(u)"
-                          >
-                            {{ (u.isActive ? 'settings.users.deactivate' : 'settings.users.reactivate') | transloco }}
-                          </button>
+                          @if (u.employeeId) {
+                            <button type="button" class="block w-full px-3 py-2 text-start text-sm hover:bg-hover" role="menuitem" (click)="unlinkEmployee(u)">
+                              {{ 'settings.users.unlinkEmployee' | transloco }}
+                            </button>
+                          }
+                          @if (!isOwnerRow(u)) {
+                            <button
+                              type="button"
+                              class="block w-full px-3 py-2 text-start text-sm hover:bg-hover"
+                              role="menuitem"
+                              (click)="toggleActive(u)"
+                            >
+                              {{ (u.isActive ? 'settings.users.deactivate' : 'settings.users.reactivate') | transloco }}
+                            </button>
+                          }
                         </div>
                       </kadr-dropdown-menu>
+                    } @else if (isOwnerRow(u)) {
+                      <span class="inline-flex size-8 items-center justify-center text-fg-muted" [attr.aria-label]="'settings.users.ownerLocked' | transloco">
+                        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <rect x="5" y="11" width="14" height="10" rx="2" />
+                          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                        </svg>
+                      </span>
                     }
                   </td>
                 </tr>
@@ -168,6 +185,17 @@ import { UsersStore } from './users.store';
                     [label]="(u.isActive ? 'settings.users.active' : 'settings.users.inactive') | transloco"
                   />
                 </div>
+                <p class="mt-2 text-xs text-fg-2">
+                  {{ 'settings.users.colEmployee' | transloco }}:
+                  {{ u.employeeNameAr || ('settings.users.notLinked' | transloco) }}
+                </p>
+                @if (canUpdate()) {
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <kadr-button variant="secondary" type="button" (click)="openLink(u)">
+                      {{ (u.employeeId ? 'settings.users.changeLink' : 'settings.users.linkEmployee') | transloco }}
+                    </kadr-button>
+                  </div>
+                }
               </article>
             }
           </div>
@@ -237,11 +265,38 @@ import { UsersStore } from './users.store';
           <kadr-button variant="secondary" type="button" (click)="editUser.set(null)">{{ 'ui.cancel' | transloco }}</kadr-button>
         </div>
       </kadr-drawer>
+
+      <kadr-drawer
+        [open]="!!linkUser()"
+        [title]="'settings.users.linkTitle' | transloco"
+        [closeLabel]="'ui.cancel' | transloco"
+        (closed)="linkUser.set(null)"
+      >
+        <p class="mb-3 text-sm text-fg-2">{{ 'settings.users.linkBody' | transloco }}</p>
+        @if (linkUser()?.employeeNameAr) {
+          <p class="mb-3 text-sm text-fg">
+            {{ 'settings.users.currentlyLinked' | transloco: { name: linkUser()!.employeeNameAr } }}
+          </p>
+        }
+        <kadr-select
+          [label]="'settings.users.employee' | transloco"
+          [options]="employeeOptions()"
+          [value]="linkEmployeeId()"
+          (valueChange)="linkEmployeeId.set($event)"
+        />
+        <div drawerFooter class="contents">
+          <kadr-button variant="primary" type="button" [loading]="store.busy()" (click)="saveLink()">
+            {{ 'settings.users.saveLink' | transloco }}
+          </kadr-button>
+          <kadr-button variant="secondary" type="button" (click)="linkUser.set(null)">{{ 'ui.cancel' | transloco }}</kadr-button>
+        </div>
+      </kadr-drawer>
     </div>
   `,
 })
 export class UsersSettingsPage implements OnInit {
   protected readonly store = inject(UsersStore);
+  private readonly employeesApi = inject(EmployeesApi);
   private readonly auth = inject(AuthService);
   private readonly subscription = inject(SubscriptionStore);
   private readonly toast = inject(ToastService);
@@ -253,6 +308,9 @@ export class UsersSettingsPage implements OnInit {
   protected readonly editUser = signal<UserListItem | null>(null);
   protected readonly editName = signal('');
   protected readonly editRoleId = signal('');
+  protected readonly linkUser = signal<UserListItem | null>(null);
+  protected readonly linkEmployeeId = signal('');
+  protected readonly employeeOptions = signal<SelectOption[]>([]);
 
   protected readonly readOnly = computed(() => this.subscription.readOnly());
   protected readonly canUpdate = computed(
@@ -261,6 +319,7 @@ export class UsersSettingsPage implements OnInit {
   protected readonly userColumns = computed<TableColumn[]>(() => [
     { id: 'user', label: this.i18n.translate('settings.users.colUser') },
     { id: 'role', label: this.i18n.translate('settings.users.colRole') },
+    { id: 'employee', label: this.i18n.translate('settings.users.colEmployee') },
     { id: 'status', label: this.i18n.translate('settings.users.colStatus') },
     { id: 'login', label: this.i18n.translate('settings.users.colLastLogin') },
     { id: 'actions', label: this.i18n.translate('settings.users.colActions') },
@@ -365,6 +424,63 @@ export class UsersSettingsPage implements OnInit {
     this.editUser.set(u);
     this.editName.set(u.fullName);
     this.editRoleId.set(u.roleId);
+  }
+
+  protected async openLink(u: UserListItem): Promise<void> {
+    this.linkUser.set(u);
+    this.linkEmployeeId.set(u.employeeId ?? '');
+    try {
+      const page = await this.employeesApi.list({ page: 1, pageSize: 100 });
+      const lang = this.i18n.getActiveLang();
+      this.employeeOptions.set([
+        { value: '', label: this.i18n.translate('settings.users.pickEmployee') },
+        ...page.items
+          .filter((e) => e.status === 'Active' || e.status === 'Probation')
+          .map((e) => ({
+            value: e.id,
+            label:
+              lang === 'en' && e.fullNameEn
+                ? `${e.fullNameEn} (${e.employeeNumber})`
+                : `${e.fullNameAr} (${e.employeeNumber})`,
+          })),
+      ]);
+    } catch {
+      this.employeeOptions.set([{ value: '', label: this.i18n.translate('settings.users.pickEmployee') }]);
+      this.toast.show(this.i18n.translate('settings.users.linkFailed'), 'danger');
+    }
+  }
+
+  protected async saveLink(): Promise<void> {
+    const u = this.linkUser();
+    const employeeId = this.linkEmployeeId().trim();
+    if (!u || !employeeId) {
+      this.toast.show(this.i18n.translate('settings.users.pickEmployeeRequired'), 'danger');
+      return;
+    }
+    if (u.employeeId && u.employeeId !== employeeId) {
+      try {
+        await this.store.setEmployeeLink(u.id, null);
+      } catch {
+        this.toast.show(this.i18n.translate('settings.users.linkFailed'), 'danger');
+        return;
+      }
+    }
+    try {
+      await this.store.setEmployeeLink(u.id, employeeId);
+      this.linkUser.set(null);
+      this.toast.show(this.i18n.translate('settings.users.linked'), 'success');
+    } catch {
+      this.toast.show(this.i18n.translate('settings.users.linkFailed'), 'danger');
+    }
+  }
+
+  protected async unlinkEmployee(u: UserListItem): Promise<void> {
+    try {
+      await this.store.setEmployeeLink(u.id, null);
+      this.toast.show(this.i18n.translate('settings.users.unlinked'), 'success');
+    } catch {
+      this.toast.show(this.i18n.translate('settings.users.linkFailed'), 'danger');
+    }
   }
 
   protected async saveEdit(): Promise<void> {

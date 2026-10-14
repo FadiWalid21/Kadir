@@ -47,6 +47,9 @@ public static class ErrorCodes
     public const string UsersSelfDeactivationForbidden = "users.self_deactivation_forbidden";
     public const string UsersNotFound = "users.not_found";
     public const string UsersValidationFailed = "users.validation_failed";
+    public const string UsersEmployeeAlreadyLinked = "users.employee_already_linked";
+    public const string UsersEmployeeLinkConflict = "users.employee_link_conflict";
+    public const string UsersEmployeeInactive = "users.employee_inactive";
     public const string RolesPrivilegeEscalation = "roles.privilege_escalation";
     public const string RolesSystemReadonly = "roles.system_readonly";
     public const string RolesInUse = "roles.in_use";
