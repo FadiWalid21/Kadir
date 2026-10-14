@@ -7,9 +7,12 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AttendanceApi, AttendanceToday } from '../../core/api/attendance.api';
 import { GeolocationService } from '../../core/geo/geolocation.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { PermissionCodes } from '../../core/auth/permission-codes';
 import { OfflineService } from '../../core/pwa/offline.service';
 import { problemDetailsFromError } from '../../core/api/auth.api';
 import { BadgeComponent } from '../../shared/ui/badge/badge.component';
@@ -41,6 +44,7 @@ type CardUi =
   selector: 'kadr-home-attendance-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RouterLink,
     TranslocoPipe,
     ButtonComponent,
     BadgeComponent,
@@ -64,9 +68,14 @@ type CardUi =
         {{ 'attendance.card.offline' | transloco }}
       </p>
     } @else if (ui() === 'noEmployee') {
-      <p class="rounded-lg border border-line bg-app p-4 text-sm text-fg-2">
-        {{ 'attendance.card.noEmployee' | transloco }}
-      </p>
+      <div class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4 text-start">
+        <p class="text-sm text-fg-2">{{ 'attendance.card.noEmployee' | transloco }}</p>
+        @if (canManageEmployees()) {
+          <a routerLink="/employees" class="text-sm font-medium text-accent hover:underline">
+            {{ 'attendance.card.setupLinkEmployees' | transloco }}
+          </a>
+        }
+      </div>
     } @else if (ui() === 'error') {
       <div class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4 text-start">
         <p class="text-sm text-fg-2">{{ 'attendance.card.loadError' | transloco }}</p>
@@ -74,15 +83,36 @@ type CardUi =
           {{ 'pwa.offline.retry' | transloco }}
         </kadr-button>
       </div>
-    } @else if (ui() === 'holiday' || ui() === 'weekend' || ui() === 'noShift') {
+    } @else if (ui() === 'holiday' || ui() === 'weekend') {
       <div class="flex flex-col gap-2 rounded-lg border border-line bg-app p-4 text-start">
         <p class="text-sm font-medium text-fg">{{ dayKindLabel() }}</p>
         <p class="text-sm text-fg-2">{{ 'attendance.card.nonWorkdayHint' | transloco }}</p>
       </div>
+    } @else if (ui() === 'noShift') {
+      <div class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4 text-start">
+        <p class="text-sm font-medium text-fg">{{ dayKindLabel() }}</p>
+        <p class="text-sm text-fg-2">{{ 'attendance.card.noShiftHint' | transloco }}</p>
+        @if (canManageAttendance()) {
+          <a
+            routerLink="/attendance/settings/rules"
+            class="text-sm font-medium text-accent hover:underline"
+          >
+            {{ 'attendance.card.setupLinkDefaultShift' | transloco }}
+          </a>
+        }
+      </div>
     } @else if (ui() === 'branchMissing') {
-      <p class="rounded-lg border border-line bg-app p-4 text-sm text-fg-2">
-        {{ 'attendance.card.branchMissing' | transloco }}
-      </p>
+      <div class="flex flex-col gap-3 rounded-lg border border-line bg-app p-4 text-start">
+        <p class="text-sm text-fg-2">{{ 'attendance.card.branchMissing' | transloco }}</p>
+        @if (canManageAttendance()) {
+          <a
+            routerLink="/attendance/settings/branches"
+            class="text-sm font-medium text-accent hover:underline"
+          >
+            {{ 'attendance.card.setupLinkBranchGeo' | transloco }}
+          </a>
+        }
+      </div>
     } @else if (ui() === 'permission') {
       <div class="flex flex-col gap-3 rounded-lg border border-line bg-surface p-4 text-start shadow-sm">
         <p class="text-sm text-fg-2">{{ 'attendance.card.permissionExplain' | transloco }}</p>
@@ -190,7 +220,25 @@ type CardUi =
             (input)="outsideReason.set($any($event.target).value)"
           ></textarea>
         </label>
-        <kadr-button variant="primary" type="button" (click)="confirmOutside()">
+        <label class="flex flex-col gap-1 text-sm">
+          <span class="text-fg-2">{{ 'attendance.card.photoLabel' | transloco }}</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            capture="environment"
+            class="text-sm text-fg"
+            (change)="onEvidenceFile($event)"
+          />
+          @if (evidenceFileName()) {
+            <span class="text-xs text-fg-muted">{{ evidenceFileName() }}</span>
+          }
+        </label>
+        <kadr-button
+          variant="primary"
+          type="button"
+          [loading]="evidenceBusy()"
+          (click)="confirmOutside()"
+        >
           {{ 'attendance.card.confirmOutside' | transloco }}
         </kadr-button>
       </div>
@@ -216,13 +264,25 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
   private readonly geo = inject(GeolocationService);
   private readonly toast = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
+  private readonly auth = inject(AuthService);
   protected readonly offline = inject(OfflineService);
+
+  protected canManageEmployees(): boolean {
+    return this.auth.hasPermission(PermissionCodes.EmployeesUpdate);
+  }
+
+  protected canManageAttendance(): boolean {
+    return this.auth.hasPermission(PermissionCodes.AttendanceManage);
+  }
 
   protected readonly today = signal<AttendanceToday | null>(null);
   protected readonly ui = signal<CardUi>('skeleton');
   protected readonly outsideOpen = signal(false);
   protected readonly earlyOutOpen = signal(false);
   protected readonly outsideReason = signal('');
+  protected readonly evidenceFile = signal<File | null>(null);
+  protected readonly evidenceFileName = signal('');
+  protected readonly evidenceBusy = signal(false);
   protected readonly previewDistanceM = signal<number | null>(null);
   protected readonly elapsedLabel = signal('00:00:00');
 
@@ -310,14 +370,34 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
     await this.onPunch(true);
   }
 
+  protected onEvidenceFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.evidenceFile.set(file);
+    this.evidenceFileName.set(file?.name ?? '');
+  }
+
   protected async confirmOutside(): Promise<void> {
     const reason = this.outsideReason().trim();
-    if (!reason) {
-      this.toast.show(this.transloco.translate('attendance.card.reasonRequired'), 'danger');
+    const file = this.evidenceFile();
+    if (!reason && !file) {
+      this.toast.show(this.transloco.translate('attendance.card.evidenceRequired'), 'danger');
       return;
     }
-    this.outsideOpen.set(false);
-    await this.submitPunch(reason);
+    this.evidenceBusy.set(true);
+    try {
+      let photoFileId: string | null = null;
+      if (file) {
+        const uploaded = await this.api.uploadPunchEvidence(file);
+        photoFileId = uploaded.fileId;
+      }
+      this.outsideOpen.set(false);
+      await this.submitPunch(reason || null, photoFileId);
+    } catch {
+      this.toast.show(this.transloco.translate('attendance.card.punchFailed'), 'danger');
+    } finally {
+      this.evidenceBusy.set(false);
+    }
   }
 
   protected async onPunch(skipEarlyConfirm = false): Promise<void> {
@@ -360,7 +440,7 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
     await this.submitPunch();
   }
 
-  private async submitPunch(reason?: string): Promise<void> {
+  private async submitPunch(reason?: string | null, photoFileId?: string | null): Promise<void> {
     if (!this.pendingFix) {
       return;
     }
@@ -372,13 +452,21 @@ export class HomeAttendanceCardComponent implements OnInit, OnDestroy {
         positionAgeMs: this.pendingFix.positionAgeMs,
         clientRequestId: crypto.randomUUID(),
         reason: reason ?? null,
+        photoFileId: photoFileId ?? null,
       });
       this.pendingFix = null;
+      this.evidenceFile.set(null);
+      this.evidenceFileName.set('');
+      this.outsideReason.set('');
       this.toast.show(this.transloco.translate('attendance.card.punchOk'), 'success');
       await this.reload();
     } catch (err) {
       const code = problemDetailsFromError(err)?.code ?? '';
-      if (code === 'attendance.reason_required' || code === 'attendance.outside_range') {
+      if (
+        code === 'attendance.reason_required' ||
+        code === 'attendance.outside_range' ||
+        code === 'attendance.anywhere_evidence_required'
+      ) {
         this.outsideOpen.set(true);
         this.ui.set('outside');
         return;

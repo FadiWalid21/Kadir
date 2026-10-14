@@ -350,3 +350,5 @@ public sealed record UpdateEmployeeAttendancePolicyRequest(
     bool MayClockInFromAnywhere,
     bool AnywhereRequiresReason,
     bool AnywhereRequiresPhoto);
+
+public sealed record PunchEvidenceDto(Guid FileId);

@@ -142,8 +142,17 @@ Without a successful deploy that baked `API_BASE_URL`, the SPA calls `/api/v1/..
 
 | Mode | Prerequisites |
 |------|----------------|
-| **Self punch (GPS)** | Login user linked to the employee (profile → Link login, or invite auto-link); branch geofence set under Attendance settings; default shift recommended (without a shift, In still shows as Incomplete on the today board). Browser must allow geolocation. |
+| **Self punch (GPS)** | Login user linked to the employee (profile → Link login, or invite auto-link); branch geofence set under Attendance → Branches; default shift under Attendance → Rules (industry apply sets a default when shifts exist). Browser HTTPS + geolocation allowed. |
 | **HR proxy (manual)** | Permission `attendance.edit` + data scope; reason required. No GPS. Shows on the today board even when no default shift is configured. |
+
+**Happy-path verify**
+
+1. Register tenant (industry with shifts) → `GET /attendance/settings/default-shift` has a `shiftId`
+2. Attendance → Branches → set lat/lng/radius for HQ (use device GPS near that point)
+3. Employees → open employee → Link login to the punching user
+4. Home → Clock in → today board shows In time + Incomplete; Clock out → Present (or Late)
+5. Today board → proxy punch another employee with a reason → row updates without GPS
+6. Terminate from list/profile → status Terminated; self-punch blocked
 
 Terminate an employee from the list or profile (**إنهاء الخدمة / Terminate**) — status becomes Terminated (history kept; self-punch blocked). Not a hard delete.
 

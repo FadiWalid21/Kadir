@@ -365,6 +365,43 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
         Assert.All(boardB.Items, row => Assert.DoesNotContain("موظف أ", row.FullNameAr));
     }
 
+    [Fact]
+    public async Task Owner_can_cancel_own_pending_correction()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Corr Cancel Co", "corr-cancel@example.com");
+        var session = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var client = helper.Authed(session.AccessToken);
+
+        await CreateLinkedEmployeeAsync(helper, client, a.TenantId, a.Email, "موظف تصحيح", "Corr Employee");
+
+        var today = await client.GetFromJsonAsync<AttendanceTodayDto>("/api/v1/attendance/me/today", JsonOptions);
+        Assert.NotNull(today);
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/attendance/corrections",
+            new CreateAttendanceCorrectionRequest(
+                today.WorkDate,
+                "ForgotIn",
+                new TimeOnly(9, 0),
+                "Forgot to punch in this morning",
+                null),
+            JsonOptions);
+        var createBody = await create.Content.ReadAsStringAsync();
+        Assert.True(create.IsSuccessStatusCode, createBody);
+        var created = JsonSerializer.Deserialize<AttendanceCorrectionRequestDto>(createBody, JsonOptions)!;
+        Assert.Equal("Pending", created.Status);
+
+        var cancel = await client.PostAsync($"/api/v1/attendance/corrections/{created.Id}/cancel", null);
+        var cancelBody = await cancel.Content.ReadAsStringAsync();
+        Assert.True(cancel.IsSuccessStatusCode, cancelBody);
+        var cancelled = JsonSerializer.Deserialize<AttendanceCorrectionRequestDto>(cancelBody, JsonOptions)!;
+        Assert.Equal("Cancelled", cancelled.Status);
+
+        var again = await client.PostAsync($"/api/v1/attendance/corrections/{created.Id}/cancel", null);
+        Assert.Equal(HttpStatusCode.BadRequest, again.StatusCode);
+    }
+
     private static async Task<Guid> CreateLinkedEmployeeAsync(
         AuthTestHelper helper,
         HttpClient client,
