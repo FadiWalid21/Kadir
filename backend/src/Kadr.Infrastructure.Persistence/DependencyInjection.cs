@@ -79,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowEngine>(sp => sp.GetRequiredService<WorkflowEngine>());
         services.AddScoped<ILeaveService, LeaveService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddSingleton<INotificationRealtimeNotifier, Notifications.NoOpNotificationRealtimeNotifier>();
         services.AddScoped<IPushSubscriptionService, Notifications.PushSubscriptionService>();
         services.AddScoped<IHomeDashboardService, HomeDashboardService>();
         services.AddSingleton<IReportExportService, Reports.ReportExportService>();

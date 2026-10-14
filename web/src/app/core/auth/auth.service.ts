@@ -104,6 +104,14 @@ export class AuthService {
       // Best-effort unsubscribe; session clear must continue.
     }
     try {
+      const { NotificationsRealtimeService } = await import(
+        '../notifications/notifications-realtime.service'
+      );
+      await this.injector.get(NotificationsRealtimeService).stop();
+    } catch {
+      // Best-effort SignalR disconnect.
+    }
+    try {
       await this.authApi.logout();
     } catch {
       // Clear local session even if the API call fails.

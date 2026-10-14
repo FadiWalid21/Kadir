@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Kadr.Api.Auth;
 using Kadr.Api.Endpoints;
+using Kadr.Api.Hubs;
 using Kadr.Api.Http;
 using Kadr.Api.Localization;
 using Kadr.Api.Middleware;
@@ -120,6 +121,9 @@ try
     var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
         ?? new JwtOptions();
 
+    builder.Services.AddSignalR();
+    builder.Services.AddSingleton<INotificationRealtimeNotifier, SignalRNotificationRealtimeNotifier>();
+
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -138,6 +142,21 @@ try
                 NameClaimType = JwtRegisteredClaimNames.Sub,
             };
             options.MapInboundClaims = false;
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken)
+                        && path.StartsWithSegments("/hubs/notifications"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                },
+            };
         });
 
     var registerLimit = builder.Configuration.GetValue("RateLimiting:RegisterPermitLimit", 5);
@@ -401,6 +420,7 @@ try
     app.MapNotificationEndpoints();
     app.MapHomeEndpoints();
     app.MapReportsEndpoints();
+    app.MapHub<NotificationsHub>("/hubs/notifications").RequireAuthorization();
 
     app.Run();
 }

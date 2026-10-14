@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NotificationsRealtimeService } from '../core/notifications/notifications-realtime.service';
 import { OfflineService } from '../core/pwa/offline.service';
 import { UpdateService } from '../core/pwa/update.service';
 import { SubscriptionStore } from '../core/subscription/subscription.store';
@@ -65,6 +66,7 @@ export class ShellLayout {
     inject(OfflineService);
     inject(UpdateService);
     inject(PushNotificationService).startLifecycle();
+    inject(NotificationsRealtimeService).start();
   }
 
   onCollapsedChange(value: boolean): void {

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Domain.Notifications;
 using Kadr.SharedKernel.Application;
@@ -6,7 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kadr.Infrastructure.Persistence.Notifications;
 
-public sealed class ApprovalRequiredNotificationHandler(KadrDbContext db)
+public sealed class ApprovalRequiredNotificationHandler(
+    KadrDbContext db,
+    INotificationRealtimeNotifier realtime)
     : IDomainEventHandler<ApprovalRequiredNotificationRequested>
 {
     public Task HandleAsync(
@@ -14,6 +17,7 @@ public sealed class ApprovalRequiredNotificationHandler(KadrDbContext db)
         CancellationToken cancellationToken = default) =>
         NotificationCreator.CreateAsync(
             db,
+            realtime,
             domainEvent.TenantId,
             domainEvent.RecipientUserId,
             NotificationContentBuilder.ApprovalRequired(
@@ -30,7 +34,9 @@ public sealed class ApprovalRequiredNotificationHandler(KadrDbContext db)
             cancellationToken);
 }
 
-public sealed class RequestDecisionNotificationHandler(KadrDbContext db)
+public sealed class RequestDecisionNotificationHandler(
+    KadrDbContext db,
+    INotificationRealtimeNotifier realtime)
     : IDomainEventHandler<RequestDecisionNotificationRequested>
 {
     public Task HandleAsync(
@@ -38,6 +44,7 @@ public sealed class RequestDecisionNotificationHandler(KadrDbContext db)
         CancellationToken cancellationToken = default) =>
         NotificationCreator.CreateAsync(
             db,
+            realtime,
             domainEvent.TenantId,
             domainEvent.RecipientUserId,
             NotificationContentBuilder.Decision(
@@ -59,6 +66,7 @@ internal static class NotificationCreator
 {
     public static async Task CreateAsync(
         KadrDbContext db,
+        INotificationRealtimeNotifier realtime,
         Guid tenantId,
         Guid recipientUserId,
         NotificationContent content,
@@ -129,5 +137,12 @@ internal static class NotificationCreator
         }
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        if (inApp)
+        {
+            await realtime
+                .NotifyCreatedAsync(tenantId, recipientUserId, notification.Id, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }
