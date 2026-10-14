@@ -88,14 +88,42 @@ public static class AttendanceRulesEngine
             return Empty(AttendanceDayStatus.Weekend);
         }
 
-        if (hasNoShift || shift is null)
-        {
-            return Empty(AttendanceDayStatus.NoShift);
-        }
-
         var ordered = punches.OrderBy(p => p.PunchedAtUtc).ToList();
         var firstIn = ordered.FirstOrDefault(p => p.Kind == PunchKind.In)?.PunchedAtUtc;
         var lastOut = ordered.LastOrDefault(p => p.Kind == PunchKind.Out)?.PunchedAtUtc;
+
+        // Punches without a shift must still surface FirstIn / Incomplete|Present on the board.
+        if (hasNoShift || shift is null)
+        {
+            if (firstIn is null)
+            {
+                return Empty(AttendanceDayStatus.NoShift);
+            }
+
+            if (lastOut is null)
+            {
+                return new AttendanceRulesResult(
+                    AttendanceDayStatus.Incomplete,
+                    firstIn,
+                    null,
+                    0,
+                    0,
+                    0,
+                    0);
+            }
+
+            var workedNoShift = (int)Math.Max(
+                0,
+                Math.Floor((lastOut.Value - firstIn.Value).TotalMinutes));
+            return new AttendanceRulesResult(
+                AttendanceDayStatus.Present,
+                firstIn,
+                lastOut,
+                workedNoShift,
+                0,
+                0,
+                0);
+        }
 
         if (firstIn is null)
         {

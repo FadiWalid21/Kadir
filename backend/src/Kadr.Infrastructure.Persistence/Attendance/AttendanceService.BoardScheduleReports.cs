@@ -128,7 +128,10 @@ public sealed partial class AttendanceService
             filteredIds = key.ToLowerInvariant() switch
             {
                 "present" => employeeIds.Where(id =>
-                    byEmp.TryGetValue(id, out var s) && s.Status == AttendanceDayStatus.Present),
+                    byEmp.TryGetValue(id, out var s)
+                    && s.Status is AttendanceDayStatus.Present
+                        or AttendanceDayStatus.Late
+                        or AttendanceDayStatus.Incomplete),
                 "late" => employeeIds.Where(id =>
                     byEmp.TryGetValue(id, out var s) && s.Status == AttendanceDayStatus.Late),
                 "absent" => employeeIds.Where(id =>

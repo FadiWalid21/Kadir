@@ -20,9 +20,11 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { BadgeComponent, BadgeTone } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { SelectComponent, SelectOption } from '../../shared/ui/select/select.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
 
@@ -39,6 +41,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
     EmptyStateComponent,
     AvatarComponent,
     SelectComponent,
+    ConfirmDialogComponent,
   ],
   template: `
     <div class="flex flex-col gap-6">
@@ -226,6 +229,9 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
                   <th class="px-3 py-3 font-medium">{{ 'employees.colBranch' | transloco }}</th>
                   <th class="px-3 py-3 font-medium">{{ 'employees.colManager' | transloco }}</th>
                   <th class="px-3 py-3 font-medium">{{ 'employees.colStatus' | transloco }}</th>
+                  @if (canTerminate()) {
+                    <th class="px-3 py-3 font-medium">{{ 'employees.colActions' | transloco }}</th>
+                  }
                 </tr>
               </thead>
               <tbody>
@@ -255,6 +261,19 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
                     <td class="px-3 py-3">
                       <kadr-badge [tone]="statusTone(row.status)" [label]="statusLabel(row.status)" />
                     </td>
+                    @if (canTerminate()) {
+                      <td class="px-3 py-3">
+                        @if (row.status !== 'Terminated') {
+                          <kadr-button
+                            variant="danger-soft"
+                            type="button"
+                            (click)="askTerminate(row)"
+                          >
+                            {{ 'employees.terminate' | transloco }}
+                          </kadr-button>
+                        }
+                      </td>
+                    }
                   </tr>
                 }
               </tbody>
@@ -268,8 +287,13 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
                   displayName(row)
                 }}</a>
                 <p class="mt-1 text-xs text-fg-muted"><bdi>{{ row.employeeNumber }}</bdi></p>
-                <div class="mt-2">
+                <div class="mt-2 flex flex-wrap items-center gap-2">
                   <kadr-badge [tone]="statusTone(row.status)" [label]="statusLabel(row.status)" />
+                  @if (canTerminate() && row.status !== 'Terminated') {
+                    <kadr-button variant="danger-soft" type="button" (click)="askTerminate(row)">
+                      {{ 'employees.terminate' | transloco }}
+                    </kadr-button>
+                  }
                 </div>
               </li>
             }
@@ -303,6 +327,18 @@ type PageState = 'loading' | 'ready' | 'error' | 'empty' | 'locked';
           </div>
         }
       }
+
+      <kadr-confirm-dialog
+        [open]="!!terminateTarget()"
+        [title]="'employees.terminateTitle' | transloco"
+        [message]="'employees.terminateBody' | transloco"
+        [confirmLabel]="'employees.terminateConfirm' | transloco"
+        [cancelLabel]="'ui.cancel' | transloco"
+        [danger]="true"
+        [busy]="terminating()"
+        (confirmed)="confirmTerminate()"
+        (cancelled)="terminateTarget.set(null)"
+      />
     </div>
   `,
 })
@@ -310,11 +346,14 @@ export class EmployeesListPage implements OnInit {
   private readonly api = inject(EmployeesApi);
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly state = signal<PageState>('loading');
   protected readonly items = signal<EmployeeListItem[]>([]);
   protected readonly summary = signal<EmployeeSummary | null>(null);
+  protected readonly terminateTarget = signal<EmployeeListItem | null>(null);
+  protected readonly terminating = signal(false);
   protected readonly q = signal('');
   protected readonly status = signal('');
   protected readonly departmentId = signal('');
@@ -406,6 +445,32 @@ export class EmployeesListPage implements OnInit {
 
   canImportSalaries(): boolean {
     return this.auth.hasPermission(PermissionCodes.SalaryManage);
+  }
+
+  canTerminate(): boolean {
+    return this.auth.hasPermission(PermissionCodes.EmployeesTerminate);
+  }
+
+  askTerminate(row: EmployeeListItem): void {
+    this.terminateTarget.set(row);
+  }
+
+  async confirmTerminate(): Promise<void> {
+    const row = this.terminateTarget();
+    if (!row || this.terminating()) {
+      return;
+    }
+    this.terminating.set(true);
+    try {
+      await this.api.changeStatus(row.id, 'Terminated');
+      this.toast.show(this.i18n.translate('employees.terminated'), 'success');
+      this.terminateTarget.set(null);
+      await this.reload();
+    } catch {
+      this.toast.show(this.i18n.translate('employees.terminateFailed'), 'danger');
+    } finally {
+      this.terminating.set(false);
+    }
   }
 
   setStatus(value: string): void {

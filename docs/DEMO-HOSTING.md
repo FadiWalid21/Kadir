@@ -138,6 +138,15 @@ Without a successful deploy that baked `API_BASE_URL`, the SPA calls `/api/v1/..
 7. Login → refresh keeps session (cross-site cookie + CSRF header)
 8. Optional: attendance punch needs geolocation permission (CSP allows `geolocation=(self)`)
 
+### Attendance punch (demo)
+
+| Mode | Prerequisites |
+|------|----------------|
+| **Self punch (GPS)** | Login user linked to the employee (profile → Link login, or invite auto-link); branch geofence set under Attendance settings; default shift recommended (without a shift, In still shows as Incomplete on the today board). Browser must allow geolocation. |
+| **HR proxy (manual)** | Permission `attendance.edit` + data scope; reason required. No GPS. Shows on the today board even when no default shift is configured. |
+
+Terminate an employee from the list or profile (**إنهاء الخدمة / Terminate**) — status becomes Terminated (history kept; self-punch blocked). Not a hard delete.
+
 ## 4. CI
 
 GitHub Actions `backend-ci.yml` runs restore/build/test on `backend/**` changes. API publish is MonsterASP Git Deploy, not Actions Web Deploy.

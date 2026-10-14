@@ -71,6 +71,16 @@ public sealed class EmployeesApiTests(RegisterApiFactory factory)
             new { status = "OnLeave" });
         Assert.Equal(HttpStatusCode.OK, status.StatusCode);
 
+        var terminate = await clientA.PostAsJsonAsync(
+            $"/api/v1/employees/{created.Id}/status",
+            new { status = "Terminated" });
+        Assert.Equal(HttpStatusCode.OK, terminate.StatusCode);
+        var terminated = await clientA.GetFromJsonAsync<EmployeeDetailDto>(
+            $"/api/v1/employees/{created.Id}",
+            JsonOptions);
+        Assert.NotNull(terminated);
+        Assert.Equal("Terminated", terminated.Status);
+
         var template = await clientA.GetAsync("/api/v1/employees/import/template");
         Assert.Equal(HttpStatusCode.OK, template.StatusCode);
         Assert.True((await template.Content.ReadAsByteArrayAsync()).Length > 0);

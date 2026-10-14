@@ -50,6 +50,34 @@ public sealed class AttendanceRulesEngineTests
     }
 
     [Fact]
+    public void No_shift_with_in_only_is_incomplete_with_first_in()
+    {
+        var inAt = new DateTimeOffset(2026, 3, 15, 8, 0, 0, TimeSpan.Zero);
+        var punches = new[] { new PunchFact(PunchKind.In, inAt) };
+        var r = AttendanceRulesEngine.Compute(punches, null, Rules, false, false, false, true);
+        Assert.Equal(AttendanceDayStatus.Incomplete, r.Status);
+        Assert.Equal(inAt, r.FirstInAt);
+        Assert.Null(r.LastOutAt);
+    }
+
+    [Fact]
+    public void No_shift_with_in_and_out_is_present()
+    {
+        var inAt = new DateTimeOffset(2026, 3, 15, 8, 0, 0, TimeSpan.Zero);
+        var outAt = inAt.AddHours(8);
+        var punches = new[]
+        {
+            new PunchFact(PunchKind.In, inAt),
+            new PunchFact(PunchKind.Out, outAt),
+        };
+        var r = AttendanceRulesEngine.Compute(punches, null, Rules, false, false, false, true);
+        Assert.Equal(AttendanceDayStatus.Present, r.Status);
+        Assert.Equal(inAt, r.FirstInAt);
+        Assert.Equal(outAt, r.LastOutAt);
+        Assert.Equal(480, r.WorkedMinutes);
+    }
+
+    [Fact]
     public void Present_on_time()
     {
         var w = DayShift();
