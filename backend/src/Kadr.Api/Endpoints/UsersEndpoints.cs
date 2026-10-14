@@ -24,6 +24,10 @@ public static class UsersEndpoints
             .RequireAuthorization(PermissionCodes.UsersUpdate)
             .WithName("UpdateUser");
 
+        app.MapPut("/api/v1/users/{id:guid}/employee", SetEmployeeAsync)
+            .RequireAuthorization(PermissionCodes.UsersUpdate)
+            .WithName("SetUserEmployee");
+
         return app;
     }
 
@@ -67,6 +71,18 @@ public static class UsersEndpoints
         return ToResult(httpContext, result, localizer);
     }
 
+    private static async Task<IResult> SetEmployeeAsync(
+        Guid id,
+        [FromBody] SetUserEmployeeRequest request,
+        HttpContext httpContext,
+        IUserService users,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var result = await users.SetEmployeeLinkAsync(id, request, cancellationToken).ConfigureAwait(false);
+        return ToResult(httpContext, result, localizer);
+    }
+
     private static IResult ToResult<T>(
         HttpContext httpContext,
         Result<T> result,
@@ -84,11 +100,17 @@ public static class UsersEndpoints
     {
         var status = code switch
         {
-            ErrorCodes.UsersNotFound or ErrorCodes.TenantNotFound or ErrorCodes.RolesNotFound =>
+            ErrorCodes.UsersNotFound
+                or ErrorCodes.TenantNotFound
+                or ErrorCodes.RolesNotFound
+                or ErrorCodes.EmployeesNotFound =>
                 StatusCodes.Status404NotFound,
             ErrorCodes.UsersPrivilegeEscalation
                 or ErrorCodes.UsersLastOwnerProtected
-                or ErrorCodes.UsersSelfDeactivationForbidden => StatusCodes.Status400BadRequest,
+                or ErrorCodes.UsersSelfDeactivationForbidden
+                or ErrorCodes.UsersEmployeeAlreadyLinked
+                or ErrorCodes.UsersEmployeeLinkConflict
+                or ErrorCodes.UsersEmployeeInactive => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status400BadRequest,
         };
         return Results.Problem(ApiProblemDetails.Create(httpContext, status, code, localizer));

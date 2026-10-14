@@ -393,6 +393,19 @@ public sealed class InvitationService(
         db.Users.Add(user);
         db.UserRoles.Add(UserRole.Create(invitation.TenantId, user.Id, invitation.RoleId));
 
+        // Auto-link when exactly one unmatched employee shares this email (case-insensitive).
+        var emailMatches = await db.Employees
+            .Where(e => e.UserId == null && e.Email != null && e.Email.ToUpper() == invitation.NormalizedEmail)
+            .Take(2)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (emailMatches.Count == 1)
+        {
+            var employee = emailMatches[0];
+            user.SetEmployeeId(employee.Id);
+            employee.LinkUser(user.Id);
+        }
+
         // Suppress auto AppUser create audit that would include PasswordHash (redacted anyway);
         // keep a single invitation.accepted row keyed to the new user id.
         audit.Stage(
@@ -402,7 +415,14 @@ public sealed class InvitationService(
             "invitation",
             user.Id,
             null,
-            JsonSerializer.Serialize(new { userId = user.Id, invitation.Email, invitation.RoleId, invitationId = invitation.Id }));
+            JsonSerializer.Serialize(new
+            {
+                userId = user.Id,
+                invitation.Email,
+                invitation.RoleId,
+                invitationId = invitation.Id,
+                employeeId = user.EmployeeId,
+            }));
 
         if (invitation.CreatedBy is { } inviterId && inviterId != Guid.Empty)
         {

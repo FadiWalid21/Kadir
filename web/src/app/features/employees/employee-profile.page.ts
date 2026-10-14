@@ -15,6 +15,7 @@ import {
   EmployeeDocumentItem,
   EmployeesApi,
 } from '../../core/api/employees.api';
+import { UsersApi } from '../../core/api/users.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
@@ -151,6 +152,35 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
                     <dd class="text-end">{{ e.address || '—' }}</dd>
                   </div>
                 </dl>
+              </section>
+              <section class="rounded-lg border border-line bg-surface p-4 text-start lg:col-span-2">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="min-w-0 text-start">
+                    <h2 class="text-sm font-bold text-fg">{{ 'employees.sectionLogin' | transloco }}</h2>
+                    <p class="mt-1 text-sm text-fg-2">{{ 'employees.loginHint' | transloco }}</p>
+                    @if (e.userId && e.linkedUserEmail) {
+                      <p class="mt-2 text-sm text-fg">
+                        <span class="font-medium">{{ e.linkedUserFullName }}</span>
+                        <span class="text-fg-2"> · </span>
+                        <bdi dir="ltr">{{ e.linkedUserEmail }}</bdi>
+                      </p>
+                    } @else {
+                      <p class="mt-2 text-sm text-fg-muted">{{ 'employees.loginNotLinked' | transloco }}</p>
+                    }
+                  </div>
+                  @if (canLinkUser()) {
+                    <div class="flex flex-wrap gap-2">
+                      <kadr-button variant="secondary" type="button" (click)="openUserLink()">
+                        {{ (e.userId ? 'employees.changeLoginLink' : 'employees.linkLogin') | transloco }}
+                      </kadr-button>
+                      @if (e.userId) {
+                        <kadr-button variant="secondary" type="button" [loading]="linkBusy()" (click)="unlinkLogin()">
+                          {{ 'employees.unlinkLogin' | transloco }}
+                        </kadr-button>
+                      }
+                    </div>
+                  }
+                </div>
               </section>
               <section class="rounded-lg border border-line bg-surface p-4 text-start lg:col-span-2">
                 <h2 class="text-sm font-bold text-fg">{{ 'employees.sectionEmergency' | transloco }}</h2>
@@ -417,6 +447,29 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
         </div>
       </kadr-drawer>
 
+      <kadr-drawer
+        [open]="userLinkOpen()"
+        [title]="'employees.linkLoginTitle' | transloco"
+        [closeLabel]="'ui.cancel' | transloco"
+        (closed)="userLinkOpen.set(false)"
+      >
+        <p class="mb-3 text-sm text-fg-2">{{ 'employees.linkLoginBody' | transloco }}</p>
+        <kadr-select
+          [label]="'employees.loginUser' | transloco"
+          [options]="userOptions()"
+          [value]="linkUserId()"
+          (valueChange)="linkUserId.set($event)"
+        />
+        <div class="mt-4 flex justify-end gap-2">
+          <kadr-button variant="secondary" type="button" (click)="userLinkOpen.set(false)">{{
+            'ui.cancel' | transloco
+          }}</kadr-button>
+          <kadr-button variant="primary" type="button" [loading]="linkBusy()" (click)="saveUserLink()">
+            {{ 'employees.saveLoginLink' | transloco }}
+          </kadr-button>
+        </div>
+      </kadr-drawer>
+
       <kadr-confirm-dialog
         [open]="!!deleteTarget()"
         [title]="'employees.deleteDocTitle' | transloco"
@@ -433,6 +486,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
 })
 export class EmployeeProfilePage implements OnInit {
   private readonly api = inject(EmployeesApi);
+  private readonly usersApi = inject(UsersApi);
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(TranslocoService);
@@ -445,6 +499,10 @@ export class EmployeeProfilePage implements OnInit {
   protected readonly activeTab = signal('overview');
   protected readonly statusDraft = signal('');
   protected readonly statusSaving = signal(false);
+  protected readonly userLinkOpen = signal(false);
+  protected readonly linkUserId = signal('');
+  protected readonly userOptions = signal<SelectOption[]>([]);
+  protected readonly linkBusy = signal(false);
 
   protected readonly uploadOpen = signal(false);
   protected readonly uploadTypeId = signal('');
@@ -516,6 +574,72 @@ export class EmployeeProfilePage implements OnInit {
 
   canManageDocs(): boolean {
     return this.auth.hasPermission(PermissionCodes.EmployeesDocumentsManage);
+  }
+
+  canLinkUser(): boolean {
+    return this.auth.hasPermission(PermissionCodes.UsersUpdate);
+  }
+
+  async openUserLink(): Promise<void> {
+    const e = this.employee();
+    if (!e) {
+      return;
+    }
+    this.linkUserId.set(e.userId ?? '');
+    this.userLinkOpen.set(true);
+    try {
+      const page = await this.usersApi.list({ page: 1, pageSize: 100, active: true });
+      this.userOptions.set([
+        { value: '', label: this.i18n.translate('employees.pickLoginUser') },
+        ...page.items.map((u) => ({
+          value: u.id,
+          label: `${u.fullName} (${u.email})`,
+        })),
+      ]);
+    } catch {
+      this.userOptions.set([{ value: '', label: this.i18n.translate('employees.pickLoginUser') }]);
+      this.toast.show(this.i18n.translate('employees.linkLoginFailed'), 'danger');
+    }
+  }
+
+  async saveUserLink(): Promise<void> {
+    const e = this.employee();
+    const userId = this.linkUserId().trim();
+    if (!e || !userId) {
+      this.toast.show(this.i18n.translate('employees.pickLoginRequired'), 'danger');
+      return;
+    }
+    this.linkBusy.set(true);
+    try {
+      if (e.userId && e.userId !== userId) {
+        await this.usersApi.setEmployeeLink(e.userId, null);
+      }
+      await this.usersApi.setEmployeeLink(userId, e.id);
+      this.userLinkOpen.set(false);
+      this.toast.show(this.i18n.translate('employees.loginLinked'), 'success');
+      await this.load();
+    } catch {
+      this.toast.show(this.i18n.translate('employees.linkLoginFailed'), 'danger');
+    } finally {
+      this.linkBusy.set(false);
+    }
+  }
+
+  async unlinkLogin(): Promise<void> {
+    const e = this.employee();
+    if (!e?.userId) {
+      return;
+    }
+    this.linkBusy.set(true);
+    try {
+      await this.usersApi.setEmployeeLink(e.userId, null);
+      this.toast.show(this.i18n.translate('employees.loginUnlinked'), 'success');
+      await this.load();
+    } catch {
+      this.toast.show(this.i18n.translate('employees.linkLoginFailed'), 'danger');
+    } finally {
+      this.linkBusy.set(false);
+    }
   }
 
   reload(): void {

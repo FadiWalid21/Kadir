@@ -353,6 +353,124 @@ public sealed class UsersApiTests(RegisterApiFactory factory)
         scope.ServiceProvider.GetRequiredService<IPermissionCacheInvalidator>().Invalidate(tenantId, user.Id);
     }
 
+    [Fact]
+    public async Task Link_and_unlink_user_employee_is_bidirectional()
+    {
+        await factory.ResetDatabaseAsync();
+        var owner = await RegisterOwnerAsync("Users Link Co", "users-link@example.com");
+        var client = AuthedClient(owner.Token);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف مربوط",
+                fullNameEn = "Linked Emp",
+                hireDate = "2024-01-15",
+                status = "Active",
+                email = "linked.emp@example.com",
+            });
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var emp = (await create.Content.ReadFromJsonAsync<Kadr.Platform.Application.Employees.EmployeeDetailDto>(JsonOptions))!;
+
+        Guid ownerUserId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            ownerUserId = await db.Users.AsNoTracking()
+                .Where(u => u.Email == owner.Email)
+                .Select(u => u.Id)
+                .SingleAsync();
+        }
+
+        var link = await client.PutAsJsonAsync(
+            $"/api/v1/users/{ownerUserId}/employee",
+            new SetUserEmployeeRequest(emp.Id));
+        Assert.Equal(HttpStatusCode.OK, link.StatusCode);
+        var linked = (await link.Content.ReadFromJsonAsync<UserDetailDto>(JsonOptions))!;
+        Assert.Equal(emp.Id, linked.EmployeeId);
+        Assert.Equal("موظف مربوط", linked.EmployeeNameAr);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            var employee = await db.Employees.AsNoTracking().SingleAsync(e => e.Id == emp.Id);
+            Assert.Equal(ownerUserId, employee.UserId);
+        }
+
+        var second = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف آخر",
+                hireDate = "2024-02-01",
+                status = "Active",
+            });
+        var emp2 = (await second.Content.ReadFromJsonAsync<Kadr.Platform.Application.Employees.EmployeeDetailDto>(JsonOptions))!;
+        var conflict = await client.PutAsJsonAsync(
+            $"/api/v1/users/{ownerUserId}/employee",
+            new SetUserEmployeeRequest(emp2.Id));
+        Assert.Equal(HttpStatusCode.BadRequest, conflict.StatusCode);
+        Assert.Contains(ErrorCodes.UsersEmployeeAlreadyLinked, await conflict.Content.ReadAsStringAsync());
+
+        var unlink = await client.PutAsJsonAsync(
+            $"/api/v1/users/{ownerUserId}/employee",
+            new SetUserEmployeeRequest(null));
+        Assert.Equal(HttpStatusCode.OK, unlink.StatusCode);
+        var unlinked = (await unlink.Content.ReadFromJsonAsync<UserDetailDto>(JsonOptions))!;
+        Assert.Null(unlinked.EmployeeId);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            Assert.Null(await db.Employees.AsNoTracking().Where(e => e.Id == emp.Id).Select(e => e.UserId).SingleAsync());
+            Assert.Null(await db.Users.AsNoTracking().Where(u => u.Id == ownerUserId).Select(u => u.EmployeeId).SingleAsync());
+        }
+    }
+
+    [Fact]
+    public async Task Link_employee_already_linked_to_other_user_conflicts()
+    {
+        await factory.ResetDatabaseAsync();
+        var owner = await RegisterOwnerAsync("Users Link Conflict Co", "users-link-conflict@example.com");
+        var hr = await CreateHrAdminUserAsync(owner.TenantId, "hr-link-conflict@example.com", owner.Slug);
+        var client = AuthedClient(owner.Token);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new { fullNameAr = "مشترك", hireDate = "2024-01-15", status = "Active" });
+        var emp = (await create.Content.ReadFromJsonAsync<Kadr.Platform.Application.Employees.EmployeeDetailDto>(JsonOptions))!;
+
+        var linkOwner = await client.PutAsJsonAsync(
+            $"/api/v1/users/{(await OwnerUserIdAsync(owner.TenantId, owner.Email))}/employee",
+            new SetUserEmployeeRequest(emp.Id));
+        Assert.Equal(HttpStatusCode.OK, linkOwner.StatusCode);
+
+        var linkHr = await client.PutAsJsonAsync(
+            $"/api/v1/users/{hr.UserId}/employee",
+            new SetUserEmployeeRequest(emp.Id));
+        Assert.Equal(HttpStatusCode.BadRequest, linkHr.StatusCode);
+        Assert.Contains(ErrorCodes.UsersEmployeeLinkConflict, await linkHr.Content.ReadAsStringAsync());
+    }
+
+    private async Task<Guid> OwnerUserIdAsync(Guid tenantId, string email)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+        var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+        ambient.Set(tenantId);
+        return await db.Users.AsNoTracking()
+            .Where(u => u.Email == email)
+            .Select(u => u.Id)
+            .SingleAsync();
+    }
+
     private async Task<Guid> OwnerRoleIdAsync(Guid tenantId)
     {
         using var scope = factory.Services.CreateScope();

@@ -15,6 +15,8 @@ export interface UserListItem {
   isActive: boolean;
   dataScope: DataScope;
   lastLoginAt: string | null;
+  employeeId: string | null;
+  employeeNameAr: string | null;
 }
 
 export interface UserDetail extends UserListItem {
@@ -80,6 +82,12 @@ export class UsersApi {
 
   update(id: string, body: UpdateUserBody): Promise<UserDetail> {
     return firstValueFrom(this.http.put<UserDetail>(`${this.base}/${id}`, body));
+  }
+
+  setEmployeeLink(id: string, employeeId: string | null): Promise<UserDetail> {
+    return firstValueFrom(
+      this.http.put<UserDetail>(`${this.base}/${id}/employee`, { employeeId }),
+    );
   }
 
   invite(email: string, roleId: string): Promise<InvitationListItem> {

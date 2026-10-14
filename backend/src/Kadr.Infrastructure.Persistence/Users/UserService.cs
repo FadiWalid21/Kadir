@@ -4,6 +4,7 @@ using Kadr.Identity.Domain.Roles;
 using Kadr.Infrastructure.Persistence.Auth;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Users;
+using Kadr.Platform.Domain.Employees;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Results;
 using Kadr.SharedKernel.Tenancy;
@@ -67,6 +68,7 @@ public sealed class UserService(
                 u.Email,
                 u.IsActive,
                 u.LastLoginAt,
+                u.EmployeeId,
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -91,9 +93,24 @@ public sealed class UserService(
             .GroupBy(x => x.UserId)
             .ToDictionary(g => g.Key, g => g.First());
 
+        var employeeIds = users.Where(u => u.EmployeeId is not null).Select(u => u.EmployeeId!.Value).Distinct().ToList();
+        var employeeNames = employeeIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await db.Employees.AsNoTracking()
+                .Where(e => employeeIds.Contains(e.Id))
+                .Select(e => new { e.Id, e.FullNameAr })
+                .ToDictionaryAsync(e => e.Id, e => e.FullNameAr, cancellationToken)
+                .ConfigureAwait(false);
+
         var items = users.Select(u =>
             {
                 roleByUser.TryGetValue(u.Id, out var role);
+                string? employeeName = null;
+                if (u.EmployeeId is Guid eid)
+                {
+                    employeeNames.TryGetValue(eid, out employeeName);
+                }
+
                 return new UserListItemDto(
                     u.Id,
                     u.FullName,
@@ -103,7 +120,9 @@ public sealed class UserService(
                     role?.IsSystem ?? false,
                     u.IsActive,
                     role?.DataScope ?? DataScope.All,
-                    u.LastLoginAt);
+                    u.LastLoginAt,
+                    u.EmployeeId,
+                    employeeName);
             })
             .ToList();
 
@@ -304,6 +323,125 @@ public sealed class UserService(
         return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));
     }
 
+    public async Task<Result<UserDetailDto>> SetEmployeeLinkAsync(
+        Guid id,
+        SetUserEmployeeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (tenantContext.TenantId is null || tenantContext.UserId is null)
+        {
+            return Result.Failure<UserDetailDto>(ErrorCodes.TenantNotFound, ErrorCodes.TenantNotFound);
+        }
+
+        var user = await db.Users.SingleOrDefaultAsync(u => u.Id == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (user is null)
+        {
+            return Result.Failure<UserDetailDto>(ErrorCodes.UsersNotFound, ErrorCodes.UsersNotFound);
+        }
+
+        var targetCheck = await privilegeGuard
+            .EnsureCanActOnUserAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+        if (targetCheck.IsFailure)
+        {
+            return Result.Failure<UserDetailDto>(targetCheck.ErrorCode!, targetCheck.ErrorMessage!);
+        }
+
+        var tenantId = tenantContext.TenantId.Value;
+
+        if (request.EmployeeId is null)
+        {
+            if (user.EmployeeId is null)
+            {
+                return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));
+            }
+
+            var previousEmployeeId = user.EmployeeId.Value;
+            var previous = await db.Employees
+                .SingleOrDefaultAsync(e => e.Id == previousEmployeeId, cancellationToken)
+                .ConfigureAwait(false);
+            if (previous is not null && previous.UserId == user.Id)
+            {
+                previous.LinkUser(null);
+            }
+
+            user.SetEmployeeId(null);
+            await audit.WriteAsync(
+                    tenantId,
+                    tenantContext.UserId,
+                    "users.employee_unlinked",
+                    "user",
+                    user.Id,
+                    JsonSerializer.Serialize(new { employeeId = previousEmployeeId }),
+                    null,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));
+        }
+
+        var employeeId = request.EmployeeId.Value;
+        if (user.EmployeeId is Guid current && current != employeeId)
+        {
+            return Result.Failure<UserDetailDto>(
+                ErrorCodes.UsersEmployeeAlreadyLinked,
+                ErrorCodes.UsersEmployeeAlreadyLinked);
+        }
+
+        if (user.EmployeeId == employeeId)
+        {
+            return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));
+        }
+
+        var employee = await db.Employees
+            .SingleOrDefaultAsync(e => e.Id == employeeId, cancellationToken)
+            .ConfigureAwait(false);
+        if (employee is null)
+        {
+            return Result.Failure<UserDetailDto>(ErrorCodes.EmployeesNotFound, ErrorCodes.EmployeesNotFound);
+        }
+
+        if (employee.Status is not (EmployeeStatus.Active or EmployeeStatus.Probation))
+        {
+            return Result.Failure<UserDetailDto>(
+                ErrorCodes.UsersEmployeeInactive,
+                ErrorCodes.UsersEmployeeInactive);
+        }
+
+        if (employee.UserId is Guid otherUser && otherUser != user.Id)
+        {
+            return Result.Failure<UserDetailDto>(
+                ErrorCodes.UsersEmployeeLinkConflict,
+                ErrorCodes.UsersEmployeeLinkConflict);
+        }
+
+        var otherUserWithEmployee = await db.Users
+            .AnyAsync(u => u.Id != user.Id && u.EmployeeId == employeeId, cancellationToken)
+            .ConfigureAwait(false);
+        if (otherUserWithEmployee)
+        {
+            return Result.Failure<UserDetailDto>(
+                ErrorCodes.UsersEmployeeLinkConflict,
+                ErrorCodes.UsersEmployeeLinkConflict);
+        }
+
+        user.SetEmployeeId(employeeId);
+        employee.LinkUser(user.Id);
+        await audit.WriteAsync(
+                tenantId,
+                tenantContext.UserId,
+                "users.employee_linked",
+                "user",
+                user.Id,
+                null,
+                JsonSerializer.Serialize(new { employeeId }),
+                cancellationToken)
+            .ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(await ToDetailAsync(user.Id, cancellationToken).ConfigureAwait(false));
+    }
+
     private async Task<Result> EnsureLastOwnerSafeAsync(
         Guid userId,
         Guid? currentRoleId,
@@ -369,6 +507,7 @@ public sealed class UserService(
                 u.IsActive,
                 u.LastLoginAt,
                 u.CreatedAt,
+                u.EmployeeId,
             })
             .SingleAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -387,6 +526,16 @@ public sealed class UserService(
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        string? employeeName = null;
+        if (user.EmployeeId is Guid eid)
+        {
+            employeeName = await db.Employees.AsNoTracking()
+                .Where(e => e.Id == eid)
+                .Select(e => e.FullNameAr)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         return new UserDetailDto(
             user.Id,
             user.FullName,
@@ -397,6 +546,8 @@ public sealed class UserService(
             user.IsActive,
             role?.DataScope ?? DataScope.All,
             user.LastLoginAt,
-            user.CreatedAt);
+            user.CreatedAt,
+            user.EmployeeId,
+            employeeName);
     }
 }

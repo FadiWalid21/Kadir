@@ -11,7 +11,9 @@ public sealed record UserListItemDto(
     bool IsSystemRole,
     bool IsActive,
     DataScope DataScope,
-    DateTimeOffset? LastLoginAt);
+    DateTimeOffset? LastLoginAt,
+    Guid? EmployeeId,
+    string? EmployeeNameAr);
 
 public sealed record UserDetailDto(
     Guid Id,
@@ -23,13 +25,17 @@ public sealed record UserDetailDto(
     bool IsActive,
     DataScope DataScope,
     DateTimeOffset? LastLoginAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Guid? EmployeeId,
+    string? EmployeeNameAr);
 
 public sealed record UpdateUserRequest(
     string FullName,
     Guid RoleId,
     bool IsActive,
     DataScope DataScope);
+
+public sealed record SetUserEmployeeRequest(Guid? EmployeeId);
 
 public sealed record PagedUsersDto(
     IReadOnlyList<UserListItemDto> Items,

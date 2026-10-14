@@ -95,6 +95,8 @@ export interface EmployeeDetail {
   contractEndDate: string | null;
   status: string;
   userId: string | null;
+  linkedUserEmail: string | null;
+  linkedUserFullName: string | null;
   emergencyContacts: EmergencyContact[];
   directReports: EmployeeListItem[];
   urgentDocuments: EmployeeDocumentItem[];

@@ -296,8 +296,11 @@ public sealed class PushSubscriptionApiTests(RegisterApiFactory factory)
 
         await helper.WithTenantAsync(account.TenantId, async db =>
         {
+            using var scope = factory.Services.CreateScope();
+            var realtime = scope.ServiceProvider.GetRequiredService<INotificationRealtimeNotifier>();
             await NotificationCreator.CreateAsync(
                 db,
+                realtime,
                 account.TenantId,
                 userId,
                 NotificationContentBuilder.ApprovalRequired(
