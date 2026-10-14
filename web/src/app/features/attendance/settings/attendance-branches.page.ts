@@ -34,6 +34,7 @@ type PageState = 'loading' | 'ready' | 'error';
     <header class="mb-6 text-start">
       <h1 class="text-2xl font-bold text-fg">{{ 'attendance.settings.branchesTitle' | transloco }}</h1>
       <p class="mt-1 text-sm text-fg-2">{{ 'attendance.settings.branchesSubtitle' | transloco }}</p>
+      <p class="mt-2 text-sm text-fg-muted">{{ 'attendance.settings.branchesSetupHint' | transloco }}</p>
     </header>
 
     @if (state() === 'loading') {

@@ -575,6 +575,12 @@ export class AttendanceApi {
     );
   }
 
+  cancelCorrection(id: string): Promise<AttendanceCorrection> {
+    return firstValueFrom(
+      this.http.post<AttendanceCorrection>(`${this.base}/corrections/${id}/cancel`, {}),
+    );
+  }
+
   listCorrectionsInbox(status?: string, page = 1, pageSize = 20): Promise<PagedCorrections> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (status) params = params.set('status', status);
@@ -657,6 +663,14 @@ export class AttendanceApi {
         `${this.base}/employees/${employeeId}/attendance-policy`,
         body,
       ),
+    );
+  }
+
+  uploadPunchEvidence(file: File): Promise<{ fileId: string }> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return firstValueFrom(
+      this.http.post<{ fileId: string }>(`${this.base}/punch-evidence`, form),
     );
   }
 }

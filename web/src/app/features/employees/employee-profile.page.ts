@@ -15,6 +15,7 @@ import {
   EmployeeDocumentItem,
   EmployeesApi,
 } from '../../core/api/employees.api';
+import { AttendanceApi, EmployeeAttendancePolicy } from '../../core/api/attendance.api';
 import { UsersApi } from '../../core/api/users.api';
 import { AuthService } from '../../core/auth/auth.service';
 import { PermissionCodes } from '../../core/auth/permission-codes';
@@ -160,6 +161,67 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
                   </div>
                 </dl>
               </section>
+              @if (canManageAttendance()) {
+                <section class="rounded-lg border border-line bg-surface p-4 text-start lg:col-span-2">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0 text-start">
+                      <h2 class="text-sm font-bold text-fg">
+                        {{ 'employees.sectionAttendancePolicy' | transloco }}
+                      </h2>
+                      <p class="mt-1 text-sm text-fg-2">{{ 'employees.attendancePolicyHint' | transloco }}</p>
+                    </div>
+                    <kadr-button
+                      variant="secondary"
+                      type="button"
+                      [loading]="policySaving()"
+                      (click)="saveAttendancePolicy()"
+                    >
+                      {{ 'ui.save' | transloco }}
+                    </kadr-button>
+                  </div>
+                  @if (policyLoadError()) {
+                    <p class="mt-2 text-sm text-danger" role="alert">{{ policyLoadError() }}</p>
+                  } @else if (attendancePolicy(); as pol) {
+                    <div class="mt-3 flex flex-col gap-2 text-sm">
+                      <label class="flex items-center gap-2 text-fg">
+                        <input
+                          type="checkbox"
+                          [checked]="pol.mayClockInFromAnywhere"
+                          (change)="patchPolicy({ mayClockInFromAnywhere: $any($event.target).checked })"
+                        />
+                        {{ 'employees.mayClockAnywhere' | transloco }}
+                      </label>
+                      <label
+                        class="flex items-center gap-2 text-fg"
+                        [class.opacity-50]="!pol.mayClockInFromAnywhere"
+                      >
+                        <input
+                          type="checkbox"
+                          [disabled]="!pol.mayClockInFromAnywhere"
+                          [checked]="pol.anywhereRequiresReason"
+                          (change)="patchPolicy({ anywhereRequiresReason: $any($event.target).checked })"
+                        />
+                        {{ 'employees.anywhereRequiresReason' | transloco }}
+                      </label>
+                      <label
+                        class="flex items-center gap-2 text-fg"
+                        [class.opacity-50]="!pol.mayClockInFromAnywhere"
+                      >
+                        <input
+                          type="checkbox"
+                          [disabled]="!pol.mayClockInFromAnywhere"
+                          [checked]="pol.anywhereRequiresPhoto"
+                          (change)="patchPolicy({ anywhereRequiresPhoto: $any($event.target).checked })"
+                        />
+                        {{ 'employees.anywhereRequiresPhoto' | transloco }}
+                      </label>
+                    </div>
+                  } @else {
+                    <p class="mt-2 text-sm text-fg-muted">{{ 'ui.loading' | transloco }}</p>
+                  }
+                </section>
+              }
+
               <section class="rounded-lg border border-line bg-surface p-4 text-start lg:col-span-2">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div class="min-w-0 text-start">
@@ -505,6 +567,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
 })
 export class EmployeeProfilePage implements OnInit {
   private readonly api = inject(EmployeesApi);
+  private readonly attendanceApi = inject(AttendanceApi);
   private readonly usersApi = inject(UsersApi);
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
@@ -513,6 +576,9 @@ export class EmployeeProfilePage implements OnInit {
 
   protected readonly state = signal<PageState>('loading');
   protected readonly employee = signal<EmployeeDetail | null>(null);
+  protected readonly attendancePolicy = signal<EmployeeAttendancePolicy | null>(null);
+  protected readonly policySaving = signal(false);
+  protected readonly policyLoadError = signal<string | null>(null);
   protected readonly docs = signal<EmployeeDocumentItem[]>([]);
   protected readonly docTypes = signal<DocumentTypeLookup[]>([]);
   protected readonly activeTab = signal('overview');
@@ -599,6 +665,40 @@ export class EmployeeProfilePage implements OnInit {
 
   canLinkUser(): boolean {
     return this.auth.hasPermission(PermissionCodes.UsersUpdate);
+  }
+
+  canManageAttendance(): boolean {
+    return this.auth.hasPermission(PermissionCodes.AttendanceManage);
+  }
+
+  patchPolicy(patch: Partial<EmployeeAttendancePolicy>): void {
+    const current = this.attendancePolicy();
+    if (!current) {
+      return;
+    }
+    this.attendancePolicy.set({ ...current, ...patch });
+  }
+
+  async saveAttendancePolicy(): Promise<void> {
+    const e = this.employee();
+    const pol = this.attendancePolicy();
+    if (!e || !pol) {
+      return;
+    }
+    this.policySaving.set(true);
+    try {
+      const saved = await this.attendanceApi.updateEmployeeAttendancePolicy(e.id, {
+        mayClockInFromAnywhere: pol.mayClockInFromAnywhere,
+        anywhereRequiresReason: pol.anywhereRequiresReason,
+        anywhereRequiresPhoto: pol.anywhereRequiresPhoto,
+      });
+      this.attendancePolicy.set(saved);
+      this.toast.show(this.i18n.translate('employees.attendancePolicySaved'), 'success');
+    } catch {
+      this.toast.show(this.i18n.translate('employees.attendancePolicyFailed'), 'danger');
+    } finally {
+      this.policySaving.set(false);
+    }
   }
 
   async openUserLink(): Promise<void> {
@@ -878,6 +978,17 @@ export class EmployeeProfilePage implements OnInit {
       this.docTypes.set(lookups.documentTypes);
       this.statusDraft.set(e.status);
       this.state.set('ready');
+      if (this.canManageAttendance()) {
+        this.policyLoadError.set(null);
+        try {
+          this.attendancePolicy.set(await this.attendanceApi.getEmployeeAttendancePolicy(id));
+        } catch {
+          this.attendancePolicy.set(null);
+          this.policyLoadError.set(this.i18n.translate('employees.attendancePolicyFailed'));
+        }
+      } else {
+        this.attendancePolicy.set(null);
+      }
     } catch (err: unknown) {
       const code = (err as { error?: { code?: string } })?.error?.code;
       this.state.set(code === 'plan.feature_not_available' ? 'locked' : 'error');

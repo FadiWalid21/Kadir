@@ -8,16 +8,18 @@ import {
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { AttendanceApi, PagedCorrections } from '../../core/api/attendance.api';
+import { AttendanceApi, AttendanceCorrection, PagedCorrections } from '../../core/api/attendance.api';
 import { BadgeComponent, BadgeTone } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { CorrectionRequestDrawerComponent } from './correction-request-drawer.component';
 
 type PageState = 'loading' | 'ready' | 'error';
-type Tab = '' | 'Pending' | 'Approved' | 'Rejected';
+type Tab = '' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
 
 @Component({
   selector: 'kadr-my-requests-page',
@@ -26,6 +28,7 @@ type Tab = '' | 'Pending' | 'Approved' | 'Rejected';
     TranslocoPipe,
     BadgeComponent,
     ButtonComponent,
+    ConfirmDialogComponent,
     EmptyStateComponent,
     NetworkErrorComponent,
     SkeletonComponent,
@@ -97,6 +100,13 @@ type Tab = '' | 'Pending' | 'Approved' | 'Rejected';
                   {{ 'attendance.corrections.rejectReason' | transloco }}: {{ item.rejectReason }}
                 </p>
               }
+              @if (item.status === 'Pending') {
+                <div class="mt-3">
+                  <kadr-button variant="danger-soft" type="button" (click)="askCancel(item)">
+                    {{ 'attendance.requests.cancel' | transloco }}
+                  </kadr-button>
+                </div>
+              }
             </li>
           }
         </ul>
@@ -109,20 +119,35 @@ type Tab = '' | 'Pending' | 'Approved' | 'Rejected';
       (closed)="formOpen.set(false)"
       (submitted)="reload()"
     />
+
+    <kadr-confirm-dialog
+      [open]="!!cancelTarget()"
+      [title]="'attendance.requests.cancelTitle' | transloco"
+      [message]="'attendance.requests.cancelBody' | transloco"
+      [confirmLabel]="'attendance.requests.cancelConfirm' | transloco"
+      [cancelLabel]="'ui.cancel' | transloco"
+      [danger]="true"
+      [busy]="cancelling()"
+      (confirmed)="confirmCancel()"
+      (cancelled)="cancelTarget.set(null)"
+    />
   `,
 })
 export class MyRequestsPage implements OnInit {
   private readonly api = inject(AttendanceApi);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
+  private readonly toast = inject(ToastService);
   private readonly drawer = viewChild(CorrectionRequestDrawerComponent);
 
-  protected readonly tabs: Tab[] = ['', 'Pending', 'Approved', 'Rejected'];
+  protected readonly tabs: Tab[] = ['', 'Pending', 'Approved', 'Rejected', 'Cancelled'];
   protected readonly state = signal<PageState>('loading');
   protected readonly page = signal<PagedCorrections | null>(null);
   protected readonly tab = signal<Tab>('');
   protected readonly formOpen = signal(false);
   protected readonly formDate = signal<string | null>(null);
+  protected readonly cancelTarget = signal<AttendanceCorrection | null>(null);
+  protected readonly cancelling = signal(false);
 
   ngOnInit(): void {
     this.title.setTitle(this.transloco.translate('attendance.requests.title'));
@@ -151,6 +176,28 @@ export class MyRequestsPage implements OnInit {
     queueMicrotask(() => this.drawer()?.resetFromInputs());
   }
 
+  protected askCancel(item: AttendanceCorrection): void {
+    this.cancelTarget.set(item);
+  }
+
+  protected async confirmCancel(): Promise<void> {
+    const item = this.cancelTarget();
+    if (!item || this.cancelling()) {
+      return;
+    }
+    this.cancelling.set(true);
+    try {
+      await this.api.cancelCorrection(item.id);
+      this.toast.show(this.transloco.translate('attendance.requests.cancelOk'), 'success');
+      this.cancelTarget.set(null);
+      await this.reload();
+    } catch {
+      this.toast.show(this.transloco.translate('attendance.requests.cancelFailed'), 'danger');
+    } finally {
+      this.cancelling.set(false);
+    }
+  }
+
   protected tabLabel(t: Tab): string {
     if (!t) return this.transloco.translate('attendance.requests.tabAll');
     return this.statusLabel(t);
@@ -170,6 +217,8 @@ export class MyRequestsPage implements OnInit {
         return 'danger';
       case 'Pending':
         return 'warning';
+      case 'Cancelled':
+        return 'neutral';
       default:
         return 'neutral';
     }

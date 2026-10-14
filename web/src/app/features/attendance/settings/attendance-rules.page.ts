@@ -9,9 +9,11 @@ import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { AttendanceApi, AttendanceRules } from '../../../core/api/attendance.api';
+import { TenantTemplatesApi } from '../../../core/api/tenant-templates.api';
 import { ButtonComponent } from '../../../shared/ui/button/button.component';
 import { IconComponent } from '../../../shared/ui/icon/icon.component';
 import { NetworkErrorComponent } from '../../../shared/ui/pwa/network-error.component';
+import { SelectComponent, SelectOption } from '../../../shared/ui/select/select.component';
 import { SkeletonComponent } from '../../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 
@@ -26,6 +28,7 @@ type PageState = 'loading' | 'ready' | 'error';
     ButtonComponent,
     IconComponent,
     NetworkErrorComponent,
+    SelectComponent,
     SkeletonComponent,
   ],
   template: `
@@ -49,6 +52,19 @@ type PageState = 'loading' | 'ready' | 'error';
       />
     } @else if (rules(); as r) {
       <form class="flex flex-col gap-4 pb-24 text-start" (ngSubmit)="save()">
+        <section class="rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-5">
+          <h2 class="mb-3 text-base font-bold text-fg">
+            {{ 'attendance.settings.rulesSectionDefaultShift' | transloco }}
+          </h2>
+          <p class="mb-3 text-xs text-fg-muted">{{ 'attendance.settings.defaultShiftHint' | transloco }}</p>
+          <kadr-select
+            [label]="'attendance.settings.defaultShift' | transloco"
+            [options]="shiftOptions()"
+            [value]="defaultShiftId()"
+            (valueChange)="onDefaultShiftChange($event)"
+          />
+        </section>
+
         <section class="rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-5">
           <h2 class="mb-3 text-base font-bold text-fg">
             {{ 'attendance.settings.rulesSectionGrace' | transloco }}
@@ -159,6 +175,7 @@ type PageState = 'loading' | 'ready' | 'error';
 })
 export class AttendanceRulesPage implements OnInit {
   private readonly api = inject(AttendanceApi);
+  private readonly templatesApi = inject(TenantTemplatesApi);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
   private readonly toast = inject(ToastService);
@@ -166,6 +183,8 @@ export class AttendanceRulesPage implements OnInit {
   protected readonly state = signal<PageState>('loading');
   protected readonly rules = signal<AttendanceRules | null>(null);
   protected readonly saving = signal(false);
+  protected readonly defaultShiftId = signal('');
+  protected readonly shiftOptions = signal<SelectOption[]>([]);
 
   ngOnInit(): void {
     this.title.setTitle(this.transloco.translate('attendance.settings.rulesTitle'));
@@ -175,10 +194,39 @@ export class AttendanceRulesPage implements OnInit {
   protected async reload(): Promise<void> {
     this.state.set('loading');
     try {
-      this.rules.set(await this.api.getRules());
+      const [rules, def, shifts] = await Promise.all([
+        this.api.getRules(),
+        this.api.getDefaultShift(),
+        this.templatesApi.listSection('shifts', { page: 1, pageSize: 100, active: true }),
+      ]);
+      this.rules.set(rules);
+      this.defaultShiftId.set(def.shiftId ?? '');
+      const lang = this.transloco.getActiveLang();
+      this.shiftOptions.set([
+        {
+          value: '',
+          label: this.transloco.translate('attendance.settings.defaultShiftNone'),
+        },
+        ...shifts.items.map((s) => ({
+          value: s.id,
+          label: lang === 'en' ? s.nameEn || s.nameAr : s.nameAr || s.nameEn,
+        })),
+      ]);
       this.state.set('ready');
     } catch {
       this.state.set('error');
+    }
+  }
+
+  protected async onDefaultShiftChange(value: string): Promise<void> {
+    this.defaultShiftId.set(value);
+    try {
+      const saved = await this.api.setDefaultShift(value || null);
+      this.defaultShiftId.set(saved.shiftId ?? '');
+      this.toast.show(this.transloco.translate('attendance.settings.defaultShiftSaved'), 'success');
+    } catch {
+      this.toast.show(this.transloco.translate('attendance.settings.saveFailed'), 'danger');
+      await this.reload();
     }
   }
 

@@ -20,6 +20,12 @@ public static class AttendanceEndpoints
             .RequireRateLimiting("attendance-punch")
             .WithName("AttendancePunch");
 
+        app.MapPost("/api/v1/attendance/punch-evidence", UploadPunchEvidenceAsync)
+            .RequireAuthorization(PermissionCodes.AttendancePunch)
+            .RequireFeature(FeatureKeys.Attendance)
+            .DisableAntiforgery()
+            .WithName("AttendanceUploadPunchEvidence");
+
         app.MapPost("/api/v1/attendance/proxy-punch", ProxyPunchAsync)
             .RequireAuthorization(PermissionCodes.AttendanceEdit)
             .RequireFeature(FeatureKeys.Attendance)
@@ -166,6 +172,11 @@ public static class AttendanceEndpoints
             .RequireFeature(FeatureKeys.Attendance)
             .WithName("AttendanceRejectCorrection");
 
+        app.MapPost("/api/v1/attendance/corrections/{id:guid}/cancel", CancelCorrectionAsync)
+            .RequireAuthorization(PermissionCodes.AttendancePunch)
+            .RequireFeature(FeatureKeys.Attendance)
+            .WithName("AttendanceCancelCorrection");
+
         app.MapGet("/api/v1/attendance/work-locations", ListWorkLocationsAsync)
             .RequireAuthorization(PermissionCodes.AttendanceManage)
             .RequireFeature(FeatureKeys.Attendance)
@@ -216,6 +227,34 @@ public static class AttendanceEndpoints
         IErrorLocalizer localizer,
         CancellationToken cancellationToken) =>
         ToResult(httpContext, await attendance.PunchAsync(request, cancellationToken).ConfigureAwait(false), localizer);
+
+    private static async Task<IResult> UploadPunchEvidenceAsync(
+        HttpRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (!request.HasFormContentType)
+        {
+            return Results.BadRequest();
+        }
+
+        var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
+        var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+        if (file is null || file.Length <= 0)
+        {
+            return Results.BadRequest();
+        }
+
+        await using var stream = file.OpenReadStream();
+        return ToResult(
+            httpContext,
+            await attendance
+                .UploadPunchEvidenceAsync(stream, file.FileName, file.ContentType, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+    }
 
     private static async Task<IResult> ProxyPunchAsync(
         [FromBody] ProxyPunchRequest request,
@@ -456,6 +495,17 @@ public static class AttendanceEndpoints
         ToResult(
             httpContext,
             await attendance.RejectCorrectionAsync(id, request, cancellationToken).ConfigureAwait(false),
+            localizer);
+
+    private static async Task<IResult> CancelCorrectionAsync(
+        Guid id,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken) =>
+        ToResult(
+            httpContext,
+            await attendance.CancelCorrectionAsync(id, cancellationToken).ConfigureAwait(false),
             localizer);
 
     private static async Task<IResult> GetRulesAsync(

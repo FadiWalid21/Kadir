@@ -1,13 +1,17 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Attendance;
 using Kadr.Platform.Domain.Attendance;
 using Kadr.Platform.Domain.Attendance.Geo;
 using Kadr.Platform.Domain.Employees;
+using Kadr.Platform.Domain.Files;
 using Kadr.Platform.Domain.Org;
 using Kadr.Platform.Domain.Settings;
 using Kadr.Platform.Domain.Templates;
 using Kadr.Platform.Domain.Tenants;
+using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Results;
 using Kadr.SharedKernel.Tenancy;
@@ -21,7 +25,8 @@ public sealed partial class AttendanceService(
     ISubscriptionGuard subscriptionGuard,
     IAuditLogWriter audit,
     IWorkflowEngine workflowEngine,
-    ILeaveService leaveService) : IAttendanceService
+    ILeaveService leaveService,
+    IFileStorage fileStorage) : IAttendanceService
 {
     private const long MaxPositionAgeMs = 60_000;
     private static readonly string[] ValidWeekendDays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -387,6 +392,80 @@ public sealed partial class AttendanceService(
             punch.OutsideReason,
             status.ToString(),
             punch.WorkLocationId));
+    }
+
+    public async Task<Result<PunchEvidenceDto>> UploadPunchEvidenceAsync(
+        Stream content,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var writable = await EnsureWritableFeatureAsync(cancellationToken).ConfigureAwait(false);
+        if (writable.IsFailure)
+        {
+            return Result.Failure<PunchEvidenceDto>(writable.ErrorCode!, writable.ErrorMessage!);
+        }
+
+        if (tenantContext.TenantId is null)
+        {
+            return Result.Failure<PunchEvidenceDto>(ErrorCodes.TenantNotFound, ErrorCodes.TenantNotFound);
+        }
+
+        var linked = await ResolveLinkedEmployeeAsync(cancellationToken).ConfigureAwait(false);
+        if (linked.IsFailure)
+        {
+            return Result.Failure<PunchEvidenceDto>(linked.ErrorCode!, linked.ErrorMessage!);
+        }
+
+        var type = (contentType ?? string.Empty).Trim().ToLowerInvariant();
+        if (type is not ("image/jpeg" or "image/png" or "image/jpg"))
+        {
+            return Result.Failure<PunchEvidenceDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = type.Contains("png", StringComparison.Ordinal) ? "evidence.png" : "evidence.jpg";
+        }
+
+        StoredFile stored;
+        try
+        {
+            stored = await fileStorage
+                .SaveAsync(
+                    tenantContext.TenantId.Value,
+                    FilePurpose.Photo,
+                    content,
+                    fileName,
+                    type == "image/jpg" ? "image/jpeg" : type,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure<PunchEvidenceDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        if (stored.SizeBytes is <= 0 or > 5_000_000)
+        {
+            await fileStorage.DeleteAsync(stored.StoragePath, cancellationToken).ConfigureAwait(false);
+            return Result.Failure<PunchEvidenceDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        var hash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(stored.StoragePath + stored.SizeBytes)))
+            .ToLowerInvariant();
+        db.FileObjects.Add(FileObject.Create(
+            stored.FileId,
+            tenantContext.TenantId.Value,
+            stored.StoragePath,
+            stored.FileName,
+            stored.ContentType,
+            stored.SizeBytes,
+            hash,
+            FilePurpose.Photo));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(new PunchEvidenceDto(stored.FileId));
     }
 
     public async Task<Result<AttendanceTodayDto>> GetMyTodayAsync(CancellationToken cancellationToken = default)

@@ -115,6 +115,69 @@ public sealed partial class AttendanceService
         return Result.Success(await MapCorrectionAsync(entity, cancellationToken).ConfigureAwait(false));
     }
 
+    public async Task<Result<AttendanceCorrectionRequestDto>> CancelCorrectionAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var writable = await EnsureWritableFeatureAsync(cancellationToken).ConfigureAwait(false);
+        if (writable.IsFailure)
+        {
+            return Result.Failure<AttendanceCorrectionRequestDto>(writable.ErrorCode!, writable.ErrorMessage!);
+        }
+
+        if (tenantContext.TenantId is null || tenantContext.UserId is null)
+        {
+            return Result.Failure<AttendanceCorrectionRequestDto>(
+                ErrorCodes.TenantNotFound,
+                ErrorCodes.TenantNotFound);
+        }
+
+        var linked = await ResolveLinkedEmployeeAsync(cancellationToken).ConfigureAwait(false);
+        if (linked.IsFailure)
+        {
+            return Result.Failure<AttendanceCorrectionRequestDto>(linked.ErrorCode!, linked.ErrorMessage!);
+        }
+
+        var entity = await db.AttendanceCorrectionRequests
+            .SingleOrDefaultAsync(c => c.Id == id, cancellationToken)
+            .ConfigureAwait(false);
+        if (entity is null || entity.EmployeeId != linked.Value!.Employee.Id)
+        {
+            return Result.Failure<AttendanceCorrectionRequestDto>(
+                ErrorCodes.AttendanceNotFound,
+                ErrorCodes.AttendanceNotFound);
+        }
+
+        try
+        {
+            entity.Cancel();
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure<AttendanceCorrectionRequestDto>(
+                ErrorCodes.AttendanceCorrectionInvalid,
+                ErrorCodes.AttendanceCorrectionInvalid);
+        }
+
+        await workflowEngine
+            .CancelForSubjectAsync(WorkflowRequestType.AttendanceCorrection, entity.Id, cancellationToken)
+            .ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await audit.WriteAsync(
+                tenantContext.TenantId.Value,
+                tenantContext.UserId,
+                "attendance.correction.cancel",
+                nameof(AttendanceCorrectionRequest),
+                entity.Id,
+                null,
+                null,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return Result.Success(await MapCorrectionAsync(entity, cancellationToken).ConfigureAwait(false));
+    }
+
     public async Task<Result<PagedAttendanceCorrectionsDto>> ListMyCorrectionsAsync(
         string? status,
         int page,

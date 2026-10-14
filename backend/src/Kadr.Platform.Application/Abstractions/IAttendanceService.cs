@@ -7,6 +7,12 @@ public interface IAttendanceService
 {
     Task<Result<PunchResultDto>> PunchAsync(PunchRequest request, CancellationToken cancellationToken = default);
 
+    Task<Result<PunchEvidenceDto>> UploadPunchEvidenceAsync(
+        Stream content,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken = default);
+
     Task<Result<PunchResultDto>> ProxyPunchAsync(
         ProxyPunchRequest request,
         CancellationToken cancellationToken = default);
@@ -88,6 +94,10 @@ public interface IAttendanceService
 
     Task<Result<AttendanceCorrectionRequestDto>> CreateCorrectionAsync(
         CreateAttendanceCorrectionRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<AttendanceCorrectionRequestDto>> CancelCorrectionAsync(
+        Guid id,
         CancellationToken cancellationToken = default);
 
     Task<Result<PagedAttendanceCorrectionsDto>> ListMyCorrectionsAsync(

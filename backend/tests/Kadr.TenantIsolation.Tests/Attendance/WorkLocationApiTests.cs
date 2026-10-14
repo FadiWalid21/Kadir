@@ -105,6 +105,51 @@ public sealed class WorkLocationApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Anywhere_policy_with_photo_evidence_allows_punch_outside()
+    {
+        await factory.ResetDatabaseAsync();
+        var (_, _, client, employeeId) = await SetupAsync("WL Photo Ok Co", "wl-photo-ok@example.com");
+
+        var locationId = await CreateLocationAsync(client, "موقع", "Site");
+        await AssignEmployeeAsync(client, locationId, employeeId);
+        var policy = await client.PutAsJsonAsync(
+            $"/api/v1/attendance/employees/{employeeId}/attendance-policy",
+            new { mayClockInFromAnywhere = true, anywhereRequiresReason = false, anywhereRequiresPhoto = true });
+        Assert.Equal(HttpStatusCode.OK, policy.StatusCode);
+
+        // Minimal valid 1x1 PNG
+        var png = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(png);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+        content.Add(fileContent, "file", "evidence.png");
+        var upload = await client.PostAsync("/api/v1/attendance/punch-evidence", content);
+        var uploadBody = await upload.Content.ReadAsStringAsync();
+        Assert.True(upload.IsSuccessStatusCode, uploadBody);
+        var evidence = JsonSerializer.Deserialize<PunchEvidenceDto>(uploadBody, JsonOptions)!;
+        Assert.NotEqual(Guid.Empty, evidence.FileId);
+
+        var punch = await client.PostAsJsonAsync(
+            "/api/v1/attendance/punch",
+            new
+            {
+                latitude = SiteLat + 0.05,
+                longitude = SiteLon,
+                accuracyM = 20,
+                positionAgeMs = 500,
+                clientRequestId = Guid.NewGuid(),
+                reason = (string?)null,
+                photoFileId = evidence.FileId,
+            });
+        var punchBody = await punch.Content.ReadAsStringAsync();
+        Assert.True(punch.IsSuccessStatusCode, punchBody);
+        var result = JsonSerializer.Deserialize<PunchResultDto>(punchBody, JsonOptions)!;
+        Assert.False(result.IsInside);
+        Assert.Equal(locationId, result.WorkLocationId);
+    }
+
+    [Fact]
     public async Task Work_locations_are_tenant_isolated_and_paginated()
     {
         await factory.ResetDatabaseAsync();

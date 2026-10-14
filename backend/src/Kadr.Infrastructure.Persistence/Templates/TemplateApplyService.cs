@@ -3,7 +3,9 @@ using System.Text.Json;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Templates;
 using Kadr.Platform.Domain.Payroll;
+using Kadr.Platform.Domain.Settings;
 using Kadr.Platform.Domain.Templates;
+using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +23,7 @@ public sealed class TemplateApplyService(KadrDbContext db) : ITemplateApplyServi
         var template = await GetLatestTemplateAsync(industryCode, cancellationToken).ConfigureAwait(false);
         var seed = Deserialize(template);
         AddAllMissing(tenantId, template, seed, existingKeys: null);
+        await EnsureDefaultShiftSettingAsync(tenantId, cancellationToken).ConfigureAwait(false);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -34,8 +37,11 @@ public sealed class TemplateApplyService(KadrDbContext db) : ITemplateApplyServi
         var existing = await CollectExistingKeysAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var before = CountTrackedAdds();
         AddAllMissing(tenantId, template, seed, existing);
+        await EnsureDefaultShiftSettingAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var added = CountTrackedAdds() - before;
-        if (added > 0)
+        var settingPending = db.ChangeTracker.Entries<TenantSetting>()
+            .Any(e => e.State is EntityState.Added or EntityState.Modified);
+        if (added > 0 || settingPending)
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -83,14 +89,68 @@ public sealed class TemplateApplyService(KadrDbContext db) : ITemplateApplyServi
 
         var before = CountTrackedAdds();
         AddAllMissing(tenantId, template, seed, existing);
+        await EnsureDefaultShiftSettingAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var added = CountTrackedAdds() - before;
+        var settingPending = db.ChangeTracker.Entries<TenantSetting>()
+            .Any(e => e.State is EntityState.Added or EntityState.Modified);
 
-        if (added > 0 || deactivated > 0)
+        if (added > 0 || deactivated > 0 || settingPending)
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return new TemplateReplaceResult(added, deactivated);
+    }
+
+    /// <summary>
+    /// When attendance shifts exist but no default shift is configured, pick the first active shift
+    /// so new tenants get Present/Late/Incomplete day status instead of NoShift.
+    /// </summary>
+    private async Task EnsureDefaultShiftSettingAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var existing = await db.TenantSettings
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(
+                s => s.TenantId == tenantId && s.Key == SettingKeys.AttendanceDefaultShiftId,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existing is not null
+            && !string.IsNullOrWhiteSpace(existing.ValueJson)
+            && existing.ValueJson is not "null")
+        {
+            return;
+        }
+
+        var fromLocal = db.Shifts.Local
+            .Where(s => s.TenantId == tenantId && s.IsActive)
+            .OrderBy(s => s.NameAr)
+            .Select(s => (Guid?)s.Id)
+            .FirstOrDefault();
+
+        var shiftId = fromLocal
+            ?? await db.Shifts.AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(s => s.TenantId == tenantId && s.IsActive)
+                .OrderBy(s => s.NameAr)
+                .Select(s => (Guid?)s.Id)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+        if (shiftId is null)
+        {
+            return;
+        }
+
+        var json = JsonSerializer.Serialize(shiftId.Value.ToString("D"), JsonOptions);
+        if (existing is null)
+        {
+            db.TenantSettings.Add(TenantSetting.Create(tenantId, SettingKeys.AttendanceDefaultShiftId, json));
+        }
+        else
+        {
+            existing.SetValue(json);
+        }
     }
 
     private static async Task<int> DeactivateUntouchedAsync<T>(

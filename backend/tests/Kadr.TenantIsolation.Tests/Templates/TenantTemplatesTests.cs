@@ -24,6 +24,25 @@ public sealed class TenantTemplatesTests(RegisterApiFactory factory)
     private const string Password = "Str0ngPass!!";
 
     [Fact]
+    public async Task Register_applies_default_attendance_shift_from_template()
+    {
+        await factory.ResetDatabaseAsync();
+        var session = await RegisterAndLoginAsync("Default Shift Co", "default-shift@example.com", "office");
+
+        var def = await session.Client.GetFromJsonAsync<Kadr.Platform.Application.Attendance.AttendanceDefaultShiftDto>(
+            "/api/v1/attendance/settings/default-shift",
+            JsonOptions);
+        Assert.NotNull(def);
+        Assert.NotNull(def.ShiftId);
+
+        var shifts = await session.Client.GetFromJsonAsync<PagedResultDto<TemplateItemDto>>(
+            "/api/v1/tenant/templates/shifts?page=1&pageSize=50",
+            JsonOptions);
+        Assert.NotNull(shifts);
+        Assert.Contains(shifts.Items, s => s.Id == def.ShiftId);
+    }
+
+    [Fact]
     public async Task Edit_leave_type_marks_customized_and_other_tenant_untouched()
     {
         await factory.ResetDatabaseAsync();
