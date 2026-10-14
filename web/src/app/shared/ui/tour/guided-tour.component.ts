@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { GuidedTourService } from '../../../core/tour/guided-tour.service';
+import { GuidedTourService, TourStepDef } from '../../../core/tour/guided-tour.service';
 import { ButtonComponent } from '../button/button.component';
 
 @Component({
@@ -78,7 +78,7 @@ export class GuidedTourComponent {
     queueMicrotask(() => this.position(step));
   });
 
-  private position(step: { target: string; mobileTarget?: string }): void {
+  private position(step: TourStepDef): void {
     const selector = this.tour.resolveTargetSelector(step);
     const el = this.document.querySelector(selector) as HTMLElement | null;
     if (!el) {
