@@ -121,6 +121,7 @@ export type NavEntry = NavLeaf | NavGroup | NavDivider;
                 [class.text-accent-soft-fg]="isLeafActive(entry)"
                 [class.border-accent]="isLeafActive(entry)"
                 [attr.title]="collapsed() ? (entry.labelKey | transloco) : null"
+                [attr.data-tour]="tourAttrFor(entry.route)"
               >
                 <kadr-icon [name]="entry.icon" size="sm" />
                 @if (!collapsed()) {
@@ -149,6 +150,7 @@ export type NavEntry = NavLeaf | NavGroup | NavDivider;
                 [class.hover:bg-hover]="!parentActive"
                 [attr.aria-expanded]="open"
                 [attr.title]="collapsed() ? (entry.labelKey | transloco) : null"
+                [attr.data-tour]="tourAttrForGroup(entry.id)"
                 (click)="toggleGroup(entry.id)"
               >
                 <kadr-icon [name]="entry.icon" size="sm" />
@@ -493,5 +495,22 @@ export class SidebarComponent {
     const path = url.split('?')[0] ?? url;
     const prefix = child.matchPrefix ?? child.route;
     return path === child.route || path.startsWith(prefix + '/') || path === prefix;
+  }
+
+  protected tourAttrFor(route: string | undefined): string | null {
+    if (route === '/home') {
+      return 'nav-home';
+    }
+    if (route === '/settings') {
+      return 'nav-settings';
+    }
+    return null;
+  }
+
+  protected tourAttrForGroup(id: string): string | null {
+    if (id === 'people' || id === 'attendance' || id === 'leave') {
+      return `nav-${id}`;
+    }
+    return null;
   }
 }

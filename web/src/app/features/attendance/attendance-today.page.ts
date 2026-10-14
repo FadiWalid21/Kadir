@@ -15,11 +15,15 @@ import {
   AttendanceBoardRow,
   BranchLocation,
 } from '../../core/api/attendance.api';
+import { AuthService } from '../../core/auth/auth.service';
+import { PermissionCodes } from '../../core/auth/permission-codes';
 import { BadgeComponent, BadgeTone } from '../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../shared/ui/button/button.component';
+import { DrawerComponent } from '../../shared/ui/drawer/drawer.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { NetworkErrorComponent } from '../../shared/ui/pwa/network-error.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 
@@ -31,6 +35,7 @@ type PageState = 'loading' | 'ready' | 'error';
     TranslocoPipe,
     BadgeComponent,
     ButtonComponent,
+    DrawerComponent,
     EmptyStateComponent,
     NetworkErrorComponent,
     SkeletonComponent,
@@ -158,6 +163,9 @@ type PageState = 'loading' | 'ready' | 'error';
                 <th class="px-4 py-3 font-medium">{{ 'attendance.today.colShift' | transloco }}</th>
                 <th class="px-4 py-3 font-medium">{{ 'attendance.today.colBranch' | transloco }}</th>
                 <th class="px-4 py-3 font-medium">{{ 'attendance.today.colStatus' | transloco }}</th>
+                @if (canProxyPunch()) {
+                  <th class="px-4 py-3 font-medium">{{ 'attendance.today.colActions' | transloco }}</th>
+                }
               </tr>
             </thead>
             <tbody>
@@ -203,6 +211,13 @@ type PageState = 'loading' | 'ready' | 'error';
                   <td class="px-4 py-3">
                     <kadr-badge [tone]="statusTone(row.status)" [label]="statusLabel(row.status)" />
                   </td>
+                  @if (canProxyPunch()) {
+                    <td class="px-4 py-3">
+                      <kadr-button variant="secondary" size="sm" type="button" (click)="openProxy(row)">
+                        {{ 'attendance.today.proxyPunch' | transloco }}
+                      </kadr-button>
+                    </td>
+                  }
                 </tr>
               }
             </tbody>
@@ -223,6 +238,13 @@ type PageState = 'loading' | 'ready' | 'error';
                 {{ 'attendance.today.colIn' | transloco }}:
                 {{ row.firstInAt ? formatTime(row.firstInAt) : '—' }}
               </p>
+              @if (canProxyPunch()) {
+                <div class="mt-3">
+                  <kadr-button variant="secondary" size="sm" type="button" (click)="openProxy(row)">
+                    {{ 'attendance.today.proxyPunch' | transloco }}
+                  </kadr-button>
+                </div>
+              }
             </li>
           }
         </ul>
@@ -243,10 +265,50 @@ type PageState = 'loading' | 'ready' | 'error';
         </div>
       }
     }
+
+    <kadr-drawer
+      [open]="!!proxyTarget()"
+      [title]="'attendance.today.proxyTitle' | transloco"
+      [subtitle]="'attendance.today.proxyBody' | transloco"
+      [closeLabel]="'attendance.today.proxyCancel' | transloco"
+      (closed)="closeProxy()"
+    >
+      @if (proxyTarget(); as target) {
+        <p class="mb-3 text-sm font-medium text-fg">{{ displayName(target) }}</p>
+        <label class="flex flex-col gap-1 text-start">
+          <span class="text-sm font-medium text-fg">{{ 'attendance.today.proxyReason' | transloco }}</span>
+          <span class="text-xs text-fg-muted">{{ 'attendance.today.proxyReasonHint' | transloco }}</span>
+          <textarea
+            class="min-h-24 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-fg"
+            rows="3"
+            [value]="proxyReason()"
+            (input)="proxyReason.set($any($event.target).value); proxyReasonError.set(undefined)"
+          ></textarea>
+          @if (proxyReasonError(); as err) {
+            <span class="text-xs text-danger" role="alert">{{ err | transloco }}</span>
+          }
+        </label>
+      }
+      <div drawerFooter class="flex flex-wrap gap-2">
+        <kadr-button
+          variant="primary"
+          type="button"
+          [disabled]="proxySaving()"
+          (click)="submitProxy()"
+        >
+          {{ 'attendance.today.proxySubmit' | transloco }}
+        </kadr-button>
+        <kadr-button variant="secondary" type="button" (click)="closeProxy()">
+          {{ 'attendance.today.proxyCancel' | transloco }}
+        </kadr-button>
+      </div>
+    </kadr-drawer>
   `,
 })
 export class AttendanceTodayPage implements OnInit {
   private readonly api = inject(AttendanceApi);
+  private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
   private readonly title = inject(Title);
   private readonly transloco = inject(TranslocoService);
 
@@ -255,6 +317,13 @@ export class AttendanceTodayPage implements OnInit {
   protected readonly branches = signal<BranchLocation[]>([]);
   protected readonly dateIso = signal(new Date().toISOString().slice(0, 10));
   protected readonly page = signal(1);
+  protected readonly canProxyPunch = computed(() =>
+    this.auth.hasPermission(PermissionCodes.AttendanceEdit),
+  );
+  protected readonly proxyTarget = signal<AttendanceBoardRow | null>(null);
+  protected readonly proxyReason = signal('');
+  protected readonly proxyReasonError = signal<string | undefined>(undefined);
+  protected readonly proxySaving = signal(false);
   protected statusFilter = '';
   protected branchFilter = '';
   protected query = '';
@@ -390,5 +459,47 @@ export class AttendanceTodayPage implements OnInit {
       return `${h}:${String(m).padStart(2, '0')}`;
     }
     return '—';
+  }
+
+  protected openProxy(row: AttendanceBoardRow): void {
+    this.proxyTarget.set(row);
+    this.proxyReason.set('');
+    this.proxyReasonError.set(undefined);
+  }
+
+  protected closeProxy(): void {
+    this.proxyTarget.set(null);
+    this.proxyReason.set('');
+    this.proxyReasonError.set(undefined);
+    this.proxySaving.set(false);
+  }
+
+  protected async submitProxy(): Promise<void> {
+    const target = this.proxyTarget();
+    if (!target || this.proxySaving()) {
+      return;
+    }
+    const reason = this.proxyReason().trim();
+    if (!reason) {
+      this.proxyReasonError.set('attendance.today.proxyReasonRequired');
+      return;
+    }
+    this.proxySaving.set(true);
+    try {
+      const result = await this.api.proxyPunch({
+        employeeId: target.employeeId,
+        reason,
+        clientRequestId: crypto.randomUUID(),
+      });
+      this.toast.show(
+        this.transloco.translate('attendance.today.proxySuccess', { kind: result.kind }),
+        'success',
+      );
+      this.closeProxy();
+      await this.reload();
+    } catch {
+      this.toast.show(this.transloco.translate('attendance.today.proxyFail'), 'danger');
+      this.proxySaving.set(false);
+    }
   }
 }

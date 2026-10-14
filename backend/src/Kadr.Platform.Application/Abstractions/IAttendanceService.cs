@@ -7,6 +7,10 @@ public interface IAttendanceService
 {
     Task<Result<PunchResultDto>> PunchAsync(PunchRequest request, CancellationToken cancellationToken = default);
 
+    Task<Result<PunchResultDto>> ProxyPunchAsync(
+        ProxyPunchRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<Result<AttendanceTodayDto>> GetMyTodayAsync(CancellationToken cancellationToken = default);
 
     Task<Result<AttendanceMonthDto>> GetMyMonthAsync(int year, int month, CancellationToken cancellationToken = default);

@@ -52,6 +52,19 @@ Brevo__SenderEmail=<verified sender in Brevo>
 Brevo__SenderName=Kadr
 ```
 
+### Web Push (closed / installed PWA)
+
+Platform health component **webpush** must show `webpush` (configured), not `disabled` / `logging`.
+
+| Env var | Notes |
+|---|---|
+| `WebPush__Enabled` | `true` |
+| `WebPush__VapidPublicKey` | public VAPID key |
+| `WebPush__VapidPrivateKey` | secret; never commit |
+| `WebPush__Subject` | e.g. `mailto:ops@yourdomain` |
+
+Generate a VAPID pair once (e.g. `npx web-push generate-vapid-keys`), set all four on MonsterASP, restart, then: install PWA → enable notifications → Account → send test → close app and confirm OS notification.
+
 Git Deploy project path:
 
 ```text

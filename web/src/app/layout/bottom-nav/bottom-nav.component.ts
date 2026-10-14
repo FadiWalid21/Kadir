@@ -26,6 +26,7 @@ interface MoreItem {
         routerLinkActive="text-accent"
         [routerLinkActiveOptions]="{ exact: true }"
         class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-fg-2 focus-visible:outline-none"
+        data-tour="bottom-home"
         (click)="moreOpen.set(false)"
       >
         <kadr-icon name="home" size="sm" />
@@ -35,6 +36,7 @@ interface MoreItem {
         [routerLink]="approvalsRoute()"
         routerLinkActive="text-accent"
         class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-fg-2 focus-visible:outline-none"
+        data-tour="bottom-approvals"
         (click)="moreOpen.set(false)"
       >
         <kadr-icon name="inbox" size="sm" />
@@ -44,6 +46,7 @@ interface MoreItem {
         routerLink="/attendance/me"
         routerLinkActive="text-accent"
         class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-fg-2 focus-visible:outline-none"
+        data-tour="bottom-attendance"
         (click)="moreOpen.set(false)"
       >
         <kadr-icon name="clock" size="sm" />
@@ -56,6 +59,7 @@ interface MoreItem {
         [class.text-fg-2]="!moreOpen()"
         [attr.aria-expanded]="moreOpen()"
         [attr.aria-controls]="'shell-more-sheet'"
+        data-tour="bottom-more"
         (click)="moreOpen.set(!moreOpen())"
       >
         <kadr-icon name="more-horizontal" size="sm" />

@@ -20,7 +20,7 @@ import { IconComponent } from '../icon/icon.component';
         <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
             <p class="text-sm font-bold text-fg">{{ 'notifications.pushPromptTitle' | transloco }}</p>
-            <p class="mt-1 text-sm text-fg-2">{{ 'notifications.pushPromptBody' | transloco }}</p>
+            <p class="mt-1 text-sm text-fg-2">{{ bodyKey() | transloco }}</p>
           </div>
           <button
             type="button"
@@ -56,6 +56,12 @@ export class PushSoftPromptComponent {
 
   protected readonly visible = computed(
     () => this.auth.status() === 'authenticated' && this.push.softPromptEligible(),
+  );
+
+  protected readonly bodyKey = computed(() =>
+    this.push.state() === 'failed'
+      ? 'notifications.pushPromptBodyFailed'
+      : 'notifications.pushPromptBody',
   );
 
   async onEnable(): Promise<void> {
