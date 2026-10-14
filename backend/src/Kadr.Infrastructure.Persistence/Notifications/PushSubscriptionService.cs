@@ -117,8 +117,45 @@ public sealed class PushSubscriptionService(
             existing.Refresh(request.Keys.P256dh, request.Keys.Auth, request.DeviceLabel, userAgent);
         }
 
+        // Subscribing a device opts the user into push for all known event types so deliveries
+        // are not skipped as preference_off while an active subscription exists.
+        await EnablePushPreferencesAsync(tenantId, userId, cancellationToken).ConfigureAwait(false);
+
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success(ToDto(existing));
+    }
+
+    private async Task EnablePushPreferencesAsync(
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var existing = await db.NotificationPreferences
+            .Where(p => p.UserId == userId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var byType = existing.ToDictionary(p => p.EventType, StringComparer.Ordinal);
+
+        foreach (var eventType in NotificationEventTypes.All)
+        {
+            if (byType.TryGetValue(eventType, out var row))
+            {
+                if (!row.PushEnabled)
+                {
+                    row.Update(row.InAppEnabled, row.EmailEnabled, pushEnabled: true);
+                }
+            }
+            else
+            {
+                db.NotificationPreferences.Add(NotificationPreference.Create(
+                    tenantId,
+                    userId,
+                    eventType,
+                    NotificationPreference.DefaultInAppEnabled,
+                    NotificationPreference.DefaultEmailEnabled,
+                    pushEnabled: true));
+            }
+        }
     }
 
     public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)

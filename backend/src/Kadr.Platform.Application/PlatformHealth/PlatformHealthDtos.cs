@@ -19,6 +19,7 @@ public static class PlatformHealthComponents
     public const string Database = "database";
     public const string Storage = "storage";
     public const string Email = "email";
+    public const string WebPush = "webpush";
 }
 
 public sealed record PlatformHealthComponentDto(

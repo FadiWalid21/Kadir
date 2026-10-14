@@ -1,28 +1,34 @@
 using System.Diagnostics;
 using Kadr.Platform.Application.Abstractions;
+using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Application.PlatformHealth;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Kadr.Infrastructure.Persistence.PlatformHealth;
 
 /// <summary>
 /// Real checks only: the API answering this request, a live database connection, and what the DI container
-/// wires for file storage and email. Storage and email have no probe port, so they report the provider kind
-/// instead of pretending to have tested delivery. Error details are never returned to the caller.
+/// wires for file storage, email, and web push. Storage/email/push have no probe port, so they report the
+/// provider kind instead of pretending to have tested delivery. Error details are never returned to the caller.
 /// </summary>
 public sealed class PlatformHealthService(
     KadrDbContext db,
     IFileStorage fileStorage,
     IEmailSender emailSender,
+    IPushNotificationSender pushSender,
+    IOptions<WebPushOptions> webPushOptions,
     IClock clock,
     ILogger<PlatformHealthService> logger) : IPlatformHealthService
 {
     private const string LocalStorageType = "LocalFileStorage";
     private const string LoggingEmailType = "LoggingEmailSender";
     private const string BrevoEmailType = "BrevoEmailSender";
+    private const string WebPushSenderType = "WebPushNotificationSender";
+    private const string LoggingPushType = "LoggingPushNotificationSender";
     private static readonly TimeSpan DatabaseTimeout = TimeSpan.FromSeconds(3);
 
     public async Task<PlatformHealthDto> CheckAsync(CancellationToken cancellationToken = default)
@@ -33,6 +39,7 @@ public sealed class PlatformHealthService(
             await CheckDatabaseAsync(cancellationToken).ConfigureAwait(false),
             DescribeStorage(),
             DescribeEmail(),
+            DescribeWebPush(),
         };
 
         var overall = components.Any(c => c.Status == PlatformHealthStatuses.Down)
@@ -118,5 +125,49 @@ public sealed class PlatformHealthService(
                 typeName,
                 "not_probed",
                 null);
+    }
+
+    private PlatformHealthComponentDto DescribeWebPush()
+    {
+        var options = webPushOptions.Value;
+        var typeName = pushSender.GetType().Name;
+
+        if (!options.Enabled)
+        {
+            return new PlatformHealthComponentDto(
+                PlatformHealthComponents.WebPush,
+                PlatformHealthStatuses.Degraded,
+                "disabled",
+                "webpush_disabled",
+                null);
+        }
+
+        if (typeName == LoggingPushType || !options.CanSend)
+        {
+            return new PlatformHealthComponentDto(
+                PlatformHealthComponents.WebPush,
+                PlatformHealthStatuses.Degraded,
+                "logging",
+                "not_configured",
+                null);
+        }
+
+        if (typeName == WebPushSenderType)
+        {
+            return new PlatformHealthComponentDto(
+                PlatformHealthComponents.WebPush,
+                PlatformHealthStatuses.Configured,
+                "webpush",
+                "not_probed",
+                null);
+        }
+
+        // Test hosts and alternate senders that are wired with keys present.
+        return new PlatformHealthComponentDto(
+            PlatformHealthComponents.WebPush,
+            PlatformHealthStatuses.Configured,
+            typeName,
+            "not_probed",
+            null);
     }
 }
