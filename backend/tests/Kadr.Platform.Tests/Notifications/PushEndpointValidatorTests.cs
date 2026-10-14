@@ -55,6 +55,7 @@ public sealed class NotificationLinkPathsTests
     [InlineData("/leave/me", true)]
     [InlineData("/attendance/corrections", true)]
     [InlineData("/notifications", true)]
+    [InlineData("/settings/invitations", true)]
     [InlineData("/", true)]
     [InlineData("https://evil.test/x", false)]
     [InlineData("//evil.test", false)]

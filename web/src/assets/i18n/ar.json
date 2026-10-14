@@ -2140,7 +2140,8 @@
     "events": {
       "workflow.approval_required": "طلب بانتظار موافقتك",
       "workflow.request_approved": "تمت الموافقة على طلبك",
-      "workflow.request_rejected": "تم رفض طلبك"
+      "workflow.request_rejected": "تم رفض طلبك",
+      "invitation.accepted": "تم قبول الدعوة"
     }
   },
   "reports": {

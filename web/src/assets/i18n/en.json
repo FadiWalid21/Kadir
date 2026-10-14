@@ -2140,7 +2140,8 @@
     "events": {
       "workflow.approval_required": "Approval required",
       "workflow.request_approved": "Request approved",
-      "workflow.request_rejected": "Request rejected"
+      "workflow.request_rejected": "Request rejected",
+      "invitation.accepted": "Invitation accepted"
     }
   },
   "reports": {

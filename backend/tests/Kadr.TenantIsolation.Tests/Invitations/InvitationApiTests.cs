@@ -60,10 +60,32 @@ public sealed class InvitationApiTests(RegisterApiFactory factory)
         Assert.Equal("Invite Co", validBody.CompanyName);
         Assert.Equal(SystemRoleNames.HrAdmin, validBody.RoleName);
 
+        Guid ownerUserId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            var row = await db.Invitations.AsNoTracking().SingleAsync();
+            Assert.NotNull(row.CreatedBy);
+            ownerUserId = row.CreatedBy!.Value;
+        }
+
         var accept = await factory.CreateCookieClient().PostAsJsonAsync(
             "/api/v1/auth/accept-invitation",
             new AcceptInvitationRequest(raw!, "New Hire", Password));
         Assert.Equal(HttpStatusCode.NoContent, accept.StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            var note = await db.Notifications.AsNoTracking()
+                .SingleAsync(n => n.RecipientUserId == ownerUserId && n.Type == "invitation.accepted");
+            Assert.Equal("/settings/invitations", note.LinkPath);
+            Assert.Contains("New Hire", note.BodyEn, StringComparison.Ordinal);
+        }
 
         var login = await factory.CreateCookieClient().PostAsJsonAsync(
             "/api/v1/auth/login",
@@ -75,6 +97,45 @@ public sealed class InvitationApiTests(RegisterApiFactory factory)
             new ValidateInvitationRequest(raw!));
         var usedBody = await used.Content.ReadFromJsonAsync<ValidateInvitationResponse>(JsonOptions);
         Assert.Equal("used", usedBody!.Status);
+    }
+
+    [Fact]
+    public async Task Accept_skips_inviter_notification_when_CreatedBy_null()
+    {
+        await factory.ResetDatabaseAsync();
+        var owner = await RegisterOwnerAsync("Invite NoSender Co", "invite-nosender@example.com");
+        var client = AuthedClient(owner.Token);
+        factory.Emails.Clear();
+        await client.PostAsJsonAsync(
+            "/api/v1/users/invite",
+            new InviteUserRequest(
+                "orphan.hire@example.com",
+                await RoleIdAsync(owner.TenantId, SystemRoleNames.Employee)));
+        var raw = factory.Emails.ExtractLastInvitationToken();
+        Assert.False(string.IsNullOrWhiteSpace(raw));
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            await db.Invitations.ExecuteUpdateAsync(s => s.SetProperty(i => i.CreatedBy, (Guid?)null));
+        }
+
+        var accept = await factory.CreateCookieClient().PostAsJsonAsync(
+            "/api/v1/auth/accept-invitation",
+            new AcceptInvitationRequest(raw!, "Orphan Hire", Password));
+        Assert.Equal(HttpStatusCode.NoContent, accept.StatusCode);
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            var ambient = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            ambient.Set(owner.TenantId);
+            Assert.Equal(
+                0,
+                await db.Notifications.CountAsync(n => n.Type == "invitation.accepted"));
+        }
     }
 
     [Fact]

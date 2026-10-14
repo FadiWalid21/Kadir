@@ -103,7 +103,7 @@ public sealed class NotificationApiTests(RegisterApiFactory factory)
             "/api/v1/notifications/preferences",
             JsonOptions);
         Assert.NotNull(prefs);
-        Assert.Equal(3, prefs.Items.Count);
+        Assert.Equal(NotificationEventTypes.All.Count, prefs.Items.Count);
         Assert.All(prefs.Items, i => Assert.True(i.InAppEnabled));
         Assert.All(prefs.Items, i => Assert.True(i.EmailEnabled));
         Assert.All(prefs.Items, i => Assert.False(i.PushEnabled));
@@ -115,6 +115,7 @@ public sealed class NotificationApiTests(RegisterApiFactory factory)
                 new NotificationPreferenceDto(NotificationEventTypes.WorkflowApprovalRequired, true, false, true),
                 new NotificationPreferenceDto(NotificationEventTypes.WorkflowRequestApproved, true, true, false),
                 new NotificationPreferenceDto(NotificationEventTypes.WorkflowRequestRejected, false, false, false),
+                new NotificationPreferenceDto(NotificationEventTypes.InvitationAccepted, true, true, false),
             ]));
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
         var updated = (await update.Content.ReadFromJsonAsync<NotificationPreferencesDto>(JsonOptions))!;

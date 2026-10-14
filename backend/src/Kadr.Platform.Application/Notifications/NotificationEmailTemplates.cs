@@ -29,6 +29,7 @@ public static class NotificationEmailTemplates
     private static string CallToAction(string eventType, bool arabic) => eventType switch
     {
         NotificationEventTypes.WorkflowApprovalRequired => arabic ? "مراجعة الطلب" : "Review the request",
+        NotificationEventTypes.InvitationAccepted => arabic ? "عرض الدعوات" : "View invitations",
         _ => arabic ? "عرض طلباتي" : "View my requests",
     };
 

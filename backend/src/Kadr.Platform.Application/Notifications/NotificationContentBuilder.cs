@@ -52,6 +52,17 @@ public static class NotificationContentBuilder
             hasReason ? $"Your {en} was rejected. Reason: {rejectReason}" : $"Your {en} was rejected.");
     }
 
+    public static NotificationContent InvitationAccepted(string inviteeEmail, string inviteeFullName)
+    {
+        var name = string.IsNullOrWhiteSpace(inviteeFullName) ? inviteeEmail : inviteeFullName.Trim();
+        return new NotificationContent(
+            NotificationEventTypes.InvitationAccepted,
+            "تم قبول الدعوة",
+            "Invitation accepted",
+            $"{name} قبل دعوتك وانضم إلى الشركة.",
+            $"{name} accepted your invitation and joined the company.");
+    }
+
     private static (string Ar, string En) RequestLabel(WorkflowRequestType requestType) => requestType switch
     {
         WorkflowRequestType.Leave => ("طلب الإجازة", "leave request"),

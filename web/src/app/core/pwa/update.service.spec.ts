@@ -11,12 +11,16 @@ describe('UpdateService', () => {
   let activateUpdate: ReturnType<typeof vi.fn>;
   let checkForUpdate: ReturnType<typeof vi.fn>;
   let reload: ReturnType<typeof vi.fn>;
+  let addEventListener: ReturnType<typeof vi.fn>;
+  let viewAddEventListener: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     versionUpdates = new Subject();
     activateUpdate = vi.fn().mockResolvedValue(true);
     checkForUpdate = vi.fn().mockResolvedValue(true);
     reload = vi.fn();
+    addEventListener = vi.fn();
+    viewAddEventListener = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
@@ -34,10 +38,12 @@ describe('UpdateService', () => {
         {
           provide: DOCUMENT,
           useValue: {
-            ...document,
             visibilityState: 'visible',
-            addEventListener: document.addEventListener.bind(document),
-            defaultView: { location: { reload } },
+            addEventListener,
+            defaultView: {
+              location: { reload },
+              addEventListener: viewAddEventListener,
+            },
           },
         },
       ],
@@ -62,5 +68,20 @@ describe('UpdateService', () => {
     expect(service.hasUnsavedChanges()).toBe(false);
     dirty.register('form-1');
     expect(service.hasUnsavedChanges()).toBe(true);
+  });
+
+  it('checks for updates on startup, visibility restore, and online', () => {
+    const service = TestBed.inject(UpdateService);
+    expect(checkForUpdate).toHaveBeenCalled();
+    expect(addEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
+    expect(viewAddEventListener).toHaveBeenCalledWith('online', expect.any(Function));
+
+    const before = checkForUpdate.mock.calls.length;
+    service.handleVisibilityForTests();
+    expect(checkForUpdate.mock.calls.length).toBeGreaterThan(before);
+
+    const mid = checkForUpdate.mock.calls.length;
+    service.handleOnlineForTests();
+    expect(checkForUpdate.mock.calls.length).toBeGreaterThan(mid);
   });
 });

@@ -1,13 +1,15 @@
+import { DOCUMENT } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { problemDetailsFromError } from '../../core/api/auth.api';
 import { InvitationListItem } from '../../core/api/users.api';
@@ -26,6 +28,8 @@ import { RadioCardComponent } from '../../shared/ui/radio-card/radio-card.compon
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { UsersStore } from './users.store';
+
+const INVITES_POLL_MS = 30_000;
 
 @Component({
   selector: 'kadr-invitations-settings-page',
@@ -217,6 +221,9 @@ export class InvitationsSettingsPage implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly i18n = inject(TranslocoService);
   private readonly dirtyForms = inject(DirtyFormRegistry);
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly inviteOpen = signal(false);
   protected readonly inviteEmail = signal('');
@@ -247,6 +254,42 @@ export class InvitationsSettingsPage implements OnInit {
     const firstAssignable = this.store.roles().find((r) => r.name !== 'Owner');
     if (firstAssignable) {
       this.inviteRoleId.set(firstAssignable.id);
+    }
+    this.document.addEventListener('visibilitychange', this.onVisibility);
+    this.startPoll();
+    this.destroyRef.onDestroy(() => {
+      this.document.removeEventListener('visibilitychange', this.onVisibility);
+      this.stopPoll();
+    });
+  }
+
+  /** Test hook: simulate tab becoming visible. */
+  handleVisibilityForTests(): void {
+    this.onVisibility();
+  }
+
+  private readonly onVisibility = (): void => {
+    if (this.document.visibilityState === 'visible') {
+      void this.store.loadInvitations();
+      this.startPoll();
+    } else {
+      this.stopPoll();
+    }
+  };
+
+  private startPoll(): void {
+    this.stopPoll();
+    this.pollTimer = setInterval(() => {
+      if (this.document.visibilityState === 'visible') {
+        void this.store.loadInvitations();
+      }
+    }, INVITES_POLL_MS);
+  }
+
+  private stopPoll(): void {
+    if (this.pollTimer !== null) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
   }
 
