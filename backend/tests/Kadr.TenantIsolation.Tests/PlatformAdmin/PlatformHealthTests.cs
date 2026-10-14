@@ -47,6 +47,7 @@ public sealed class PlatformHealthTests : IAsyncLifetime
         var database = Component(health, PlatformHealthComponents.Database);
         var storage = Component(health, PlatformHealthComponents.Storage);
         var email = Component(health, PlatformHealthComponents.Email);
+        var webPush = Component(health, PlatformHealthComponents.WebPush);
 
         Assert.Equal(PlatformHealthStatuses.Ok, api.Status);
         Assert.Equal(PlatformHealthStatuses.Ok, database.Status);
@@ -58,6 +59,7 @@ public sealed class PlatformHealthTests : IAsyncLifetime
         Assert.Equal(PlatformHealthStatuses.Degraded, storage.Status);
         Assert.Equal("local", storage.Provider);
         Assert.Equal(PlatformHealthStatuses.Configured, email.Status);
+        Assert.Equal(PlatformHealthStatuses.Configured, webPush.Status);
         Assert.Equal(PlatformHealthStatuses.Degraded, health.Status);
         Assert.True(health.CheckedAt > DateTimeOffset.UtcNow.AddMinutes(-5));
     }

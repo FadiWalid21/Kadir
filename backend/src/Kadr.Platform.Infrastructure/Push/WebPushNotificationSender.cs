@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Notifications;
 using Kadr.SharedKernel.Abstractions;
 using Lib.Net.Http.WebPush.Authentication;
@@ -19,17 +20,20 @@ public sealed class WebPushNotificationSender : IPushNotificationSender, IDispos
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly WebPushOptions _options;
+    private readonly string _iconUrl;
     private readonly ILogger<WebPushNotificationSender> _logger;
     private readonly LibPushServiceClient _client;
     private readonly VapidAuthentication? _vapid;
 
     public WebPushNotificationSender(
         IOptions<WebPushOptions> options,
+        IOptions<AppOptions> appOptions,
         IHttpClientFactory httpClientFactory,
         ILogger<WebPushNotificationSender> logger)
     {
         _options = options.Value;
         _logger = logger;
+        _iconUrl = ResolveIconUrl(appOptions.Value.PublicWebBaseUrl);
         _client = new LibPushServiceClient(httpClientFactory.CreateClient(nameof(WebPushNotificationSender)))
         {
             AutoRetryAfter = false,
@@ -64,8 +68,8 @@ public sealed class WebPushNotificationSender : IPushNotificationSender, IDispos
                 {
                     title = message.Title,
                     body = message.Body,
-                    icon = "/icons/icon-192.png",
-                    badge = "/icons/icon-192.png",
+                    icon = _iconUrl,
+                    badge = _iconUrl,
                     dir = message.Dir,
                     lang = message.Lang,
                     tag = message.Tag,
@@ -130,5 +134,16 @@ public sealed class WebPushNotificationSender : IPushNotificationSender, IDispos
     public void Dispose()
     {
         _vapid?.Dispose();
+    }
+
+    private static string ResolveIconUrl(string? publicWebBaseUrl)
+    {
+        const string relative = "/brand/icon-192.png";
+        if (string.IsNullOrWhiteSpace(publicWebBaseUrl))
+        {
+            return relative;
+        }
+
+        return $"{publicWebBaseUrl.TrimEnd('/')}{relative}";
     }
 }

@@ -201,6 +201,8 @@ export class PlatformHealthPage implements OnInit {
         return 'inbox';
       case 'email':
         return 'inbox';
+      case 'webpush':
+        return 'bell';
       default:
         return 'info';
     }

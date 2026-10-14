@@ -1393,7 +1393,7 @@
     },
     "health": {
       "title": "System health",
-      "subtitle": "Live checks for API, database, storage, and email.",
+      "subtitle": "Live checks for API, database, storage, email, and web push.",
       "refresh": "Re-check",
       "checkedAt": "Checked at",
       "serverTime": "Server time",
@@ -1415,7 +1415,8 @@
         "api": "API",
         "database": "Database",
         "storage": "File storage",
-        "email": "Email"
+        "email": "Email",
+        "webpush": "Web push"
       }
     }
   },
@@ -2135,6 +2136,7 @@
     "pushPromptRegion": "Enable browser notifications",
     "pushPromptTitle": "Stay informed on the go",
     "pushPromptBody": "Get a browser alert when a request needs your approval — even if Kadr is closed.",
+    "pushPromptBodyFailed": "Could not enable notifications. The server may not have Web Push configured, or the browser blocked permission. Try again from Account → Notifications, or ask your admin to set WebPush on the API host.",
     "pushPromptDismiss": "Dismiss",
     "pushPromptLater": "Not now",
     "emptyTitle": "No notifications",

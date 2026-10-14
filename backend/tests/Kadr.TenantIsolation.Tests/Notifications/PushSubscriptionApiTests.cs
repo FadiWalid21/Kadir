@@ -1,9 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Kadr.Infrastructure.Persistence;
+using Kadr.Infrastructure.Persistence.Notifications;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Domain.Notifications;
+using Kadr.Platform.Domain.Workflows;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Tenancy;
@@ -268,5 +271,51 @@ public sealed class PushSubscriptionApiTests(RegisterApiFactory factory)
         Assert.Equal(HttpStatusCode.NoContent, test.StatusCode);
         Assert.NotNull(factory.Push.LastMessage);
         Assert.Equal("/notifications", factory.Push.LastMessage!.LinkPath);
+    }
+
+    [Fact]
+    public async Task Upsert_enables_push_preferences_so_creator_queues_pending()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var account = await helper.RegisterVerifiedAsync("Push Prefs Co", "push-prefs@example.com");
+        var session = await helper.LoginSessionAsync(account.Email, AuthTestHelper.Password, account.Slug);
+        var client = helper.Authed(session.AccessToken);
+        var userId = await helper.WithTenantAsync(account.TenantId, db =>
+            db.Users.AsNoTracking().Where(u => u.Email == account.Email.ToLowerInvariant()).Select(u => u.Id).SingleAsync());
+
+        var upsert = await client.PostAsJsonAsync(
+            "/api/v1/me/push-subscriptions",
+            new UpsertPushSubscriptionRequest(FcmEndpoint, new PushKeysDto("p256dh", "auth"), "Device"));
+        Assert.Equal(HttpStatusCode.OK, upsert.StatusCode);
+
+        var prefs = await helper.WithTenantAsync(account.TenantId, db =>
+            db.NotificationPreferences.AsNoTracking().Where(p => p.UserId == userId).ToListAsync());
+        Assert.Equal(NotificationEventTypes.All.Count, prefs.Count);
+        Assert.All(prefs, p => Assert.True(p.PushEnabled));
+
+        await helper.WithTenantAsync(account.TenantId, async db =>
+        {
+            await NotificationCreator.CreateAsync(
+                db,
+                account.TenantId,
+                userId,
+                NotificationContentBuilder.ApprovalRequired(
+                    WorkflowRequestType.Leave,
+                    "أحمد",
+                    "Ahmed"),
+                "/leave/approvals",
+                null,
+                CancellationToken.None);
+            return 0;
+        });
+
+        var pushDelivery = await helper.WithTenantAsync(account.TenantId, db =>
+            db.NotificationDeliveries.AsNoTracking()
+                .Where(d => d.Channel == NotificationChannel.Push)
+                .OrderByDescending(d => d.CreatedAt)
+                .FirstAsync());
+        Assert.Equal(NotificationDeliveryStatus.Pending, pushDelivery.Status);
+        Assert.Null(pushDelivery.LastError);
     }
 }
