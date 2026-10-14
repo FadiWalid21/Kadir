@@ -27,7 +27,7 @@ describe('manifest.webmanifest', () => {
     expect(manifest.short_name).toBe('كادر');
     expect(manifest.lang).toBe('ar');
     expect(manifest.dir).toBe('rtl');
-    expect(manifest.start_url).toBe('/');
+    expect(manifest.start_url).toBe('/home');
     expect(manifest.scope).toBe('/');
     expect(manifest.display).toBe('standalone');
 

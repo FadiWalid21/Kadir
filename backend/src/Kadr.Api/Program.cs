@@ -156,6 +156,7 @@ try
     var mePushLimit = builder.Configuration.GetValue("RateLimiting:MePushPermitLimit", 30);
     var mePushTestLimit = builder.Configuration.GetValue("RateLimiting:MePushTestPermitLimit", 5);
     var attendancePunchLimit = builder.Configuration.GetValue("RateLimiting:AttendancePunchPermitLimit", 2);
+    var publicPlansLimit = builder.Configuration.GetValue("RateLimiting:PublicPlansPermitLimit", 60);
 
     builder.Services.AddRateLimiter(options =>
     {
@@ -166,6 +167,15 @@ try
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = registerLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        options.AddPolicy("public-plans", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = publicPlansLimit,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0,
                 }));
@@ -376,8 +386,7 @@ try
     app.MapSalaryImportEndpoints();
     app.MapOvertimeMultipliersEndpoints();
     app.MapTemplatesEndpoints();
-
-
+    app.MapPublicPlansEndpoints();
 
     app.MapTenantTemplatesEndpoints();
     app.MapRolesEndpoints();

@@ -88,10 +88,16 @@
   --install-banner-height: 2.75rem;
   --safe-area-top: env(safe-area-inset-top, 0px);
 
+  /* ===== INVERSE (landing CTA band) ===== */
+  --bg-inverse: var(--brand-800);
+  --fg-on-inverse: var(--on-brand);
+
   /* ===== MOTION ===== */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --dur-fast: 120ms;
   --dur: 180ms;
+  --dur-reveal: 500ms;
+  --dur-reveal-long: 700ms;
 }
 
 :root[data-density='compact'] {
@@ -116,6 +122,8 @@
   --accent-soft-text: color-mix(in oklab, var(--brand-base) 45%, white);
   --text-on-accent: #0B1012;
   --text-on-ink: #E8EAED;
+  --bg-inverse: color-mix(in oklab, var(--brand-base) 55%, #0B1012);
+  --fg-on-inverse: #E8EAED;
   --success-soft: #16301F;
   --warning-soft: #33250F;
   --danger-soft: #3A1B18;

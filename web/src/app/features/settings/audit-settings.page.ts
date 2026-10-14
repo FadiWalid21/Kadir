@@ -54,7 +54,7 @@ type DatePreset = 'today' | '7d' | '30d' | 'custom';
         [title]="'settings.audit.noPermissionTitle' | transloco"
         [description]="'settings.audit.noPermissionBody' | transloco"
       >
-        <a routerLink="/">
+      <a routerLink="/home">
           <kadr-button variant="secondary" type="button">
             {{ 'settings.audit.backHome' | transloco }}
           </kadr-button>

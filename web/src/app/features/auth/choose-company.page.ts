@@ -216,7 +216,7 @@ export class ChooseCompanyPage implements OnInit {
     try {
       await this.auth.selectGoogleTenant(current.selectionToken, company.tenantId);
       this.selection.clear();
-      await this.router.navigateByUrl('/');
+      await this.router.navigateByUrl('/home');
     } catch (error) {
       const code = problemDetailsFromError(error)?.code;
       this.rowError.set({

@@ -38,7 +38,10 @@ export type IconName =
   | 'wifi-off'
   | 'refresh'
   | 'share'
-  | 'plus-square';
+  | 'plus-square'
+  | 'pause'
+  | 'play'
+  | 'map-pin';
 
 /** Inline stroke icons (Lucide-like). Logical flip via rtl-flip class when needed. */
 @Component({
@@ -252,6 +255,17 @@ export type IconName =
           <rect width="18" height="18" x="3" y="3" rx="2" />
           <path d="M12 8v8" />
           <path d="M8 12h8" />
+        }
+        @case ('pause') {
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        }
+        @case ('play') {
+          <path d="M7 4.5v15l12-7.5z" />
+        }
+        @case ('map-pin') {
+          <path d="M12 21s-7-5.3-7-11a7 7 0 1 1 14 0c0 5.7-7 11-7 11z" />
+          <circle cx="12" cy="10" r="2.5" />
         }
       }
     </svg>

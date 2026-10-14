@@ -47,7 +47,7 @@ export class GoogleSignInFlow {
       const outcome = await this.auth.loginWithGoogle(credential);
       switch (outcome.kind) {
         case 'signed_in':
-          await this.router.navigateByUrl('/');
+          await this.router.navigateByUrl('/home');
           return { kind: 'signed_in' };
         case 'tenant_selection':
           this.selection.set({
