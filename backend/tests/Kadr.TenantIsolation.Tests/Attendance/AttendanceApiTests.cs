@@ -291,6 +291,80 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Proxy_punch_with_explicit_punched_at_is_stored()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Proxy Time Co", "proxy-time@example.com");
+        var session = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var client = helper.Authed(session.AccessToken);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف وقت",
+                fullNameEn = "Timed Employee",
+                hireDate = "2024-01-15",
+                status = "Active",
+            });
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var emp = (await create.Content.ReadFromJsonAsync<EmployeeDetailDto>(JsonOptions))!;
+
+        var punchedAt = DateTimeOffset.UtcNow.AddHours(-3);
+        punchedAt = new DateTimeOffset(
+            punchedAt.Year,
+            punchedAt.Month,
+            punchedAt.Day,
+            punchedAt.Hour,
+            punchedAt.Minute,
+            0,
+            TimeSpan.Zero);
+
+        var tooOld = await client.PostAsJsonAsync(
+            "/api/v1/attendance/proxy-punch",
+            new
+            {
+                employeeId = emp.Id,
+                reason = "Backdated too far",
+                clientRequestId = Guid.NewGuid(),
+                punchedAt = DateTimeOffset.UtcNow.AddDays(-45),
+            });
+        Assert.Equal(HttpStatusCode.BadRequest, tooOld.StatusCode);
+
+        var ok = await client.PostAsJsonAsync(
+            "/api/v1/attendance/proxy-punch",
+            new
+            {
+                employeeId = emp.Id,
+                reason = "Manual time entry",
+                clientRequestId = Guid.NewGuid(),
+                punchedAt,
+            });
+        var body = await ok.Content.ReadAsStringAsync();
+        Assert.True(ok.IsSuccessStatusCode, body);
+        var punched = JsonSerializer.Deserialize<PunchResultDto>(body, JsonOptions)!;
+        Assert.Equal(punchedAt, punched.PunchedAt.ToUniversalTime());
+
+        var workDate = await helper.WithTenantAsync(a.TenantId, db =>
+            db.AttendancePunches.AsNoTracking()
+                .Where(p => p.Id == punched.PunchId)
+                .Select(p => p.WorkDate)
+                .SingleAsync());
+
+        var dateQuery = workDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var boardResponse = await client.GetAsync(
+            $"/api/v1/attendance/today?page=1&pageSize=20&date={dateQuery}");
+        var boardBody = await boardResponse.Content.ReadAsStringAsync();
+        Assert.True(boardResponse.IsSuccessStatusCode, boardBody);
+        var board = JsonSerializer.Deserialize<AttendanceBoardDto>(boardBody, JsonOptions)!;
+        Assert.Equal(workDate, board.Date);
+        var row = Assert.Single(board.Items, r => r.EmployeeId == emp.Id);
+        Assert.NotNull(row.FirstInAt);
+        Assert.Equal(punchedAt, row.FirstInAt!.Value.ToUniversalTime());
+    }
+
+    [Fact]
     public async Task Proxy_punch_without_shift_appears_on_today_board()
     {
         await factory.ResetDatabaseAsync();

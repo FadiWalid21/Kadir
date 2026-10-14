@@ -161,6 +161,14 @@ export class LeaveApi {
     return firstValueFrom(this.http.post<LeaveRequest>(`${this.base}/leave/requests`, body));
   }
 
+  uploadLeaveAttachment(file: File): Promise<{ fileId: string }> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return firstValueFrom(
+      this.http.post<{ fileId: string }>(`${this.base}/leave/attachments`, form),
+    );
+  }
+
   myLeaveRequests(status?: string, page = 1, pageSize = 20): Promise<{
     items: LeaveRequest[];
     page: number;

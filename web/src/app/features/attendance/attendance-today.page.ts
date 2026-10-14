@@ -275,6 +275,32 @@ type PageState = 'loading' | 'ready' | 'error';
     >
       @if (proxyTarget(); as target) {
         <p class="mb-3 text-sm font-medium text-fg">{{ displayName(target) }}</p>
+        <div class="mb-3 grid gap-3 sm:grid-cols-2">
+          <label class="flex flex-col gap-1 text-start">
+            <span class="text-sm font-medium text-fg">{{ 'attendance.today.proxyDate' | transloco }}</span>
+            <input
+              type="date"
+              class="h-control rounded-md border border-line bg-surface px-3 text-sm text-fg"
+              [value]="proxyDate()"
+              (input)="proxyDate.set($any($event.target).value); proxyDateError.set(undefined)"
+            />
+            @if (proxyDateError(); as err) {
+              <span class="text-xs text-danger" role="alert">{{ err | transloco }}</span>
+            }
+          </label>
+          <label class="flex flex-col gap-1 text-start">
+            <span class="text-sm font-medium text-fg">{{ 'attendance.today.proxyTime' | transloco }}</span>
+            <input
+              type="time"
+              class="h-control rounded-md border border-line bg-surface px-3 text-sm text-fg"
+              [value]="proxyTime()"
+              (input)="proxyTime.set($any($event.target).value); proxyTimeError.set(undefined)"
+            />
+            @if (proxyTimeError(); as err) {
+              <span class="text-xs text-danger" role="alert">{{ err | transloco }}</span>
+            }
+          </label>
+        </div>
         <label class="flex flex-col gap-1 text-start">
           <span class="text-sm font-medium text-fg">{{ 'attendance.today.proxyReason' | transloco }}</span>
           <span class="text-xs text-fg-muted">{{ 'attendance.today.proxyReasonHint' | transloco }}</span>
@@ -321,7 +347,11 @@ export class AttendanceTodayPage implements OnInit {
     this.auth.hasPermission(PermissionCodes.AttendanceEdit),
   );
   protected readonly proxyTarget = signal<AttendanceBoardRow | null>(null);
+  protected readonly proxyDate = signal('');
+  protected readonly proxyTime = signal('');
   protected readonly proxyReason = signal('');
+  protected readonly proxyDateError = signal<string | undefined>(undefined);
+  protected readonly proxyTimeError = signal<string | undefined>(undefined);
   protected readonly proxyReasonError = signal<string | undefined>(undefined);
   protected readonly proxySaving = signal(false);
   protected statusFilter = '';
@@ -463,13 +493,24 @@ export class AttendanceTodayPage implements OnInit {
 
   protected openProxy(row: AttendanceBoardRow): void {
     this.proxyTarget.set(row);
+    this.proxyDate.set(this.dateIso());
+    const now = new Date();
+    this.proxyTime.set(
+      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    );
     this.proxyReason.set('');
+    this.proxyDateError.set(undefined);
+    this.proxyTimeError.set(undefined);
     this.proxyReasonError.set(undefined);
   }
 
   protected closeProxy(): void {
     this.proxyTarget.set(null);
+    this.proxyDate.set('');
+    this.proxyTime.set('');
     this.proxyReason.set('');
+    this.proxyDateError.set(undefined);
+    this.proxyTimeError.set(undefined);
     this.proxyReasonError.set(undefined);
     this.proxySaving.set(false);
   }
@@ -479,17 +520,40 @@ export class AttendanceTodayPage implements OnInit {
     if (!target || this.proxySaving()) {
       return;
     }
+    const date = this.proxyDate().trim();
+    const time = this.proxyTime().trim();
     const reason = this.proxyReason().trim();
+    let valid = true;
+    if (!date) {
+      this.proxyDateError.set('attendance.today.proxyDateRequired');
+      valid = false;
+    }
+    if (!time) {
+      this.proxyTimeError.set('attendance.today.proxyTimeRequired');
+      valid = false;
+    }
     if (!reason) {
       this.proxyReasonError.set('attendance.today.proxyReasonRequired');
+      valid = false;
+    }
+    if (!valid) {
       return;
     }
+
+    const local = new Date(`${date}T${time.length === 5 ? `${time}:00` : time}`);
+    if (Number.isNaN(local.getTime())) {
+      this.proxyDateError.set('attendance.today.proxyDateRequired');
+      return;
+    }
+    const punchedAt = local.toISOString();
+
     this.proxySaving.set(true);
     try {
       const result = await this.api.proxyPunch({
         employeeId: target.employeeId,
         reason,
         clientRequestId: crypto.randomUUID(),
+        punchedAt,
       });
       this.toast.show(
         this.transloco.translate('attendance.today.proxySuccess', { kind: result.kind }),

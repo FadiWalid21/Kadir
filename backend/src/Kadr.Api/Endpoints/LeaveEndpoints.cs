@@ -48,6 +48,12 @@ public static class LeaveEndpoints
             .RequireFeature(FeatureKeys.Leave)
             .WithName("LeaveCreateRequest");
 
+        app.MapPost("/api/v1/leave/attachments", UploadLeaveAttachmentAsync)
+            .RequireAuthorization(PermissionCodes.LeaveRequest)
+            .RequireFeature(FeatureKeys.Leave)
+            .DisableAntiforgery()
+            .WithName("LeaveUploadAttachment");
+
         app.MapGet("/api/v1/leave/requests/mine", ListMyLeaveAsync)
             .RequireAuthorization(PermissionCodes.LeaveReadOwn)
             .RequireFeature(FeatureKeys.Leave)
@@ -182,6 +188,34 @@ public static class LeaveEndpoints
             httpContext,
             await leave.CreateLeaveRequestAsync(request, cancellationToken).ConfigureAwait(false),
             localizer);
+
+    private static async Task<IResult> UploadLeaveAttachmentAsync(
+        HttpRequest request,
+        HttpContext httpContext,
+        ILeaveService leave,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        if (!request.HasFormContentType)
+        {
+            return Results.BadRequest();
+        }
+
+        var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
+        var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+        if (file is null || file.Length <= 0)
+        {
+            return Results.BadRequest();
+        }
+
+        await using var stream = file.OpenReadStream();
+        return ToResult(
+            httpContext,
+            await leave
+                .UploadLeaveAttachmentAsync(stream, file.FileName, file.ContentType, cancellationToken)
+                .ConfigureAwait(false),
+            localizer);
+    }
 
     private static async Task<IResult> ListMyLeaveAsync(
         HttpContext httpContext,
