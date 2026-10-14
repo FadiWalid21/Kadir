@@ -4,11 +4,14 @@ using Kadr.Identity.Domain.Invitations;
 using Kadr.Identity.Domain.Roles;
 using Kadr.Identity.Domain.Users;
 using Kadr.Infrastructure.Persistence.Auth;
+using Kadr.Infrastructure.Persistence.Notifications;
 using Kadr.Infrastructure.Persistence.Users;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Email;
 using Kadr.Platform.Application.Invitations;
+using Kadr.Platform.Application.Notifications;
 using Kadr.Platform.Application.Tenants;
+using Kadr.Platform.Domain.Notifications;
 using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Results;
@@ -399,6 +402,25 @@ public sealed class InvitationService(
             user.Id,
             null,
             JsonSerializer.Serialize(new { userId = user.Id, invitation.Email, invitation.RoleId, invitationId = invitation.Id }));
+
+        if (invitation.CreatedBy is { } inviterId && inviterId != Guid.Empty)
+        {
+            await NotificationCreator.CreateAsync(
+                    db,
+                    invitation.TenantId,
+                    inviterId,
+                    NotificationContentBuilder.InvitationAccepted(invitation.Email, request.FullName),
+                    NotificationLinkPaths.InvitationsSettings,
+                    JsonSerializer.Serialize(new
+                    {
+                        invitationId = invitation.Id,
+                        userId = user.Id,
+                        invitation.Email,
+                    }),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

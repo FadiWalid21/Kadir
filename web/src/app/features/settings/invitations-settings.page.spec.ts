@@ -59,4 +59,15 @@ describe('InvitationsSettingsPage', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toMatch(/Invitations|الدعوات/);
   });
+
+  it('reloads invitations when the tab becomes visible', async () => {
+    const store = TestBed.inject(UsersStore);
+    const loadInvitations = store.loadInvitations as ReturnType<typeof vi.fn>;
+    const fixture = TestBed.createComponent(InvitationsSettingsPage);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const callsBefore = loadInvitations.mock.calls.length;
+    fixture.componentInstance.handleVisibilityForTests();
+    expect(loadInvitations.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
 });

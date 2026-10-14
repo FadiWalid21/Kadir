@@ -6,7 +6,8 @@ import { DirtyFormRegistry } from '../forms/dirty-form.registry';
 
 export type UpdateNoticeState = 'hidden' | 'ready' | 'updating';
 
-const CHECK_INTERVAL_MS = 60 * 60 * 1000;
+/** Check often enough that a Vercel deploy is noticed within a few minutes. */
+const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class UpdateService {
@@ -17,6 +18,14 @@ export class UpdateService {
 
   private readonly stateSignal = signal<UpdateNoticeState>('hidden');
   private readonly dismissedSignal = signal(false);
+  private readonly onVisibility = (): void => {
+    if (this.document.visibilityState === 'visible') {
+      void this.checkForUpdate();
+    }
+  };
+  private readonly onOnline = (): void => {
+    void this.checkForUpdate();
+  };
 
   readonly state = this.stateSignal.asReadonly();
   readonly hasUnsavedChanges = this.dirty.hasDirty;
@@ -40,11 +49,8 @@ export class UpdateService {
       window.setInterval(() => void this.checkForUpdate(), CHECK_INTERVAL_MS);
     });
 
-    this.document.addEventListener('visibilitychange', () => {
-      if (this.document.visibilityState === 'visible') {
-        void this.checkForUpdate();
-      }
-    });
+    this.document.addEventListener('visibilitychange', this.onVisibility);
+    this.document.defaultView?.addEventListener('online', this.onOnline);
   }
 
   dismiss(): void {
@@ -78,6 +84,16 @@ export class UpdateService {
     } catch {
       this.stateSignal.set('ready');
     }
+  }
+
+  /** Test hook: simulate a visibility restore. */
+  handleVisibilityForTests(): void {
+    this.onVisibility();
+  }
+
+  /** Test hook: simulate coming back online. */
+  handleOnlineForTests(): void {
+    this.onOnline();
   }
 
   private async checkForUpdate(): Promise<void> {

@@ -5,12 +5,15 @@ namespace Kadr.Platform.Domain.Notifications;
 /// <summary>App-relative deep links for notification events.</summary>
 public static class NotificationLinkPaths
 {
+    public const string InvitationsSettings = "/settings/invitations";
+
     private static readonly HashSet<string> AllowedExact = new(StringComparer.Ordinal)
     {
         "/leave/approvals",
         "/leave/me",
         "/attendance/corrections",
         "/notifications",
+        InvitationsSettings,
         "/",
     };
 
