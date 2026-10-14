@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap URL needs LANDING_CANONICAL_BASE_URL when domain is confirmed (BRD §12).
+# Sitemap: /sitemap.xml

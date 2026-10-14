@@ -1038,6 +1038,7 @@
     "showToast": "Show toast",
     "stepper": "Stepper",
     "tabs": "Tabs",
+    "accordion": "Accordion",
     "drawer": "Drawer",
     "table": "Table",
     "openDrawer": "Open drawer",
@@ -2295,6 +2296,133 @@
       "toastFail": "Could not complete the action.",
       "toastRulesNotConfirmed": "Confirm payroll rules in Settings before locking a run.",
       "toastSecondApprover": "A different user must approve this run."
+    }
+  },
+  "landing": {
+    "skip": "Skip to content",
+    "meta": {
+      "title": "Kadr | HR for your team",
+      "description": "Employees, geofenced attendance, leave approvals, and self-service on your phone — Arabic first. 14-day free trial, no card."
+    },
+    "nav": {
+      "features": "Features",
+      "how": "How it works",
+      "industries": "Industries",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "login": "Sign in",
+      "menu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "cta": {
+      "primary": "Start your free trial",
+      "finalTitle": "Ready to organize your team?",
+      "finalBody": "Create your company in minutes. 14 days free, no card required."
+    },
+    "trust": {
+      "trial": "14-day free trial · no card",
+      "setup": "Usable account in under 5 minutes"
+    },
+    "hero": {
+      "title": "Attendance, leave, and your team — in one system",
+      "subtitle": "Employees, geofenced attendance, leave approvals, and self-service on your phone — Arabic first.",
+      "greeting": "Hello, {{name}}",
+      "clockIn": "Clock in",
+      "toastClockIn": "Clock-in recorded",
+      "mockAttendance": "Present today",
+      "mockPending": "Pending leave",
+      "mockApprove": "Approve",
+      "mockApproved": "Approved",
+      "mockDocAlert": "Document expiring soon",
+      "mockDocDays": "{{n}} days",
+      "insideGeofence": "Inside the area",
+      "pause": "Pause motion",
+      "play": "Play motion",
+      "employeeName": "Ahmed Hassan",
+      "leaveName": "Sara Ahmed",
+      "leaveType": "Annual",
+      "docName": "National ID"
+    },
+    "how": {
+      "title": "How Kadr works",
+      "subtitle": "Three clear steps from empty company to a working team.",
+      "step1Title": "Import your people",
+      "step1Body": "Upload a CSV, map columns, and review before commit.",
+      "step2Title": "Set attendance and leave",
+      "step2Body": "Branches, geofences, leave types, and approval paths.",
+      "step3Title": "Invite the team",
+      "step3Body": "Send invitations by email; employees open the PWA.",
+      "colName": "Name",
+      "colTitle": "Job title",
+      "colBranch": "Branch",
+      "inviteSent": "Invitation sent",
+      "installedApp": "Installed app"
+    },
+    "capabilities": {
+      "title": "Built for day-to-day HR",
+      "subtitle": "Only what we ship today — no vapor features.",
+      "geoTitle": "Geofenced attendance",
+      "geoBody": "Clock in at assigned work locations.",
+      "leaveTitle": "Leave and approvals",
+      "leaveBody": "Balances, requests, and a manager inbox.",
+      "docsTitle": "Employee documents",
+      "docsBody": "Expiry tracked in-app for HR.",
+      "essTitle": "Self-service on the phone",
+      "essBody": "Installable app for punches and requests.",
+      "payrollTitle": "Payroll",
+      "payrollBody": "Salary structure and monthly run: review, approve, and lock. Your company sets the rules.",
+      "hrTitle": "Core HR",
+      "hrBody": "Employees, org tree, roles, and branding.",
+      "payrollDraft": "Draft",
+      "payrollReview": "In review",
+      "payrollApproved": "Approved",
+      "payrollLocked": "Locked",
+      "deptOps": "Operations",
+      "deptHr": "HR",
+      "headcount": "{{n}}"
+    },
+    "industries": {
+      "title": "Industry templates",
+      "subtitle": "Start from a sector seed — customize after signup.",
+      "shifts": "Shifts",
+      "leaveTypes": "Leave types",
+      "documents": "Documents",
+      "jobTitles": "Job titles",
+      "retail": "Retail",
+      "clinic": "Clinic",
+      "factory": "Factory",
+      "construction": "Construction",
+      "office": "Office"
+    },
+    "pricing": {
+      "title": "Simple pricing",
+      "subtitle": "Choose flat tiers or per active employee. Switch anytime in the app.",
+      "flat": "Flat tier",
+      "perEmployee": "Per employee",
+      "indicative": "Prices are indicative until approved.",
+      "loadError": "Could not load plans. Try again later.",
+      "retry": "Retry",
+      "cap": "Up to {{cap}} employees",
+      "from": "From",
+      "minBilled": "Min. {{n}} billed"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "aria": "Landing FAQ",
+      "q1": "Do I need a card for the trial?",
+      "a1": "No. The trial is 14 days with no card.",
+      "q2": "Is Kadr Arabic-first?",
+      "a2": "Yes. Arabic RTL is the default; English is available.",
+      "q3": "Can employees use it on their phones?",
+      "a3": "Yes. Kadr is a Progressive Web App they can install.",
+      "q4": "What does payroll include today?",
+      "a4": "Salary structure and a monthly run with review, approve, and lock. Your company controls the rules. Loans, payslip PDFs, and bank files are not claimed here."
+    },
+    "footer": {
+      "tagline": "Arabic-first HR for growing teams.",
+      "contactEmail": "Email",
+      "contactWhatsapp": "WhatsApp",
+      "rights": "Kadr — product name pending trademark and domain check."
     }
   }
 }

@@ -9,6 +9,8 @@
   --color-subtle: var(--bg-subtle);
   --color-hover: var(--bg-hover);
   --color-ink: var(--bg-ink);
+  --color-inverse: var(--bg-inverse);
+  --color-on-inverse: var(--fg-on-inverse);
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-fg: var(--text-primary);

@@ -323,7 +323,7 @@ export class LoginPage implements OnInit {
     this.submitting.set(true);
     try {
       await this.auth.login(slug, email, password);
-      await this.router.navigateByUrl('/');
+      await this.router.navigateByUrl('/home');
     } catch (error) {
       this.formError.set(this.auth.loginErrorKey(error));
     } finally {

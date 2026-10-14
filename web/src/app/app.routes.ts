@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, landingGuard, permissionGuard } from './core/auth/auth.guard';
 import { PermissionCodes } from './core/auth/permission-codes';
 import { platformAuthGuard, platformGuestGuard } from './core/platform/platform-auth.guard';
 import { featureGuard } from './core/subscription/feature.guard';
@@ -99,13 +99,19 @@ export const routes: Routes = [
   },
   {
     path: '',
+    pathMatch: 'full',
+    canActivate: [landingGuard],
+    loadComponent: () =>
+      import('./features/landing/landing.page').then((m) => m.LandingPage),
+  },
+  {
+    path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell.layout').then((m) => m.ShellLayout),
     children: [
       {
-        path: '',
+        path: 'home',
         loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
-        pathMatch: 'full',
       },
       {
         path: 'account',

@@ -26,6 +26,7 @@ import { SelectComponent } from '../../shared/ui/select/select.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { StepperComponent } from '../../shared/ui/stepper/stepper.component';
 import { TableComponent } from '../../shared/ui/table/table.component';
+import { AccordionComponent, AccordionItem } from '../../shared/ui/accordion/accordion.component';
 import { TabsComponent } from '../../shared/ui/tabs/tabs.component';
 import { ToastHostComponent } from '../../shared/ui/toast/toast.component';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -51,6 +52,7 @@ const SWATCHES = [
   '--bg-app',
   '--bg-surface',
   '--bg-subtle',
+  '--bg-inverse',
   '--border',
   '--text-primary',
   '--text-secondary',
@@ -79,6 +81,7 @@ const SWATCHES = [
     IconComponent,
     StepperComponent,
     TabsComponent,
+    AccordionComponent,
     DrawerComponent,
     TableComponent,
     SelectComponent,
@@ -305,6 +308,13 @@ const SWATCHES = [
           <p class="mt-3 text-sm text-fg-2">{{ demoTabId() }}</p>
         </kadr-card>
 
+        <kadr-card [title]="'uiKit.accordion' | transloco">
+          <kadr-accordion
+            [items]="demoAccordion"
+            [ariaLabel]="'uiKit.accordion' | transloco"
+          />
+        </kadr-card>
+
         <kadr-card [title]="'uiKit.drawer' | transloco">
           <kadr-button variant="secondary" type="button" (click)="drawerOpen.set(true)">
             {{ 'uiKit.openDrawer' | transloco }}
@@ -480,6 +490,10 @@ export class UiKitPage {
     { id: 'one', label: '1' },
     { id: 'two', label: '2' },
     { id: 'three', label: '3' },
+  ];
+  protected readonly demoAccordion: AccordionItem[] = [
+    { id: 'a', title: 'One', body: 'First panel' },
+    { id: 'b', title: 'Two', body: 'Second panel' },
   ];
   protected readonly demoColumns = [
     { id: 'name', label: 'Name' },

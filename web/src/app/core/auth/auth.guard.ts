@@ -18,7 +18,18 @@ export const guestGuard: CanActivateFn = async () => {
   const router = inject(Router);
   await auth.restoreSession();
   if (auth.status() === 'authenticated') {
-    return router.createUrlTree(['/']);
+    return router.createUrlTree(['/home']);
+  }
+  return true;
+};
+
+/** Public `/` landing: guests stay; signed-in users go to the app home. */
+export const landingGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  await auth.restoreSession();
+  if (auth.status() === 'authenticated') {
+    return router.createUrlTree(['/home']);
   }
   return true;
 };

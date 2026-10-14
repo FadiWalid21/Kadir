@@ -11,7 +11,7 @@ import { ButtonComponent } from '../../shared/ui/button/button.component';
     <main class="flex min-h-dvh flex-col items-center justify-center gap-4 bg-app px-6 text-center">
       <h1 class="text-xl font-bold text-fg">{{ 'auth.forbiddenTitle' | transloco }}</h1>
       <p class="max-w-sm text-sm text-fg-2">{{ 'auth.forbiddenBody' | transloco }}</p>
-      <a routerLink="/">
+      <a routerLink="/home">
         <kadr-button variant="secondary" type="button">{{ 'auth.backHome' | transloco }}</kadr-button>
       </a>
     </main>

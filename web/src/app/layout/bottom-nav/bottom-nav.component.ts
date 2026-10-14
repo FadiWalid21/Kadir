@@ -22,7 +22,7 @@ interface MoreItem {
       [attr.aria-label]="'shell.bottomNav' | transloco"
     >
       <a
-        routerLink="/"
+        routerLink="/home"
         routerLinkActive="text-accent"
         [routerLinkActiveOptions]="{ exact: true }"
         class="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 py-2 text-xs text-fg-2 focus-visible:outline-none"

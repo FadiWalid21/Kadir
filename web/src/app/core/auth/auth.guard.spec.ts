@@ -49,7 +49,7 @@ describe('auth guards', () => {
     vi.mocked(auth.status).mockReturnValue('authenticated');
     const result = await TestBed.runInInjectionContext(() => guestGuard({} as never, {} as never));
     expect(result instanceof UrlTree).toBe(true);
-    expect(router.serializeUrl(result as UrlTree)).toBe('/');
+    expect(router.serializeUrl(result as UrlTree)).toBe('/home');
   });
 
   it('guestGuard allows anonymous users on register', async () => {

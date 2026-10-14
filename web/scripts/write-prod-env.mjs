@@ -22,9 +22,16 @@ if (!raw) {
 
 const apiBaseUrl = raw.endsWith('/api/v1') ? raw : `${raw}/api/v1`;
 
+const landingCanonicalBaseUrl = (process.env.LANDING_CANONICAL_BASE_URL || '').trim().replace(/\/+$/, '');
+const landingContactEmail = (process.env.LANDING_CONTACT_EMAIL || '').trim();
+const landingContactWhatsapp = (process.env.LANDING_CONTACT_WHATSAPP || '').trim();
+
 const contents = `export const environment = {
   production: true,
   apiBaseUrl: ${JSON.stringify(apiBaseUrl)},
+  landingCanonicalBaseUrl: ${JSON.stringify(landingCanonicalBaseUrl)},
+  landingContactEmail: ${JSON.stringify(landingContactEmail)},
+  landingContactWhatsapp: ${JSON.stringify(landingContactWhatsapp)},
 };
 `;
 

@@ -345,7 +345,7 @@ export class SidebarComponent {
     ];
 
     return [
-      { kind: 'leaf', labelKey: 'shell.nav.home', icon: 'home', route: '/' },
+      { kind: 'leaf', labelKey: 'shell.nav.home', icon: 'home', route: '/home' },
       {
         kind: 'group',
         id: 'people',
@@ -480,8 +480,8 @@ export class SidebarComponent {
       return false;
     }
     const path = (this.url().split('?')[0] ?? this.url());
-    if (leaf.route === '/') {
-      return path === '/' || path === '';
+    if (leaf.route === '/home') {
+      return path === '/home';
     }
     if (leaf.route === '/settings') {
       return path === '/settings' || path.startsWith('/settings/');
