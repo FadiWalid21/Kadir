@@ -94,7 +94,25 @@ public sealed class ErrorLocalizer : IErrorLocalizer
         [ErrorCodes.EmployeesForbidden] = ("ليست لديك صلاحية لهذا الإجراء على الموظفين.", "You are not allowed to perform this employee action."),
         [ErrorCodes.OrgDepartmentCycle] = ("لا يمكن إنشاء حلقة في هيكل الإدارات.", "Cannot create a department hierarchy cycle."),
         [ErrorCodes.OrgNotFound] = ("عنصر الهيكل غير موجود.", "Org item was not found."),
-        [ErrorCodes.AttendanceNoEmployee] = ("حسابك غير مرتبط بملف موظف.", "Your account is not linked to an employee profile."),
+        [ErrorCodes.AttendanceNoEmployee] = (
+            "حسابك غير مرتبط بملف موظف. اطلب من الموارد البشرية ربط حساب الدخول من ملف الموظف.",
+            "Your account is not linked to an employee profile. Ask HR to link your login on the employee profile."),
+        [ErrorCodes.LeaveAttachmentRequired] = (
+            "هذا النوع من الإجازة يتطلب مرفقاً. أرفق ملفاً ثم أعد الإرسال.",
+            "This leave type requires an attachment. Upload a file and try again."),
+        [ErrorCodes.LeaveBalanceExceeded] = (
+            "رصيد الإجازة غير كافٍ للفترة المطلوبة.",
+            "Leave balance is not enough for the requested period."),
+        [ErrorCodes.LeaveOverlap] = (
+            "تتداخل هذه الإجازة مع طلب معلّق أو موافق عليه.",
+            "This leave overlaps an existing pending or approved request."),
+        [ErrorCodes.LeaveValidationFailed] = (
+            "بيانات طلب الإجازة غير صالحة. تحقق من التواريخ والنوع.",
+            "Leave request data is invalid. Check the dates and leave type."),
+        [ErrorCodes.LeaveNotFound] = ("نوع أو طلب الإجازة غير موجود.", "Leave type or request was not found."),
+        [ErrorCodes.WorkflowsNotFound] = (
+            "مسار الموافقة غير مضبوط. راجع إعدادات سير العمل.",
+            "Approval workflow is not configured. Check workflow settings."),
         [ErrorCodes.AttendanceEmployeeInactive] = ("الموظف غير نشط ولا يمكن تسجيل الحضور.", "The employee is inactive and cannot punch."),
         [ErrorCodes.AttendanceLocationStale] = ("موقع الجهاز قديم. حدّث الموقع وحاول مرة أخرى.", "Device location is stale. Refresh location and try again."),
         [ErrorCodes.AttendanceLocationInaccurate] = ("دقة الموقع غير كافية للتسجيل.", "Location accuracy is not sufficient to punch."),

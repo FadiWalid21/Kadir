@@ -1,10 +1,14 @@
+using System.Security.Cryptography;
+using System.Text;
 using Kadr.Platform.Application.Abstractions;
 using Kadr.Platform.Application.Leave;
 using Kadr.Platform.Domain.Attendance;
 using Kadr.Platform.Domain.Employees;
+using Kadr.Platform.Domain.Files;
 using Kadr.Platform.Domain.Leave;
 using Kadr.Platform.Domain.Templates;
 using Kadr.Platform.Domain.Workflows;
+using Kadr.SharedKernel.Abstractions;
 using Kadr.SharedKernel.Constants;
 using Kadr.SharedKernel.Results;
 using Kadr.SharedKernel.Tenancy;
@@ -17,7 +21,8 @@ public sealed class LeaveService(
     ITenantContext tenantContext,
     ISubscriptionGuard subscriptionGuard,
     IAuditLogWriter audit,
-    IWorkflowEngine workflowEngine) : ILeaveService
+    IWorkflowEngine workflowEngine,
+    IFileStorage fileStorage) : ILeaveService
 {
     public async Task<Result<IReadOnlyList<LeaveTypeDto>>> ListLeaveTypesAsync(
         CancellationToken cancellationToken = default)
@@ -189,6 +194,82 @@ public sealed class LeaveService(
         return list.IsFailure
             ? Result.Failure<LeaveBalanceDto>(list.ErrorCode!, list.ErrorMessage!)
             : Result.Success(list.Value![0]);
+    }
+
+    public async Task<Result<LeaveAttachmentDto>> UploadLeaveAttachmentAsync(
+        Stream content,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var writable = await EnsureWritableLeaveAsync(cancellationToken).ConfigureAwait(false);
+        if (writable.IsFailure)
+        {
+            return Result.Failure<LeaveAttachmentDto>(writable.ErrorCode!, writable.ErrorMessage!);
+        }
+
+        if (tenantContext.TenantId is null)
+        {
+            return Result.Failure<LeaveAttachmentDto>(ErrorCodes.TenantNotFound, ErrorCodes.TenantNotFound);
+        }
+
+        var employee = await ResolveLinkedEmployeeAsync(cancellationToken).ConfigureAwait(false);
+        if (employee is null)
+        {
+            return Result.Failure<LeaveAttachmentDto>(
+                ErrorCodes.AttendanceNoEmployee,
+                ErrorCodes.AttendanceNoEmployee);
+        }
+
+        var type = (contentType ?? string.Empty).Trim().ToLowerInvariant();
+        if (type is not ("image/jpeg" or "image/png" or "image/jpg"))
+        {
+            return Result.Failure<LeaveAttachmentDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = type.Contains("png", StringComparison.Ordinal) ? "leave.png" : "leave.jpg";
+        }
+
+        StoredFile stored;
+        try
+        {
+            stored = await fileStorage
+                .SaveAsync(
+                    tenantContext.TenantId.Value,
+                    FilePurpose.Document,
+                    content,
+                    fileName,
+                    type == "image/jpg" ? "image/jpeg" : type,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure<LeaveAttachmentDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        if (stored.SizeBytes is <= 0 or > 5_000_000)
+        {
+            await fileStorage.DeleteAsync(stored.StoragePath, cancellationToken).ConfigureAwait(false);
+            return Result.Failure<LeaveAttachmentDto>(ErrorCodes.FileInvalidType, ErrorCodes.FileInvalidType);
+        }
+
+        var hash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(stored.StoragePath + stored.SizeBytes)))
+            .ToLowerInvariant();
+        db.FileObjects.Add(FileObject.Create(
+            stored.FileId,
+            tenantContext.TenantId.Value,
+            stored.StoragePath,
+            stored.FileName,
+            stored.ContentType,
+            stored.SizeBytes,
+            hash,
+            FilePurpose.Document));
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success(new LeaveAttachmentDto(stored.FileId));
     }
 
     public async Task<Result<LeaveRequestDto>> CreateLeaveRequestAsync(

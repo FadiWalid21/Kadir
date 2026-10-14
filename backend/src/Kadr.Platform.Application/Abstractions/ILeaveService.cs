@@ -26,6 +26,12 @@ public interface ILeaveService
         AdjustLeaveBalanceRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<Result<LeaveAttachmentDto>> UploadLeaveAttachmentAsync(
+        Stream content,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken = default);
+
     Task<Result<LeaveRequestDto>> CreateLeaveRequestAsync(
         CreateLeaveRequestBody request,
         CancellationToken cancellationToken = default);

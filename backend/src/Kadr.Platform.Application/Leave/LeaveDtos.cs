@@ -51,6 +51,8 @@ public sealed record CreateLeaveRequestBody(
     string? Reason,
     Guid? AttachmentFileId);
 
+public sealed record LeaveAttachmentDto(Guid FileId);
+
 public sealed record LeaveRequestDto(
     Guid Id,
     Guid EmployeeId,

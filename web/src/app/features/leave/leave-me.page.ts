@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { LeaveApi, LeaveBalance, LeaveType } from '../../core/api/leave.api';
@@ -27,6 +28,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    RouterLink,
     TranslocoPipe,
     ButtonComponent,
     EmptyStateComponent,
@@ -41,7 +43,7 @@ type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
         <p class="mt-1 text-sm text-fg-2">{{ 'leave.me.subtitle' | transloco }}</p>
       </div>
       @if (canRequest() && state() === 'ready') {
-        <kadr-button variant="primary" type="button" (click)="drawerOpen.set(true)">
+        <kadr-button variant="primary" type="button" (click)="openDrawer()">
           {{ 'leave.me.request' | transloco }}
         </kadr-button>
       }
@@ -59,7 +61,15 @@ type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
       <kadr-empty-state
         [title]="'leave.me.noEmployeeTitle' | transloco"
         [description]="'leave.me.noEmployeeBody' | transloco"
-      />
+      >
+        @if (canManageEmployees()) {
+          <a routerLink="/employees" class="contents">
+            <kadr-button variant="secondary" type="button">
+              {{ 'attendance.card.setupLinkEmployees' | transloco }}
+            </kadr-button>
+          </a>
+        }
+      </kadr-empty-state>
     } @else if (balances().length === 0) {
       <kadr-empty-state
         [title]="'leave.me.emptyTitle' | transloco"
@@ -89,19 +99,39 @@ type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
       <div class="flex flex-col gap-3 p-4 text-start">
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-fg-2">{{ 'leave.me.type' | transloco }}</span>
-          <select class="rounded-md border border-line bg-surface px-3 py-2 text-fg" [(ngModel)]="leaveTypeId" name="type">
+          <select
+            class="rounded-md border border-line bg-surface px-3 py-2 text-fg"
+            [ngModel]="leaveTypeId()"
+            (ngModelChange)="onTypeChange($event)"
+            name="type"
+          >
             @for (t of types(); track t.id) {
-              <option [value]="t.id">{{ t.nameAr }}</option>
+              <option [value]="t.id">{{ typeLabel(t) }}</option>
             }
           </select>
         </label>
+        @if (selectedRemaining() !== null) {
+          <p class="text-xs text-fg-muted">
+            {{ 'leave.me.remainingHint' | transloco: { days: selectedRemaining() } }}
+          </p>
+        }
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-fg-2">{{ 'leave.me.start' | transloco }}</span>
-          <input type="date" class="rounded-md border border-line bg-surface px-3 py-2 text-fg" [(ngModel)]="startDate" name="start" />
+          <input
+            type="date"
+            class="rounded-md border border-line bg-surface px-3 py-2 text-fg"
+            [(ngModel)]="startDate"
+            name="start"
+          />
         </label>
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-fg-2">{{ 'leave.me.end' | transloco }}</span>
-          <input type="date" class="rounded-md border border-line bg-surface px-3 py-2 text-fg" [(ngModel)]="endDate" name="end" />
+          <input
+            type="date"
+            class="rounded-md border border-line bg-surface px-3 py-2 text-fg"
+            [(ngModel)]="endDate"
+            name="end"
+          />
         </label>
         <label class="flex items-center gap-2 text-sm text-fg">
           <input type="checkbox" [(ngModel)]="isHalfDay" name="half" />
@@ -109,8 +139,28 @@ type PageState = 'loading' | 'ready' | 'error' | 'noEmployee';
         </label>
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-fg-2">{{ 'leave.me.reason' | transloco }}</span>
-          <textarea class="rounded-md border border-line bg-surface px-3 py-2 text-fg" rows="3" [(ngModel)]="reason" name="reason"></textarea>
+          <textarea
+            class="rounded-md border border-line bg-surface px-3 py-2 text-fg"
+            rows="3"
+            [(ngModel)]="reason"
+            name="reason"
+          ></textarea>
         </label>
+        @if (selectedRequiresAttachment()) {
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-fg-2">{{ 'leave.me.attachment' | transloco }} *</span>
+            <span class="text-xs text-fg-muted">{{ 'leave.me.attachmentHint' | transloco }}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png"
+              class="text-sm text-fg"
+              (change)="onAttachment($event)"
+            />
+            @if (attachmentName()) {
+              <span class="text-xs text-fg-muted">{{ attachmentName() }}</span>
+            }
+          </label>
+        }
         <kadr-button variant="primary" type="button" [loading]="saving()" (click)="submit()">
           {{ 'leave.me.submit' | transloco }}
         </kadr-button>
@@ -130,23 +180,65 @@ export class LeaveMePage implements OnInit {
   protected readonly types = signal<LeaveType[]>([]);
   protected readonly drawerOpen = signal(false);
   protected readonly saving = signal(false);
+  protected readonly leaveTypeId = signal('');
+  protected readonly attachmentFile = signal<File | null>(null);
+  protected readonly attachmentName = signal('');
   protected readonly canRequest = computed(() =>
     this.auth.hasPermission(PermissionCodes.LeaveRequest),
   );
 
-  protected leaveTypeId = '';
   protected startDate = '';
   protected endDate = '';
   protected isHalfDay = false;
   protected reason = '';
+
+  protected readonly selectedRequiresAttachment = computed(() => {
+    const id = this.leaveTypeId();
+    return this.types().find((t) => t.id === id)?.requiresAttachment === true;
+  });
+
+  protected readonly selectedRemaining = computed(() => {
+    const id = this.leaveTypeId();
+    const bal = this.balances().find((b) => b.leaveTypeId === id);
+    return bal ? bal.remaining : null;
+  });
 
   ngOnInit(): void {
     this.title.setTitle(this.transloco.translate('leave.me.title'));
     void this.reload();
   }
 
+  protected canManageEmployees(): boolean {
+    return this.auth.hasPermission(PermissionCodes.EmployeesUpdate);
+  }
+
   protected typeName(b: LeaveBalance): string {
-    return this.transloco.getActiveLang() === 'en' ? b.leaveTypeNameEn || b.leaveTypeNameAr : b.leaveTypeNameAr;
+    return this.transloco.getActiveLang() === 'en'
+      ? b.leaveTypeNameEn || b.leaveTypeNameAr
+      : b.leaveTypeNameAr;
+  }
+
+  protected typeLabel(t: LeaveType): string {
+    return this.transloco.getActiveLang() === 'en' ? t.nameEn || t.nameAr : t.nameAr;
+  }
+
+  protected openDrawer(): void {
+    this.attachmentFile.set(null);
+    this.attachmentName.set('');
+    this.drawerOpen.set(true);
+  }
+
+  protected onTypeChange(id: string): void {
+    this.leaveTypeId.set(id);
+    this.attachmentFile.set(null);
+    this.attachmentName.set('');
+  }
+
+  protected onAttachment(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.attachmentFile.set(file);
+    this.attachmentName.set(file?.name ?? '');
   }
 
   protected async reload(): Promise<void> {
@@ -156,7 +248,7 @@ export class LeaveMePage implements OnInit {
       this.balances.set(balances);
       this.types.set(types);
       if (types[0]) {
-        this.leaveTypeId = types[0].id;
+        this.leaveTypeId.set(types[0].id);
       }
       this.state.set('ready');
     } catch (err) {
@@ -171,24 +263,47 @@ export class LeaveMePage implements OnInit {
   }
 
   protected async submit(): Promise<void> {
-    if (!this.canRequest() || !this.leaveTypeId || !this.startDate || !this.endDate) {
+    if (!this.canRequest() || !this.leaveTypeId() || !this.startDate || !this.endDate) {
+      return;
+    }
+    if (this.selectedRequiresAttachment() && !this.attachmentFile()) {
+      this.toast.show(this.transloco.translate('leave.me.attachmentRequired'), 'danger');
       return;
     }
     this.saving.set(true);
     try {
+      let attachmentFileId: string | null = null;
+      const file = this.attachmentFile();
+      if (file) {
+        const uploaded = await this.api.uploadLeaveAttachment(file);
+        attachmentFileId = uploaded.fileId;
+      }
       await this.api.createLeave({
-        leaveTypeId: this.leaveTypeId,
+        leaveTypeId: this.leaveTypeId(),
         startDate: this.startDate,
         endDate: this.endDate,
         isHalfDay: this.isHalfDay,
         reason: this.reason.trim() || null,
+        attachmentFileId,
       });
       this.toast.show(this.transloco.translate('leave.me.submitted'), 'success');
       this.drawerOpen.set(false);
       void this.reload();
     } catch (err) {
       const pd = problemDetailsFromError(err);
-      this.toast.show(pd?.detail ?? this.transloco.translate('leave.me.submitFailed'), 'danger');
+      const detail = pd?.detail?.trim();
+      const genericAr = 'حدث خطأ.';
+      const genericEn = 'An error occurred.';
+      if (detail && detail !== genericAr && detail !== genericEn) {
+        this.toast.show(detail, 'danger');
+      } else if (pd?.code) {
+        this.toast.show(
+          `${this.transloco.translate('leave.me.submitFailed')} (${pd.code})`,
+          'danger',
+        );
+      } else {
+        this.toast.show(this.transloco.translate('leave.me.submitFailed'), 'danger');
+      }
     } finally {
       this.saving.set(false);
     }
