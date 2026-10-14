@@ -25,17 +25,7 @@ public static class DependencyInjection
         services.AddSingleton<IIndustryTemplateSeedSource, IndustryTemplateSeedSource>();
 
         RegisterEmailSender(services, configuration);
-
-        var webPushEnabled = configuration.GetValue("WebPush:Enabled", false);
-        if (webPushEnabled)
-        {
-            services.AddHttpClient(nameof(WebPushNotificationSender));
-            services.AddSingleton<IPushNotificationSender, WebPushNotificationSender>();
-        }
-        else
-        {
-            services.AddSingleton<IPushNotificationSender, LoggingPushNotificationSender>();
-        }
+        RegisterPushSender(services, configuration);
 
         return services;
     }
@@ -71,6 +61,66 @@ public static class DependencyInjection
             "Email sender registered: {EmailSender} (Brevo not fully configured; messages are logged, not delivered)",
             typeName);
     }
+
+    /// <summary>
+    /// Logs which IPushNotificationSender was chosen. Call once after Build so incomplete VAPID is obvious.
+    /// Never includes key material.
+    /// </summary>
+    public static void LogWebPushSenderSelection(IServiceProvider services, IConfiguration configuration)
+    {
+        var logger = services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Kadr.Platform.Infrastructure.Push");
+        var sender = services.GetRequiredService<IPushNotificationSender>();
+        var typeName = sender.GetType().Name;
+        var options = ResolveWebPushOptions(configuration);
+        var validationError = WebPushOptions.Validate(options);
+
+        if (typeName == nameof(WebPushNotificationSender))
+        {
+            logger.LogInformation("Push sender registered: {PushSender}", typeName);
+            return;
+        }
+
+        if (validationError is not null)
+        {
+            logger.LogWarning(
+                "WebPush configuration is invalid ({Reason}); using {PushSender} (push is logged, not delivered). Fix VAPID settings or set WebPush:Enabled=false.",
+                validationError,
+                typeName);
+            return;
+        }
+
+        if (options.Enabled)
+        {
+            logger.LogWarning(
+                "WebPush:Enabled is true but sender is {PushSender}; check VAPID configuration and restart.",
+                typeName);
+            return;
+        }
+
+        logger.LogInformation(
+            "Push sender registered: {PushSender} (WebPush disabled; messages are logged, not delivered)",
+            typeName);
+    }
+
+    private static void RegisterPushSender(IServiceCollection services, IConfiguration configuration)
+    {
+        var options = ResolveWebPushOptions(configuration);
+        var validationError = WebPushOptions.Validate(options);
+
+        // Incomplete VAPID must not take down the host — degrade like Brevo → logging sender.
+        if (validationError is null && options.Enabled)
+        {
+            services.AddHttpClient(nameof(WebPushNotificationSender));
+            services.AddSingleton<IPushNotificationSender, WebPushNotificationSender>();
+            return;
+        }
+
+        services.AddSingleton<IPushNotificationSender, LoggingPushNotificationSender>();
+    }
+
+    private static WebPushOptions ResolveWebPushOptions(IConfiguration configuration) =>
+        configuration.GetSection(WebPushOptions.SectionName).Get<WebPushOptions>() ?? new WebPushOptions();
 
     private static void RegisterEmailSender(IServiceCollection services, IConfiguration configuration)
     {

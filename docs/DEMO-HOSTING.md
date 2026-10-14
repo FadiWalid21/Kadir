@@ -99,15 +99,20 @@ treat that as a **symptom**, not a frontend CORS bug. IIS/gateway error pages (5
 
 ### 500.30 recovery (MonsterASP stdout)
 
-Open MonsterASP → application **stdout / event** logs for the crash line. Typical `ValidateOnStart` / startup killers:
+Check these **in order** — the process never reaches CORS or login until health returns JSON.
+
+1. **.NET 10 runtime** on the host (the API targets `net10.0`). If only .NET 8/9 is installed, ANCM returns 500.30 before any app code runs.
+2. **Stdout logs** under the site folder `logs/stdout_*.log` (enabled via `web.config` `stdoutLogEnabled`). Also check MonsterASP event / deploy logs. Look for `Application terminated unexpectedly`, `Database migrate/seed failed`, or Jwt validation errors.
+3. Then apply the table below and **restart / redeploy**.
 
 | Cause | Fix |
 |-------|-----|
+| Missing .NET 10 | Install/select ASP.NET Core **10** hosting bundle / runtime on MonsterASP |
 | Missing `ConnectionStrings__Default` | Set a valid Postgres connection string |
-| Missing/short `Jwt__SigningKey` | Set ≥32 characters (same strength as local user-secrets) |
-| `WebPush__Enabled=true` or private key set without full VAPID | Either set all of `WebPush__VapidPublicKey`, `WebPush__VapidPrivateKey`, `WebPush__Subject` (`mailto:` or `https:`), or set `WebPush__Enabled=false` and clear partial keys |
-| `Database__MigrateOnStartup=true` and Postgres unreachable / migration error | Fix DB connectivity or migration; confirm migrate succeeds in logs |
-| Deploy path / runtime wrong | Project path `backend/src/Kadr.Api/Kadr.Api.csproj`, .NET 10 runtime, branch `main` |
+| Missing/short `Jwt__SigningKey` | Set ≥32 characters (same strength as local user-secrets); still fails `ValidateOnStart` |
+| Incomplete WebPush VAPID | App **degrades** to logging push (does not crash). Set all of `WebPush__VapidPublicKey`, `WebPush__VapidPrivateKey`, `WebPush__Subject`, and `WebPush__Enabled=true`, or leave Enabled false |
+| `Database__MigrateOnStartup=true` and Postgres unreachable / migration error | Fix DB connectivity or migration; stdout shows `Database migrate/seed failed` |
+| Deploy path wrong | Project path `backend/src/Kadr.Api/Kadr.Api.csproj`, branch `main` |
 
 After changing settings: **restart or redeploy**, then re-run API smoke. CORS allow-list alone cannot fix a process that never starts.
 

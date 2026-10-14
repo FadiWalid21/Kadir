@@ -64,10 +64,9 @@ try
     builder.Services.AddOptions<DatabaseHostOptions>()
         .Bind(builder.Configuration.GetSection(DatabaseHostOptions.SectionName));
 
+    // WebPush: bind only — incomplete VAPID must not kill the host (degrades in AddPlatformInfrastructure).
     builder.Services.AddOptions<WebPushOptions>()
-        .Bind(builder.Configuration.GetSection(WebPushOptions.SectionName))
-        .Validate(options => WebPushOptions.Validate(options) is null, "WebPush configuration is invalid.")
-        .ValidateOnStart();
+        .Bind(builder.Configuration.GetSection(WebPushOptions.SectionName));
 
     // Bridge legacy flat env/user-secret names → Brevo:* before options bind and DI registration.
     BridgeLegacyBrevoSettings(builder.Configuration);
@@ -339,6 +338,7 @@ try
     var app = builder.Build();
 
     Kadr.Platform.Infrastructure.DependencyInjection.LogEmailSenderSelection(app.Services, app.Configuration);
+    Kadr.Platform.Infrastructure.DependencyInjection.LogWebPushSenderSelection(app.Services, app.Configuration);
 
     var authHost = app.Configuration.GetSection(AuthHostOptions.SectionName).Get<AuthHostOptions>()
         ?? new AuthHostOptions();
@@ -374,14 +374,22 @@ try
 
     if (migrateOnStartup)
     {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
-        await db.Database.MigrateAsync();
-        await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
-        await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
-        await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
-        await scope.ServiceProvider.GetRequiredService<SystemRolePermissionSeeder>().SeedAsync();
-        await scope.ServiceProvider.GetRequiredService<StatutoryRuleSetSeeder>().SeedAsync();
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<KadrDbContext>();
+            await db.Database.MigrateAsync();
+            await scope.ServiceProvider.GetRequiredService<PlanSeeder>().SeedAsync();
+            await scope.ServiceProvider.GetRequiredService<IndustryTemplateSeeder>().SeedAsync();
+            await scope.ServiceProvider.GetRequiredService<PlatformAdminSeeder>().SeedAsync();
+            await scope.ServiceProvider.GetRequiredService<SystemRolePermissionSeeder>().SeedAsync();
+            await scope.ServiceProvider.GetRequiredService<StatutoryRuleSetSeeder>().SeedAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Database migrate/seed failed");
+            throw;
+        }
     }
 
     app.MapHealthChecks("/health");
