@@ -35,7 +35,11 @@ import { TenantLogoComponent } from '../../shared/ui/tenant-logo/tenant-logo.com
     >
       <div class="ms-auto flex items-center gap-1">
         <kadr-dropdown-menu [ariaLabel]="'shell.notifications' | transloco">
-          <span dropdownTrigger class="relative inline-flex size-11 items-center justify-center">
+          <span
+            dropdownTrigger
+            class="relative inline-flex size-11 items-center justify-center"
+            data-tour="top-notifications"
+          >
             <kadr-icon name="bell" size="sm" />
             @if (unread() > 0) {
               <span

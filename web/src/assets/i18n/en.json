@@ -5,6 +5,26 @@
     "homeBody": "The design system foundation is ready. Open the development UI kit.",
     "openUiKit": "Open UI kit"
   },
+  "tour": {
+    "next": "Next",
+    "done": "Done",
+    "skip": "Skip tour",
+    "progress": "{{current}} of {{total}}",
+    "steps": {
+      "homeTitle": "Home",
+      "homeBody": "Your dashboard and first-run checklist live here.",
+      "peopleTitle": "People",
+      "peopleBody": "Employees and organization structure.",
+      "attendanceTitle": "Attendance",
+      "attendanceBody": "Clock in/out, today’s board, and schedules.",
+      "leaveTitle": "Leave",
+      "leaveBody": "Requests, balances, and approvals.",
+      "notificationsTitle": "Notifications",
+      "notificationsBody": "Approvals and updates appear in the bell.",
+      "settingsTitle": "Settings",
+      "settingsBody": "Company, users, leave types, and more."
+    }
+  },
   "glossary": {
     "employee": "Employee",
     "department": "Department",

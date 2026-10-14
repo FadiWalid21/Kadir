@@ -5,6 +5,26 @@
     "homeBody": "أساس نظام التصميم جاهز. افتح مجموعة الواجهة للتطوير.",
     "openUiKit": "فتح مجموعة الواجهة"
   },
+  "tour": {
+    "next": "التالي",
+    "done": "تم",
+    "skip": "تخطي الجولة",
+    "progress": "{{current}} من {{total}}",
+    "steps": {
+      "homeTitle": "الرئيسية",
+      "homeBody": "لوحة التحكم وقائمة البدء الأولى هنا.",
+      "peopleTitle": "الأفراد",
+      "peopleBody": "الموظفون والهيكل التنظيمي.",
+      "attendanceTitle": "الحضور",
+      "attendanceBody": "تسجيل الحضور ولوحة اليوم والجداول.",
+      "leaveTitle": "الإجازات",
+      "leaveBody": "الطلبات والأرصدة والموافقات.",
+      "notificationsTitle": "الإشعارات",
+      "notificationsBody": "الموافقات والتحديثات تظهر في الجرس.",
+      "settingsTitle": "الإعدادات",
+      "settingsBody": "الشركة والمستخدمون وأنواع الإجازات والمزيد."
+    }
+  },
   "glossary": {
     "employee": "موظف",
     "department": "القسم",
