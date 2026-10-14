@@ -427,9 +427,9 @@ export class AttendanceTodayPage implements OnInit {
   protected statusTone(status: string): BadgeTone {
     switch (status) {
       case 'Present':
+      case 'Incomplete':
         return 'success';
       case 'Late':
-      case 'Incomplete':
       case 'NotYet':
         return 'warning';
       case 'Absent':

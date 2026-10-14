@@ -102,13 +102,20 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
                 </p>
               </div>
             </div>
-            @if (canUpdate()) {
-              <a [routerLink]="['/employees', e.id, 'edit']" class="contents">
-                <kadr-button variant="secondary" type="button">{{
-                  'employees.edit' | transloco
-                }}</kadr-button>
-              </a>
-            }
+            <div class="flex flex-wrap items-center gap-2">
+              @if (canUpdate()) {
+                <a [routerLink]="['/employees', e.id, 'edit']" class="contents">
+                  <kadr-button variant="secondary" type="button">{{
+                    'employees.edit' | transloco
+                  }}</kadr-button>
+                </a>
+              }
+              @if (canTerminate() && e.status !== 'Terminated') {
+                <kadr-button variant="danger-soft" type="button" (click)="askTerminate()">
+                  {{ 'employees.terminate' | transloco }}
+                </kadr-button>
+              }
+            </div>
           </header>
 
           <kadr-tabs
@@ -481,6 +488,18 @@ type PageState = 'loading' | 'ready' | 'error' | 'locked';
         (confirmed)="confirmDelete()"
         (cancelled)="deleteTarget.set(null)"
       />
+
+      <kadr-confirm-dialog
+        [open]="terminateOpen()"
+        [title]="'employees.terminateTitle' | transloco"
+        [message]="'employees.terminateBody' | transloco"
+        [confirmLabel]="'employees.terminateConfirm' | transloco"
+        [cancelLabel]="'ui.cancel' | transloco"
+        [danger]="true"
+        [busy]="terminating()"
+        (confirmed)="confirmTerminate()"
+        (cancelled)="terminateOpen.set(false)"
+      />
     </div>
   `,
 })
@@ -499,6 +518,8 @@ export class EmployeeProfilePage implements OnInit {
   protected readonly activeTab = signal('overview');
   protected readonly statusDraft = signal('');
   protected readonly statusSaving = signal(false);
+  protected readonly terminateOpen = signal(false);
+  protected readonly terminating = signal(false);
   protected readonly userLinkOpen = signal(false);
   protected readonly linkUserId = signal('');
   protected readonly userOptions = signal<SelectOption[]>([]);
@@ -751,6 +772,29 @@ export class EmployeeProfilePage implements OnInit {
 
   askDelete(d: EmployeeDocumentItem): void {
     this.deleteTarget.set(d);
+  }
+
+  askTerminate(): void {
+    this.terminateOpen.set(true);
+  }
+
+  async confirmTerminate(): Promise<void> {
+    const e = this.employee();
+    if (!e || this.terminating()) {
+      return;
+    }
+    this.terminating.set(true);
+    try {
+      const updated = await this.api.changeStatus(e.id, 'Terminated');
+      this.employee.set(updated);
+      this.statusDraft.set(updated.status);
+      this.terminateOpen.set(false);
+      this.toast.show(this.i18n.translate('employees.terminated'), 'success');
+    } catch {
+      this.toast.show(this.i18n.translate('employees.terminateFailed'), 'danger');
+    } finally {
+      this.terminating.set(false);
+    }
   }
 
   async saveStatus(): Promise<void> {

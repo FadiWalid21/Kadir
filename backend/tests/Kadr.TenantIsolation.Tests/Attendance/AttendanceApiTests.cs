@@ -291,6 +291,54 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Proxy_punch_without_shift_appears_on_today_board()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Proxy Board Co", "proxy-board@example.com");
+        var session = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var client = helper.Authed(session.AccessToken);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف بلا وردية",
+                fullNameEn = "No Shift Employee",
+                hireDate = "2024-01-15",
+                status = "Active",
+            });
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var emp = (await create.Content.ReadFromJsonAsync<EmployeeDetailDto>(JsonOptions))!;
+
+        var ok = await client.PostAsJsonAsync(
+            "/api/v1/attendance/proxy-punch",
+            new
+            {
+                employeeId = emp.Id,
+                reason = "Device offline — no shift assigned",
+                clientRequestId = Guid.NewGuid(),
+            });
+        var body = await ok.Content.ReadAsStringAsync();
+        Assert.True(ok.IsSuccessStatusCode, body);
+
+        var board = await client.GetFromJsonAsync<AttendanceBoardDto>(
+            "/api/v1/attendance/today?page=1&pageSize=20",
+            JsonOptions);
+        Assert.NotNull(board);
+        var row = Assert.Single(board.Items, r => r.EmployeeId == emp.Id);
+        Assert.NotNull(row.FirstInAt);
+        Assert.Equal("Incomplete", row.Status);
+        Assert.NotEqual("NoShift", row.Status);
+
+        var presentFilter = await client.GetFromJsonAsync<AttendanceBoardDto>(
+            "/api/v1/attendance/today?page=1&pageSize=20&status=present",
+            JsonOptions);
+        Assert.NotNull(presentFilter);
+        Assert.Contains(presentFilter.Items, r => r.EmployeeId == emp.Id);
+    }
+
+    [Fact]
     public async Task Board_today_is_tenant_isolated()
     {
         await factory.ResetDatabaseAsync();
