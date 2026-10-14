@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { GuidedTourService } from '../core/tour/guided-tour.service';
 import { OfflineService } from '../core/pwa/offline.service';
 import { UpdateService } from '../core/pwa/update.service';
 import { SubscriptionStore } from '../core/subscription/subscription.store';
@@ -9,6 +10,7 @@ import { PushNotificationService } from '../core/pwa/push-notification.service';
 import { OfflineBannerComponent } from '../shared/ui/pwa/offline-banner.component';
 import { PushSoftPromptComponent } from '../shared/ui/pwa/push-soft-prompt.component';
 import { UpdateNoticeComponent } from '../shared/ui/pwa/update-notice.component';
+import { GuidedTourComponent } from '../shared/ui/tour/guided-tour.component';
 import { BottomNavComponent } from './bottom-nav/bottom-nav.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { SubscriptionBannerComponent } from './subscription-banner/subscription-banner.component';
@@ -30,6 +32,7 @@ const SIDEBAR_COLLAPSED_KEY = 'kadr.sidebar.collapsed';
     OfflineBannerComponent,
     PushSoftPromptComponent,
     UpdateNoticeComponent,
+    GuidedTourComponent,
   ],
   template: `
     <div class="flex min-h-dvh bg-app">
@@ -47,6 +50,7 @@ const SIDEBAR_COLLAPSED_KEY = 'kadr.sidebar.collapsed';
       </div>
       <kadr-bottom-nav />
       <kadr-update-notice />
+      <kadr-guided-tour />
       <kadr-toast-host />
       <kadr-seat-limit-dialog
         [open]="subscription.seatDialogOpen()"
@@ -57,14 +61,20 @@ const SIDEBAR_COLLAPSED_KEY = 'kadr.sidebar.collapsed';
     </div>
   `,
 })
-export class ShellLayout {
+export class ShellLayout implements AfterViewInit {
   protected readonly subscription = inject(SubscriptionStore);
+  private readonly tour = inject(GuidedTourService);
   readonly collapsed = signal(readCollapsed());
 
   constructor() {
     inject(OfflineService);
     inject(UpdateService);
     inject(PushNotificationService).startLifecycle();
+  }
+
+  ngAfterViewInit(): void {
+    // Wait a tick so nav data-tour targets exist for permission-aware steps.
+    queueMicrotask(() => this.tour.maybeStart());
   }
 
   onCollapsedChange(value: boolean): void {
