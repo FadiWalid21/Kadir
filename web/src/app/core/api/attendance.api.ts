@@ -374,6 +374,16 @@ export class AttendanceApi {
     return firstValueFrom(this.http.post<PunchResult>(`${this.base}/punch`, body));
   }
 
+  /** ATT-11: HR records In/Out for an employee (no geofence). */
+  proxyPunch(body: {
+    employeeId: string;
+    reason: string;
+    clientRequestId: string;
+    punchedAt?: string | null;
+  }): Promise<PunchResult> {
+    return firstValueFrom(this.http.post<PunchResult>(`${this.base}/proxy-punch`, body));
+  }
+
   getMyToday(): Promise<AttendanceToday> {
     return firstValueFrom(this.http.get<AttendanceToday>(`${this.base}/me/today`));
   }

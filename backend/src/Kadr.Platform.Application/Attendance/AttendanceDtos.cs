@@ -9,6 +9,13 @@ public sealed record PunchRequest(
     string? Reason,
     Guid? PhotoFileId = null);
 
+/// <summary>ATT-11: HR/manager records In/Out for an employee without geofence (e.g. biometric failure).</summary>
+public sealed record ProxyPunchRequest(
+    Guid EmployeeId,
+    string Reason,
+    Guid ClientRequestId,
+    DateTimeOffset? PunchedAt = null);
+
 public sealed record PunchResultDto(
     Guid PunchId,
     string Kind,

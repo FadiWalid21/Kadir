@@ -1755,10 +1755,21 @@
       "colShift": "الوردية",
       "colBranch": "الفرع",
       "colStatus": "الحالة",
+      "colActions": "إجراءات",
       "inside": "داخل النطاق",
       "outside": "خارج النطاق",
       "prev": "السابق",
-      "next": "التالي"
+      "next": "التالي",
+      "proxyPunch": "تسجيل حضور",
+      "proxyTitle": "تسجيل حضور أو انصراف للموظف",
+      "proxyBody": "استخدمها عندما يتعذر على الموظف التسجيل (مثل عطل البصمة). يُنشئ حضوراً أو انصرافاً يدوياً مع سبب.",
+      "proxyReason": "السبب",
+      "proxyReasonHint": "مطلوب — مثال: تعطل جهاز البصمة",
+      "proxySubmit": "حفظ التسجيل",
+      "proxyCancel": "إلغاء",
+      "proxySuccess": "تم حفظ التسجيل اليدوي ({{kind}}).",
+      "proxyFail": "تعذر حفظ التسجيل اليدوي.",
+      "proxyReasonRequired": "أدخل السبب."
     },
     "schedules": {
       "title": "جداول الورديات",
