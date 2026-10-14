@@ -35,6 +35,7 @@ public sealed class InvitationService(
     IOptions<AppOptions> appOptions,
     IAuditLogWriter audit,
     IClock clock,
+    INotificationRealtimeNotifier realtime,
     ILogger<InvitationService> logger) : IInvitationService
 {
     public async Task<Result<InvitationListItemDto>> InviteAsync(
@@ -407,6 +408,7 @@ public sealed class InvitationService(
         {
             await NotificationCreator.CreateAsync(
                     db,
+                    realtime,
                     invitation.TenantId,
                     inviterId,
                     NotificationContentBuilder.InvitationAccepted(invitation.Email, request.FullName),
