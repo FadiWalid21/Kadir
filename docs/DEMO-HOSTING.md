@@ -79,8 +79,37 @@ Local user-secrets do **not** apply on MonsterASP.
 
 1. `https://kadir.runasp.net/api/v1/health` → JSON `{ "status": "ok" }`  
    - If you see IIS HTML **404**, the ASP.NET app is not published/running. Check MonsterASP deploy logs, .NET runtime, and project path above; redeploy.
+   - If you see IIS HTML **500.30** (“ASP.NET Core app failed to start”), the process crashed during startup. See **500.30 recovery** below — do not chase Vercel CORS until health returns JSON.
 2. `https://kadir.runasp.net/api/v1/templates/industries` → JSON array of sectors (anonymous).  
    - Onboarding calls this for the industry step. Failure shows **تعذر تحميل القطاعات**.
+
+### CORS / 504 from Vercel
+
+When the browser on `https://kadir-teal.vercel.app` reports:
+
+- `blocked by CORS policy: No 'Access-Control-Allow-Origin' header`
+- and/or `POST …/api/v1/auth/login 504 (Gateway Timeout)`
+
+treat that as a **symptom**, not a frontend CORS bug. IIS/gateway error pages (500.30, 504) have **no** CORS headers, so the browser surfaces CORS.
+
+1. Open `https://kadir.runasp.net/api/v1/health` in a new tab (or `curl`).
+2. If the response is IIS HTML (404 / 500.30) or a timeout — **fix the API on MonsterASP first** (section above + **500.30 recovery**).
+3. Only after health returns JSON `{ "status": "ok" }`, re-test login. Preflight `OPTIONS` and `POST` `/api/v1/auth/login` should include `Access-Control-Allow-Origin: https://kadir-teal.vercel.app`.
+4. If health is OK but CORS still fails: check `Cors__Origins` is exactly `https://kadir-teal.vercel.app` (no trailing slash), then restart the API. Confirm `Auth__CrossSiteCookies=true` for cross-site refresh cookies.
+
+### 500.30 recovery (MonsterASP stdout)
+
+Open MonsterASP → application **stdout / event** logs for the crash line. Typical `ValidateOnStart` / startup killers:
+
+| Cause | Fix |
+|-------|-----|
+| Missing `ConnectionStrings__Default` | Set a valid Postgres connection string |
+| Missing/short `Jwt__SigningKey` | Set ≥32 characters (same strength as local user-secrets) |
+| `WebPush__Enabled=true` or private key set without full VAPID | Either set all of `WebPush__VapidPublicKey`, `WebPush__VapidPrivateKey`, `WebPush__Subject` (`mailto:` or `https:`), or set `WebPush__Enabled=false` and clear partial keys |
+| `Database__MigrateOnStartup=true` and Postgres unreachable / migration error | Fix DB connectivity or migration; confirm migrate succeeds in logs |
+| Deploy path / runtime wrong | Project path `backend/src/Kadr.Api/Kadr.Api.csproj`, .NET 10 runtime, branch `main` |
+
+After changing settings: **restart or redeploy**, then re-run API smoke. CORS allow-list alone cannot fix a process that never starts.
 
 ## 2. Vercel
 
