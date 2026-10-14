@@ -1755,10 +1755,21 @@
       "colShift": "Shift",
       "colBranch": "Branch",
       "colStatus": "Status",
+      "colActions": "Actions",
       "inside": "Inside",
       "outside": "Outside",
       "prev": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "proxyPunch": "Record punch",
+      "proxyTitle": "Record attendance for employee",
+      "proxyBody": "Use when the employee cannot punch (for example fingerprint failure). Creates a manual In or Out with your reason.",
+      "proxyReason": "Reason",
+      "proxyReasonHint": "Required — e.g. biometric device unavailable",
+      "proxySubmit": "Save punch",
+      "proxyCancel": "Cancel",
+      "proxySuccess": "Manual punch saved ({{kind}}).",
+      "proxyFail": "Could not save the manual punch.",
+      "proxyReasonRequired": "Enter a reason."
     },
     "schedules": {
       "title": "Shift schedules",

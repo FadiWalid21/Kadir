@@ -186,6 +186,54 @@ public sealed class AttendanceApiTests(RegisterApiFactory factory)
     }
 
     [Fact]
+    public async Task Proxy_punch_creates_manual_in_with_reason()
+    {
+        await factory.ResetDatabaseAsync();
+        var helper = new AuthTestHelper(factory);
+        var a = await helper.RegisterVerifiedAsync("Proxy Punch Co", "proxy-punch@example.com");
+        var session = await helper.LoginSessionAsync(a.Email, AuthTestHelper.Password, a.Slug);
+        var client = helper.Authed(session.AccessToken);
+
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/employees",
+            new
+            {
+                fullNameAr = "موظف بصمة",
+                fullNameEn = "Biometric Employee",
+                hireDate = "2024-01-15",
+                status = "Active",
+            });
+        Assert.Equal(HttpStatusCode.OK, create.StatusCode);
+        var emp = (await create.Content.ReadFromJsonAsync<EmployeeDetailDto>(JsonOptions))!;
+
+        var missingReason = await client.PostAsJsonAsync(
+            "/api/v1/attendance/proxy-punch",
+            new { employeeId = emp.Id, reason = "", clientRequestId = Guid.NewGuid() });
+        Assert.Equal(HttpStatusCode.BadRequest, missingReason.StatusCode);
+
+        var ok = await client.PostAsJsonAsync(
+            "/api/v1/attendance/proxy-punch",
+            new
+            {
+                employeeId = emp.Id,
+                reason = "Fingerprint device offline",
+                clientRequestId = Guid.NewGuid(),
+            });
+        var body = await ok.Content.ReadAsStringAsync();
+        Assert.True(ok.IsSuccessStatusCode, body);
+        var punched = JsonSerializer.Deserialize<PunchResultDto>(body, JsonOptions)!;
+        Assert.Equal("In", punched.Kind);
+        Assert.Equal("Fingerprint device offline", punched.OutsideReason);
+
+        var source = await helper.WithTenantAsync(a.TenantId, db =>
+            db.AttendancePunches.AsNoTracking()
+                .Where(p => p.Id == punched.PunchId)
+                .Select(p => p.Source)
+                .SingleAsync());
+        Assert.Equal(Kadr.Platform.Domain.Attendance.PunchSource.Manual, source);
+    }
+
+    [Fact]
     public async Task Board_today_is_tenant_isolated()
     {
         await factory.ResetDatabaseAsync();

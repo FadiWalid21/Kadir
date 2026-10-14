@@ -1,3 +1,4 @@
+using FluentValidation;
 using Kadr.Api.Filters;
 using Kadr.Api.Http;
 using Kadr.Api.Localization;
@@ -18,6 +19,12 @@ public static class AttendanceEndpoints
             .RequireFeature(FeatureKeys.Attendance)
             .RequireRateLimiting("attendance-punch")
             .WithName("AttendancePunch");
+
+        app.MapPost("/api/v1/attendance/proxy-punch", ProxyPunchAsync)
+            .RequireAuthorization(PermissionCodes.AttendanceEdit)
+            .RequireFeature(FeatureKeys.Attendance)
+            .RequireRateLimiting("attendance-punch")
+            .WithName("AttendanceProxyPunch");
 
         app.MapGet("/api/v1/attendance/me/today", GetTodayAsync)
             .RequireAuthorization(PermissionCodes.AttendanceReadOwn)
@@ -209,6 +216,30 @@ public static class AttendanceEndpoints
         IErrorLocalizer localizer,
         CancellationToken cancellationToken) =>
         ToResult(httpContext, await attendance.PunchAsync(request, cancellationToken).ConfigureAwait(false), localizer);
+
+    private static async Task<IResult> ProxyPunchAsync(
+        [FromBody] ProxyPunchRequest request,
+        HttpContext httpContext,
+        IAttendanceService attendance,
+        IValidator<ProxyPunchRequest> validator,
+        IErrorLocalizer localizer,
+        CancellationToken cancellationToken)
+    {
+        var validation = await validator.ValidateAsync(request, cancellationToken).ConfigureAwait(false);
+        if (!validation.IsValid)
+        {
+            var code = validation.Errors
+                .Select(e => e.ErrorCode)
+                .FirstOrDefault(c => !string.IsNullOrWhiteSpace(c))
+                ?? ErrorCodes.AttendanceValidationFailed;
+            return ToProblem(httpContext, code, localizer);
+        }
+
+        return ToResult(
+            httpContext,
+            await attendance.ProxyPunchAsync(request, cancellationToken).ConfigureAwait(false),
+            localizer);
+    }
 
     private static async Task<IResult> GetTodayAsync(
         HttpContext httpContext,
